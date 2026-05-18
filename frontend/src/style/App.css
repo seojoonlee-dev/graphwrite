@@ -13,6 +13,10 @@ button {
   font-family: inherit;
 }
 
+button:hover {
+  cursor: pointer;
+}
+
 textarea {
   background-color: #282828;
   border: rgba(0,0,0,0);
@@ -78,4 +82,33 @@ textarea:focus {
   height: 50px;
 
   background-color: #FFF0E3;
+}
+
+.popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  border: 1px solid #FFF0E3;
+  color: #FFF0E3;
+  padding: 16px 24px;
+  z-index: 1000;
+  
+  transform: translateX(150%);
+
+  transition: 
+    transform 0.4s cubic-bezier(0.3, 1, 0.5, 1);
+}
+
+.popup.open {
+  transform: translateX(0);
+
+  transition: 
+    transform 0.4s cubic-bezier(0.3, 1, 0.5, 1);
+}
+
+.popup-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }

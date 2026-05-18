@@ -28,6 +28,17 @@ function MainWorkspace() {
 
   const cacheRef = useRef<Record<string, string>>({});
 
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  useEffect(() => {
+    if (popupOpen) {
+      const timer = setTimeout(() => {
+        setPopupOpen(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [popupOpen]);
+
   //Stale While Revalidate
   useEffect(() => {
     const loadFile = async () => {
@@ -77,7 +88,7 @@ function MainWorkspace() {
       });
       
       if (response.ok) {
-        alert("saved")
+        setPopupOpen(true);
         cacheRef.current[filePath] = content;
         setTimeout(() => console.log(''), 2000);
       } else {
@@ -240,10 +251,14 @@ function MainWorkspace() {
               <FileList files={sortedFiles} onCreate={createFile} />
             )}
         </div>
-
         <div id="edit">
           <Editor content={content} onChange={setContent} title={filePath ? filePath : "Select or create a file"} onTitleChange={renameFile}/>
         </div>
+        <div className={`popup ${popupOpen ? 'open' : ''}`}>
+        <div className="popup-content">
+          <p>Saved!</p>
+        </div>
+      </div>
       </div>
     </>
   );

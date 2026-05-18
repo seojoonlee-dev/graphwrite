@@ -20,15 +20,24 @@ hr {
 }
 /* Container */
 .tiptap-container {
+  display: flex;
+  flex-direction: column;
   padding-left: 10px;
   background-color: #282828;
   height: calc(100vh - 22px);
   cursor: text;
 }
 
+.tiptap-container > div {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .ProseMirror {
   outline: none;
   font-family: inherit;
+  flex-grow: 1;
 }
 
 /* Placeholder */
