@@ -2,7 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import './Editor.css';
+import './style/Editor.css';
 
 interface EditorProps {
   content: string;
@@ -58,6 +58,7 @@ function Editor({ content, onChange, placeholder = "Start typing your node here.
     <div>
       <div className="tiptap-container">
         <input type="text" value={value} onChange={titleChange} onBlur={titleChangeSave} id="titleEdit"></input>
+        <hr></hr>
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import Editor from './Editor';
-import './App.css';
+import './style/App.css';
 
 const FileList = memo(({ files, onCreate }: { files: string[], onCreate: () => void }) => {
   return (
@@ -227,7 +227,7 @@ function MainWorkspace() {
               <button onClick={saveFile} className='headerButton'>save</button>
               <button onClick={deleteFile} className='headerButton'>delete</button>
             </header>
-            <h1>Nodes</h1>
+            <h1 style={{margin: "20px 0px"}}>Nodes</h1>
             
             {loading && <p>Loading files...</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}

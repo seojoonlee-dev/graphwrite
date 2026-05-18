@@ -1,0 +1,41 @@
+hr {
+  margin: 10px 15px 10px 0px;
+  color: #FFF0E3;
+}
+
+#titleEdit {
+  margin-top: 40px;
+  border: 0;
+  background-color: #282828;
+  color: #FFF0E3;
+  font-size: larger;
+  font-size: 2em;
+  font-weight: bold;
+  font-family: inherit;
+  padding: 0;
+}
+
+#titleEdit:focus {
+  outline: none;
+}
+/* Container */
+.tiptap-container {
+  padding-left: 10px;
+  background-color: #282828;
+  height: calc(100vh - 22px);
+  cursor: text;
+}
+
+.ProseMirror {
+  outline: none;
+  font-family: inherit;
+}
+
+/* Placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  color: #959595;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
