@@ -8,24 +8,25 @@ interface EditorProps {
   content: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  title?: string;
+  title: string;
   onTitleChange: (value: string) => void;
 }
 
 function Editor({ content, onChange, placeholder = "Start typing your node here...", title, onTitleChange }: EditorProps) {
+
+  const [value, setTitle] = useState(title);
+
   const titleChange = (event: ChangeEvent<HTMLInputElement>) => {
     setTitle(event.target.value);
   };
 
-  const titleChangeSave = (event: ChangeEvent<HTMLInputElement>) => {
-    onTitleChange(event.target.value);
+  const titleChangeSave = () => {
+    onTitleChange(value);
   };
 
   useEffect(() => {
     setTitle(title);
   }, [title]);
-
-  const [value, setTitle] = useState(title);
   
   const editor = useEditor({
     extensions: [

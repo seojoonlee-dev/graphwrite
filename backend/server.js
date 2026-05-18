@@ -31,12 +31,14 @@ app.post('/api/rename', async (req, res) => {
   try {
     const oldPath = path.join(NOTES_DIR, `${filePath}.txt`);
     const newPath = path.join(NOTES_DIR, `${newSavePath}.txt`);
+
+    console.log(`attempting rename from ${oldPath} to ${newPath}`);
     
     await fs.rename(oldPath, newPath);
     
     res.json({ success: true, message: 'File renamed successfully!' });
   } catch (error) {
-    console.error(error);
+    console.error("error" + error);
 
     res.status(500).json({ success: false, message: 'Failed to rename file' });
   }

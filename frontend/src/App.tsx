@@ -22,7 +22,6 @@ function MainWorkspace() {
   const navigate = useNavigate();
   
   const [content, setContent] = useState('');
-  const [title, setTitle] = useState('');
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,17 +33,14 @@ function MainWorkspace() {
     const loadFile = async () => {
       if (!filePath) {
         setContent('');
-        setTitle('');
         return;
       }
 
       // Stale
       if (cacheRef.current[filePath] !== undefined) {
         setContent(cacheRef.current[filePath]);
-        setTitle(filePath);
       } else {
         setContent('');
-        setTitle('');
       }
       
       // Revalidate
@@ -55,7 +51,6 @@ function MainWorkspace() {
         if (data.success) {
           if (cacheRef.current[filePath] !== data.content) {
             setContent(data.content);
-            setTitle(filePath);
             cacheRef.current[filePath] = data.content;
             console.log('Background sync: File updated from server.');
           }
@@ -103,14 +98,12 @@ function MainWorkspace() {
       const response = await fetch('/api/rename', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath, renameTo, content }),
+        body: JSON.stringify({ filePath: filePath, newSavePath: renameTo }),
       });
       
       if (response.ok) {
-        alert("renamed")
         cacheRef.current[renameTo] = content;
-        setTimeout(() => console.log(''), 2000);
-        navigate(`/${renameTo}`)
+        navigate(`/${renameTo}`);
       } else {
         console.log('Error renaming file.');
       }
@@ -245,7 +238,7 @@ function MainWorkspace() {
         </div>
 
         <div id="edit">
-          <Editor content={content} onChange={setContent} title={filePath} onTitleChange={renameFile}/>
+          <Editor content={content} onChange={setContent} title={filePath ? filePath : "Select or create a file"} onTitleChange={renameFile}/>
         </div>
       </div>
     </>
