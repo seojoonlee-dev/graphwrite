@@ -20,7 +20,7 @@ docker compose up --build
 You shall now be able to access the fronend at http://localhost:8080. Additionally, the backend will use port 3001 by default. If you wish to manually change which port to use simply edit docker-compose.yml.
 
 #### Updating
-Simple pull this repo inside /node and rebuild with docker compose.
+Simply pull this repo inside /node and rebuild with docker compose.
 
 ```
 cd node
