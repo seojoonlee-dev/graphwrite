@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import './Editor.css'; // We will add basic styles here next
+import './Editor.css';
 
 interface EditorProps {
   content: string;
