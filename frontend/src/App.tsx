@@ -195,26 +195,31 @@ function MainWorkspace() {
   }, [filePath, navigate]);
 
   const createFile = useCallback(async () => {
-    const fileName = prompt("Enter the name for your new note:");
-    
-    if (!fileName || fileName.trim() === "") return;
-    
-    const sanitizedName = fileName.trim();
+    let i = 0;
+    let fileName = "NewFile";
+
+    while(true) {
+      if (!sortedFiles.includes(fileName)) {
+        break;
+      }
+      i ++;
+      fileName = "NewFile" + i;
+    }
 
     console.log('Creating file...');
     try {
       const response = await fetch('/api/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath: sanitizedName, content: '' }),
+        body: JSON.stringify({ filePath: fileName, content: '' }),
       });
       
       if (response.ok) {
         console.log('Created!');
         
-        cacheRef.current[sanitizedName] = '';
-        setFiles((prevFiles) => [...prevFiles, sanitizedName]);
-        navigate(`/${sanitizedName}`); 
+        cacheRef.current[fileName] = '';
+        setFiles((prevFiles) => [...prevFiles, fileName]);
+        navigate(`/${fileName}`); 
         
         setTimeout(() => console.log(''), 2000);
       } else {
