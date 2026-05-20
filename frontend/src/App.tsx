@@ -8,29 +8,25 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: () => v
     return files
       .map((fullPath) => {
         const parts = fullPath.split('/');
-        // Strip out extension for UI rendering
         const name = parts[parts.length - 1].replace(/\.txt$/, '');
         const depth = Math.max(0, parts.length - 2);
-        const segments = parts.slice(0, -1); // Parent folder directories
+        const segments = parts.slice(0, -1);
 
         return { fullPath, name, depth, segments };
       })
       .sort((a, b) => {
         const minLen = Math.min(a.segments.length, b.segments.length);
         
-        // Compare folder segments level by level
         for (let i = 0; i < minLen; i++) {
           const segA = a.segments[i].toLowerCase();
           const segB = b.segments[i].toLowerCase();
           
           if (segA !== segB) {
-            // Pin README nodes to the top of the current directory level
             if (segA === 'readme') return -1;
             if (segB === 'readme') return 1;
             return segA.localeCompare(segB);
           }
         }
-        // If paths match up to the minimum length, the shorter path (the parent) comes first
         return a.segments.length - b.segments.length;
       });
   }, [files]);
@@ -76,7 +72,6 @@ function MainWorkspace() {
     }
   }, [popupOpen]);
 
-  // Fetch updated directory array from backend
   const fetchFiles = useCallback(async () => {
     try {
       const response = await fetch('/api/files');
@@ -99,7 +94,7 @@ function MainWorkspace() {
     fetchFiles();
   }, [fetchFiles]);
 
-  // Stale While Revalidate Data Loader
+  // uses a mix of caching and loading to increase load time of nodes
   useEffect(() => {
     const loadFile = async () => {
       if (!filePath) {
@@ -222,7 +217,7 @@ function MainWorkspace() {
     }
   }, [filePath, fileName, navigate, fetchFiles]);
 
-  // Command + S Shortcut Save Listener
+  // save shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {

@@ -7,7 +7,7 @@ app.use(express.json());
 
 const NOTES_DIR = path.join(__dirname, 'notes');
 
-// Asynchronously discover all text files recursively
+// get all files
 async function getAllFiles(dir, baseDir = dir) {
   let results = [];
   try {
@@ -78,21 +78,18 @@ app.post('/api/save', async (req, res) => {
   }
 });
 
-// Create note folder and nested text file while avoiding duplicate collisions
 app.post('/api/create', async (req, res) => {
   const { currentPath } = req.body;
   
   try {
     let baseDir = NOTES_DIR;
     if (currentPath) {
-      // If active note is "README/README.txt", parent folder context is "notes/README"
       baseDir = path.join(NOTES_DIR, path.dirname(currentPath));
     }
     
     let counter = 0;
     let candidateName = "NewFile";
     
-    // Find next unallocated unique folder name slot
     while (true) {
       const checkDir = path.join(baseDir, candidateName);
       const checkFile = path.join(checkDir, `${candidateName}.txt`);
@@ -101,7 +98,7 @@ app.post('/api/create', async (req, res) => {
         counter++;
         candidateName = `NewFile${counter}`;
       } catch {
-        break; // Available
+        break;
       }
     }
     
@@ -119,7 +116,6 @@ app.post('/api/create', async (req, res) => {
   }
 });
 
-// Rename container directory and internal file keeping them completely aligned
 app.post('/api/rename', async (req, res) => {
   const { filePath, newTitle } = req.body;
   if (!filePath || !newTitle) {
@@ -127,15 +123,14 @@ app.post('/api/rename', async (req, res) => {
   }
   
   try {
-    const oldFullPath = path.join(NOTES_DIR, filePath); // notes/README/A/A.txt
-    const oldDir = path.dirname(oldFullPath);           // notes/README/A
-    const parentDir = path.dirname(oldDir);             // notes/README
+    const oldFullPath = path.join(NOTES_DIR, filePath);
+    const oldDir = path.dirname(oldFullPath);
+    const parentDir = path.dirname(oldDir);
     
     const cleanTitle = path.basename(newTitle).replace(/\.txt$/, '');
-    const newDir = path.join(parentDir, cleanTitle);    // notes/README/B
+    const newDir = path.join(parentDir, cleanTitle);
     const newFullPath = path.join(newDir, `${cleanTitle}.txt`);
     
-    // Rename container folder block first, then internal file
     await fs.rename(oldDir, newDir);
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
     await fs.rename(oldFileInNewDir, newFullPath);
@@ -148,7 +143,6 @@ app.post('/api/rename', async (req, res) => {
   }
 });
 
-// Delete note container directory entirely to avoid leaving empty orphaned folders
 app.delete('/api/delete', async (req, res) => {
   const { filePath } = req.query;
   if (!filePath) {
