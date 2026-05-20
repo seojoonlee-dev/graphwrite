@@ -1,5 +1,7 @@
 # Node note taker
 
+<img width="1775" height="1349" alt="image" src="https://github.com/user-attachments/assets/e2dc6083-e62a-4a2d-b658-ab47f0cfba99" />
+
 Node is a self hosted, no-bs, extremely simple and lightweight note taking app which offers WYSIWYG editing using Tiptap. No AI, no encryption, no grammer checking, no drawing, no bloat. Just text and editing.
 
 Node uses Express with Node.js as its backend and React + Typescript as the frontend.
