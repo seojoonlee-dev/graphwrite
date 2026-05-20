@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Markdown } from '@tiptap/markdown';
 import './style/Editor.css';
 
 interface EditorProps {
@@ -33,23 +34,29 @@ function Editor({ content, onChange, placeholder = "Start typing your node here.
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Markdown,
       Placeholder.configure({
         placeholder: placeholder,
         emptyEditorClass: 'is-editor-empty', 
       }),
     ],
     content: content, 
+    contentType: 'markdown',
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(editor.getMarkdown());
     },
   });
 
   useEffect(() => {
     if (!editor) return;
-    const currentContent = editor.getHTML();
+    
+    const currentContent = editor.getMarkdown();
 
     if (content !== currentContent && !editor.isFocused) {
-      editor.commands.setContent(content, { emitUpdate: false });
+      editor.commands.setContent(content, { 
+        emitUpdate: false,
+        contentType: 'markdown'
+      });
     }
   }, [content, editor]);
 

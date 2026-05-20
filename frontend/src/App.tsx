@@ -8,7 +8,7 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: () => v
     return files
       .map((fullPath) => {
         const parts = fullPath.split('/');
-        const name = parts[parts.length - 1].replace(/\.txt$/, '');
+        const name = parts[parts.length - 1].replace(/\.md$/, '');
         const depth = Math.max(0, parts.length - 2);
         const segments = parts.slice(0, -1);
 
@@ -103,7 +103,7 @@ function MainWorkspace() {
         return;
       }
 
-      const parsedFilePath = filePath.split("/").at(-1)?.replace(/\.txt$/, '');
+      const parsedFilePath = filePath.split("/").at(-1)?.replace(/\.md$/, '');
       setFileName(parsedFilePath || '');
 
       if (cacheRef.current[filePath] !== undefined) {

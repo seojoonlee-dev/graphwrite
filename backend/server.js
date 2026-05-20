@@ -19,7 +19,7 @@ async function getAllFiles(dir, baseDir = dir) {
       if (file.isDirectory()) {
         const subFiles = await getAllFiles(fullPath, baseDir);
         results = results.concat(subFiles);
-      } else if (file.name.endsWith('.txt')) {
+      } else if (file.name.endsWith('.md')) {
         const relativePath = path.relative(baseDir, fullPath);
         const normalizedPath = relativePath.split(path.sep).join('/');
         results.push(normalizedPath);
@@ -92,7 +92,7 @@ app.post('/api/create', async (req, res) => {
     
     while (true) {
       const checkDir = path.join(baseDir, candidateName);
-      const checkFile = path.join(checkDir, `${candidateName}.txt`);
+      const checkFile = path.join(checkDir, `${candidateName}.md`);
       try {
         await fs.access(checkFile);
         counter++;
@@ -105,7 +105,7 @@ app.post('/api/create', async (req, res) => {
     const finalDir = path.join(baseDir, candidateName);
     await fs.mkdir(finalDir, { recursive: true });
     
-    const finalFile = path.join(finalDir, `${candidateName}.txt`);
+    const finalFile = path.join(finalDir, `${candidateName}.md`);
     await fs.writeFile(finalFile, '', 'utf8');
     
     const relativePath = path.relative(NOTES_DIR, finalFile).split(path.sep).join('/');
@@ -127,9 +127,9 @@ app.post('/api/rename', async (req, res) => {
     const oldDir = path.dirname(oldFullPath);
     const parentDir = path.dirname(oldDir);
     
-    const cleanTitle = path.basename(newTitle).replace(/\.txt$/, '');
+    const cleanTitle = path.basename(newTitle).replace(/\.md$/, '');
     const newDir = path.join(parentDir, cleanTitle);
-    const newFullPath = path.join(newDir, `${cleanTitle}.txt`);
+    const newFullPath = path.join(newDir, `${cleanTitle}.md`);
     
     await fs.rename(oldDir, newDir);
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
