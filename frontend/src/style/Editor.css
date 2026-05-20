@@ -40,11 +40,22 @@ hr {
   flex-grow: 1;
 }
 
-/* Placeholder */
 .ProseMirror p.is-editor-empty:first-child::before {
   color: #959595;
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+.tiptap pre {
+  background-color: #1e1e1e;
+  color: #FFF0E3;
+  border: 1px solid #333333;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.tiptap pre code {
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
 }
