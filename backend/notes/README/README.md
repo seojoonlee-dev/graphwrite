@@ -50,3 +50,8 @@ docker compose up --build
 
 This is a very early version of node that just offers text edit and nothing else. Like the name suggests, I am currently planning on adding branching files, customization in the browser (so you don't have to edit the css files to change them), and a lot more. I will also be adding changes to how the text file is saved. For example while currently the text is saved as an html file I will change it so that it actually just saves the text.
 
+
+
+&nbsp;
+
+&nbsp;

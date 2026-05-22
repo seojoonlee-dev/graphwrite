@@ -13,7 +13,7 @@ hr {
   font-weight: bold;
   font-family: inherit;
   padding: 0;
-  width: fit-content;
+  width: 100%;
 }
 
 #titleEdit:focus {
@@ -33,6 +33,7 @@ hr {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  overflow: auto;
 }
 
 .ProseMirror {
@@ -55,6 +56,7 @@ hr {
   border: 1px solid #333333;
   border-radius: 6px;
   padding: 1rem;
+  margin-right: 10px;
 }
 
 .tiptap pre code {

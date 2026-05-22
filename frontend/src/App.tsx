@@ -278,7 +278,7 @@ function MainWorkspace() {
               )}
             </div>
             <div
-              style={{ width: "10px", cursor: "col-resize", position: "relative", left: "5px" }}
+              style={{ width: "12px", cursor: "col-resize", position: "relative", left: "4px" }}
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);
                 document.body.style.userSelect = "none";
