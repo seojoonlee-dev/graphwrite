@@ -64,11 +64,24 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: () => v
             {hasChildren ? (
               <button 
                 onClick={() => setCollapsed(prev => ({ ...prev, [dirPath]: !prev[dirPath] }))}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: "#FFF0E3" }}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  color: "#FFF0E3",
+                  padding: 0,
+                  width: "10px"
+                }}
               >
-                {collapsed[dirPath] ? '▶' : '▼'}
+                <span style={{
+                  display: 'inline-block',
+                  transition: 'transform 0.1s ease',
+                  transform: collapsed[dirPath] ? 'rotate(0deg)' : 'rotate(90deg)'
+                }}>
+                  ❯
+                </span>
               </button>
-            ) : <div>T</div>}
+            ) : <div style={{width: "10px"}}>T</div>}
             <Link to={`/${dirPath}`}>
               <button className="button">{name}</button>
             </Link>
