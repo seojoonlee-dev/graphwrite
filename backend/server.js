@@ -143,7 +143,7 @@ app.post('/api/rename', async (req, res) => {
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
     await fs.rename(oldFileInNewDir, newFullPath);
     
-    const newRelativePath = path.relative(NOTES_DIR, newFullPath).split(path.sep).join('/');
+    const newRelativePath = path.relative(NOTES_DIR, newDir).split(path.sep).join('/');
     res.json({ success: true, filePath: newRelativePath });
   } catch (error) {
     console.error("Error renaming file:", error);
