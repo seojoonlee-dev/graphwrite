@@ -15,6 +15,17 @@ app.use(express.json());
 
 const NOTES_DIR = path.join(__dirname, 'notes');
 
+function getSafePath(userInputPath) {
+  const safeBaseDir = path.resolve(NOTES_DIR);
+  const resolvedPath = path.resolve(safeBaseDir, userInputPath);
+  
+  if (!resolvedPath.startsWith(safeBaseDir)) {
+    throw new Error("Invalid path");
+  }
+  
+  return resolvedPath;
+}
+
 // get all files
 async function getAllFiles(dir, baseDir = dir) {
   let results = [];
@@ -57,7 +68,7 @@ app.get('/api/load', async (req, res) => {
   }
 
   try {
-    const fullPath = path.join(NOTES_DIR, filePath);
+    const fullPath = getSafePath(filePath);
     try {
       const content = await fs.readFile(fullPath, 'utf8');
       res.json({ success: true, content });
@@ -76,7 +87,7 @@ app.get('/api/load', async (req, res) => {
 app.post('/api/save', async (req, res) => {
   const { filePath, content } = req.body;
   try {
-    const fullPath = path.join(NOTES_DIR, filePath);
+    const fullPath = getSafePath(filePath);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
     await fs.writeFile(fullPath, content, 'utf8');
     res.json({ success: true, message: 'File saved successfully!' });
@@ -92,7 +103,8 @@ app.post('/api/create', async (req, res) => {
   try {
     let baseDir = NOTES_DIR;
     if (currentPath) {
-      baseDir = path.join(NOTES_DIR, path.dirname(currentPath));
+      const safePath = getSafePath(currentPath);
+      baseDir = path.dirname(safePath);
     }
     
     let counter = 0;
@@ -131,13 +143,18 @@ app.post('/api/rename', async (req, res) => {
   }
   
   try {
-    const oldFullPath = path.join(NOTES_DIR, filePath);
+    const oldFullPath = getSafePath(filePath);
     const oldDir = path.dirname(oldFullPath);
     const parentDir = path.dirname(oldDir);
     
     const cleanTitle = path.basename(newTitle).replace(/\.md$/, '');
     const newDir = path.join(parentDir, cleanTitle);
     const newFullPath = path.join(newDir, `${cleanTitle}.md`);
+    
+    const safeBaseDir = path.resolve(NOTES_DIR);
+    if (!newDir.startsWith(safeBaseDir)) {
+      throw new Error("Invalid path");
+    }
     
     await fs.rename(oldDir, newDir);
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
@@ -158,7 +175,7 @@ app.delete('/api/delete', async (req, res) => {
   }
 
   try {
-    const fullPath = path.join(NOTES_DIR, filePath);
+    const fullPath = getSafePath(filePath);
     const targetFolder = path.dirname(fullPath);
     
     await fs.rm(targetFolder, { recursive: true, force: true });
