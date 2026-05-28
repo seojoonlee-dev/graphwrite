@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'reac
 import Editor from './Editor';
 import './style/App.css';
 
+let serverIp = localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001";
+
 // file list in the sidebar
 const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -106,12 +108,13 @@ function MainWorkspace() {
     }
   };
 
+  const navigate = useNavigate();
+
+
   const filePath = getFilePath(parsedFilePath);
 
   const [fileName, setFileName] = useState('');
-  const navigate = useNavigate();
-  const [serverIp, setServerIp] = useState(localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001");
-  
+
   const [content, setContent] = useState('');
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -127,6 +130,7 @@ function MainWorkspace() {
     const saved = localStorage.getItem('sidebarWidth');
     return saved ? parseInt(saved, 10) : 250;
   }); 
+
   const sidebarRef = useRef<HTMLDivElement>(null);
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.buttons === 1 && sidebarRef.current) {
@@ -138,6 +142,9 @@ function MainWorkspace() {
     }
   };
 
+  useEffect(() => {
+
+  }, [serverIp])
   // saved popup
   useEffect(() => {
     if (popupOpen) {
@@ -291,14 +298,6 @@ function MainWorkspace() {
     }
   }, [filePath, fileName, navigate, fetchFiles, serverIp]);
 
-  function changeServer() {
-    let ip = prompt("Enter the address of the server. (example: http://xxx.xxx.xxx.xxx:3001) ");
-    if (ip) { 
-      setServerIp(ip);
-      localStorage.setItem('serverIp', ip);
-      navigate("/");
-    }
-  }
   // save shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -320,7 +319,7 @@ function MainWorkspace() {
           <button onClick={deleteFile} className='headerButton'><img src='/delete.png' style={{width: "100%"}} className='headerImage' /></button>
           <button onClick={() => createFile("")} className='headerButton'><img src='/plus.png' style={{width: "100%"}} className='headerImage' /></button>
           <div style={{marginTop: "auto"}} />
-          <button onClick={changeServer} className='headerButton'><img src='/settings.png' style={{width: "100%"}} className='headerImage' /></button>
+          <button onClick={() => navigate("/settings")} className='headerButton'><img src='/settings.png' style={{width: "100%"}} className='headerImage' /></button>
         </header>
         <div id="nodes" ref={sidebarRef} style={{ width: `${sidebarWidth}px`, display: sideBarOpen ? "flex" : "none" }}>
             <div className='list'>
@@ -372,8 +371,22 @@ function MainWorkspace() {
 }
 
 function Settings() {
+  const navigate = useNavigate();
+
+  function changeServer() {
+    let ip = prompt("Enter the address of the server. (example: http://xxx.xxx.xxx.xxx:3001) ");
+    if (ip) { 
+      localStorage.setItem('serverIp', ip);
+      serverIp = ip;
+      navigate("/");
+    }
+  }
   return (
-    <p>hi mom</p>
+    <div>
+      <p>Settings</p>
+      <button onClick={changeServer}>change server</button>
+      <button onClick={() => navigate("/")}>go back</button>
+    </div>
   );
 }
 

@@ -96,7 +96,7 @@ function Editor({ content, onChange, placeholder = "Start typing your node here.
         <hr />
         <EditorContent editor={editor} />
       </div>
-      <p style={{display: showTitleError ? "flex" : "none"}}className='errorMessage'>File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.</p>
+      <p style={{ display: showTitleError ? "flex" : "none" }} className='errorMessage'>File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.</p>
     </div>
   );
 }
