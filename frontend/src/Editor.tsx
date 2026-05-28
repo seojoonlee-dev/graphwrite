@@ -15,14 +15,31 @@ interface EditorProps {
 }
 
 function Editor({ content, onChange, placeholder = "Start typing your node here...", title, onTitleChange }: EditorProps) {
+  const invalidChars = /[\\/:*?"<>|]/;
+
   const [value, setTitle] = useState(title);
+  const [showTitleError, toggleTitleError] = useState(false);
 
   const titleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value);
+    const inputValue = event.target.value;
+    setTitle(inputValue);
+
+    if(invalidChars.test(inputValue)) {
+      toggleTitleError(true);
+    } else {
+      toggleTitleError(false);
+    }
   };
 
   const titleChangeSave = () => {
     const trimmedValue = value.trim();
+
+    if(invalidChars.test(trimmedValue)) {
+      setTitle(title);
+      toggleTitleError(false);
+      return;
+    }
+
     if (trimmedValue && title !== trimmedValue) {
       onTitleChange(trimmedValue);
     }
@@ -79,6 +96,7 @@ function Editor({ content, onChange, placeholder = "Start typing your node here.
         <hr />
         <EditorContent editor={editor} />
       </div>
+      <p style={{display: showTitleError ? "flex" : "none"}}className='errorMessage'>File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.</p>
     </div>
   );
 }

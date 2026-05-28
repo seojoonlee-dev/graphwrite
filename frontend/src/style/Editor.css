@@ -68,3 +68,10 @@ hr {
 .tiptap pre code {
   font-family: 'Fira Code', 'Courier New', Courier, monospace;
 }
+
+.errorMessage {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: red;
+}

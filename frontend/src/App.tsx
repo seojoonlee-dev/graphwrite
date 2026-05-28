@@ -76,7 +76,7 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
                   ❯
                 </span>
               </button>
-            ) : <div style={{width: "10px"}}>T</div>}
+            ) : <p style={{ width: "10px", cursor: "default" }}>T</p>}
             <Link to={`/${dirPath}`}>
               <button className="button">{name}</button>
             </Link>
@@ -371,10 +371,17 @@ function MainWorkspace() {
   );
 }
 
+function Settings() {
+  return (
+    <p>hi mom</p>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/settings" element={<Settings />} />
         <Route path="/*" element={<MainWorkspace />} />
       </Routes>
     </BrowserRouter>
