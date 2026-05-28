@@ -17,6 +17,11 @@ button:hover {
   cursor: pointer;
 }
 
+hr {
+  padding: 0;
+  margin-right: 0;
+}
+
 #view {
   display: grid;
   grid-template-columns: auto 1fr;

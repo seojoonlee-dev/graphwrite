@@ -326,8 +326,10 @@ function MainWorkspace() {
               <button onClick={changeServer} className='headerButton'><img src='/settings.png' style={{width: "100%"}} className='headerImage' /></button>
             </header>
             <div className='list'>
-              <h1 style={{ margin: "5px 0px", paddingBottom: "15px", paddingLeft: "5px" }}>Nodes</h1>
+              <h1 style={{ margin: "5px 0px", paddingLeft: "5px" }}>Nodes</h1>
             
+              <hr></hr>
+
               {loading && <p>Loading files...</p>}
               {error && <p style={{ color: 'red' }}>{error}</p>}
               
