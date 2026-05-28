@@ -59,7 +59,7 @@ hr {
 
 #addButton {
   display: none;
-  background-color: rgba(0,0,0,0);
+  background: none;
   border: 0;
   color: #FFF0E3;
   margin-left: auto;
@@ -82,7 +82,7 @@ hr {
   display: inline-flex;
   width: 100%;
   border: 0;
-  background-color: rgba(0,0,0,0);
+  background: none;
   color: #FFF0E3;
   padding-left: 5px;
   text-align: left;
@@ -92,7 +92,7 @@ hr {
   width: 45px;
   height: 45px;
 
-  background-color: rgba(0,0,0,0);
+  background: none;
   border: 0;
   color: #FFF0E3;
 
@@ -136,4 +136,13 @@ hr {
   width: 100%;
   padding-top: 5px;
   padding-left: 5px;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  cursor: pointer; 
+  color: #FFF0E3;
+  padding: 0;
+  width: 10px;
 }

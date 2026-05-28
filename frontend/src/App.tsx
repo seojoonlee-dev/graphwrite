@@ -66,14 +66,7 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
             {hasChildren ? (
               <button 
                 onClick={() => setCollapsed(prev => ({ ...prev, [dirPath]: !prev[dirPath] }))}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer', 
-                  color: "#FFF0E3",
-                  padding: 0,
-                  width: "10px"
-                }}
+                className='expandButton'
               >
                 <span style={{
                   display: 'inline-block',
