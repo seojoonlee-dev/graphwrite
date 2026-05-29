@@ -79,7 +79,7 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
                 </span>
               </button>
             ) : <p style={{ width: "10px", cursor: "default" }}>T</p>}
-            <Link to={`/${dirPath}`}>
+            <Link to={`/${dirPath}`} style={{ display: "flex", flex: 1, textDecoration: "none" }}>
               <button className="button">{name}</button>
             </Link>
             <div></div>
@@ -128,7 +128,7 @@ function MainWorkspace() {
   // sidebar
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
-    return saved ? parseInt(saved, 10) : 250;
+    return saved ? parseInt(saved, 10) : 200;
   }); 
 
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -325,7 +325,7 @@ function MainWorkspace() {
             <div className='list'>
               <h1 style={{ margin: "5px 0px", paddingLeft: "5px" }}>Nodes</h1>
             
-              <hr id="HR_node"></hr>
+              <hr id="divider"></hr>
 
               {loading && <p>Loading files...</p>}
               {error && <p style={{ color: 'red' }}>{error}</p>}
@@ -339,7 +339,7 @@ function MainWorkspace() {
               )}
             </div>
             <div
-              style={{ width: "12px", cursor: "col-resize", position: "relative", left: "4px" }}
+              style={{ minWidth: "10px", height: "100%", cursor: "col-resize", position: "absolute", right: "-5px", zIndex: 99 }}
               onPointerDown={(e) => {
                 e.currentTarget.setPointerCapture(e.pointerId);
                 document.body.style.userSelect = "none";
@@ -378,9 +378,9 @@ function Settings() {
     if (ip) { 
       localStorage.setItem('serverIp', ip);
       serverIp = ip;
-      navigate("/");
     }
   }
+
   return (
     <div>
       <p>Settings</p>

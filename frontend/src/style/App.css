@@ -31,14 +31,17 @@ hr {
 #nodes {
   display: flex;
   grid-area: nodes;
+  position: relative;
+  padding-right: 10px;
 }
 
 #nodesItems {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  overflow: auto;
 }
+
+
 
 #line {
   width: 100%;
@@ -53,14 +56,17 @@ hr {
   grid-area: header;
 }
 
+#divider {
+  width: 100px
+}
+
 #addButton {
   display: none;
-  background: none;
+  padding-left: 5px;
   border: 0;
   color: #FFF0E3;
-  margin-left: auto;
   font-size: 16px;
-  padding-left: 5px;
+  background: 0;
 }
 
 #editor {
@@ -70,12 +76,19 @@ hr {
 .node {
   display: flex;
   align-items: center;
-  padding: 2px 8px 2px 8px;
+  padding: 2px 10px 2px 6px;
   border-radius: 10px;
+  position: relative;
+  overflow: hidden;
 }
 
 .node:hover {
   background-color: #282828 !important;
+  overflow: visible;
+  max-width: 500px;
+  width: auto;
+  margin: 0;
+  z-index: 100;
 }
 
 .node:hover #addButton {
@@ -83,13 +96,12 @@ hr {
 }
 
 .button {
-  display: inline-flex;
-  width: 100%;
   border: 0;
   background: none;
   color: #FFF0E3;
   padding-left: 5px;
   text-align: left;
+  flex: 1;
 }
 
 .headerButton {
@@ -141,8 +153,6 @@ hr {
 
 .list {
   width: 100%;
-  padding-top: 5px;
-  padding-left: 5px;
 }
 
 .expandButton {
