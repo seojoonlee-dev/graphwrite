@@ -14,6 +14,7 @@ interface EditorProps {
   onTitleChange: (value: string) => void;
 }
 
+// this helper function exists so that intentional new lines are cached and showed instead of getting ignored.
 const preserveMarkdownNewlines = (markdown: string): string => {
   const normalized = markdown.replace(/\r\n/g, '\n');
   const parts = normalized.split(/(```[\s\S]*?```)/g);

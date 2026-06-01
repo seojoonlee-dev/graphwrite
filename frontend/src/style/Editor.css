@@ -47,6 +47,7 @@ hr {
   outline: none;
   font-family: inherit;
   flex-grow: 1;
+  padding-bottom: 80vh;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
