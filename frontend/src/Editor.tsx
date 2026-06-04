@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo, type ChangeEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useState, useMemo, useRef, type ChangeEvent } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -43,6 +43,9 @@ const preserveMarkdownNewlines = (markdown: string): string => {
 
 function Editor({ rawContent, onChange, placeholder = "Start typing your note here...", title, onTitleChange }: EditorProps) {
   const { '*': parsedFilePath } = useParams();
+  const prevFilePath = useRef(parsedFilePath);
+
+  const navigate = useNavigate();
   
   const content = useMemo(() => preserveMarkdownNewlines(rawContent), [rawContent]);
   
@@ -93,12 +96,26 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
         emptyEditorClass: 'is-editor-empty', 
       }),
       Indent,
-      NewFile.configure({
-        url: parsedFilePath
-      }),
+      NewFile
     ],
     content: content, 
     contentType: 'markdown',
+    editorProps: {
+      handleClick: (_view, _pos, event) => {
+        const target = event.target as HTMLElement;
+        
+        if (target.nodeName === 'A' && target.dataset.type === 'new-file') {
+          event.preventDefault(); 
+          
+          const filename = target.dataset.filename;
+          navigate(`${filename}`);
+          
+          return true;
+        }
+        
+        return false;
+      }
+    },
     onUpdate: ({ editor }) => {
       onChange(editor.getMarkdown());
     },
@@ -108,14 +125,21 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
     if (!editor) return;
     
     const currentContent = editor.getMarkdown();
+    const isFileChange = prevFilePath.current !== parsedFilePath;
 
-    if (content !== currentContent && !editor.isFocused) {
+    if (isFileChange || (content !== currentContent)) {
+      
       editor.commands.setContent(content, { 
         emitUpdate: false,
         contentType: 'markdown'
       });
+
+      if (isFileChange) {
+        //clear file history
+        prevFilePath.current = parsedFilePath;
+      }
     }
-  }, [content, editor]);
+  }, [content, editor, parsedFilePath]);
 
   return (
     <div>

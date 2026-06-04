@@ -9,6 +9,7 @@ hr {
 
 a {
   cursor: pointer;
+  color: inherit;
 }
 
 #titleEdit {

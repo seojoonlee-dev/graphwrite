@@ -1,28 +1,18 @@
 import { Mark, markInputRule, mergeAttributes } from '@tiptap/core';
 
-export interface NewFileOptions {
-  url?: string;
-}
-
-export const NewFile = Mark.create<NewFileOptions>({
+export const NewFile = Mark.create({
   name: 'newFile',
   inclusive: false,
 
-  addOptions() {
-    return {
-      url: '',
-    }
-  },
-
   addAttributes() {
     return {
-      filepath: {
+      filename: {
         default: "no name was provided",
-        parseHTML: element => element.getAttribute('data-filepath'),
+        parseHTML: element => element.getAttribute('data-filename'),
         renderHTML: attributes => {
           return { 
-            'data-filepath': attributes.filepath,
-            'href': `${this.options.url || ''}/${attributes.filepath}`,
+            'data-filename': attributes.filename,
+            'href': '#', 
           }
         },
       },
@@ -37,7 +27,6 @@ export const NewFile = Mark.create<NewFileOptions>({
     return ['a', mergeAttributes(HTMLAttributes, { 'data-type': 'new-file' }), 0];
   },
 
-
   markdownTokenizer: {
     name: 'newFile',
     level: 'inline',
@@ -49,7 +38,6 @@ export const NewFile = Mark.create<NewFileOptions>({
         type: 'newFile',
         raw: match[0],
         text: match[1],
-
         tokens: lexer.inlineTokens(match[1]),
       }
     },
@@ -57,7 +45,8 @@ export const NewFile = Mark.create<NewFileOptions>({
 
   parseMarkdown: (token, helpers) => {
     const content = helpers.parseInline(token.tokens || [])
-    return helpers.applyMark('newFile', content, { filepath: token.text })
+
+    return helpers.applyMark('newFile', content, { filename: token.text }) 
   },
 
   renderMarkdown: (mark, helpers) => {
@@ -71,7 +60,7 @@ export const NewFile = Mark.create<NewFileOptions>({
         find: /\[\[([^\]]+)\]\]\s$/,
         type: this.type,
         getAttributes: match => {
-          return { filepath: match[1] };
+          return { filename: match[1] };
         }
       }),
     ]
