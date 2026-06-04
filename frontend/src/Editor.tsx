@@ -3,7 +3,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
-import { Indent } from './Indent';
+import { Indent } from './extentions/Indent';
+import { NewFile } from './extentions/NewFile';
 import './style/Editor.css';
 
 interface EditorProps {
@@ -12,6 +13,7 @@ interface EditorProps {
   placeholder?: string;
   title: string;
   onTitleChange: (value: string) => void;
+  filePath?: string;
 }
 
 // this helper function exists so that intentional new lines are cached and showed instead of getting ignored.
@@ -39,7 +41,7 @@ const preserveMarkdownNewlines = (markdown: string): string => {
     .join('');
 };
 
-function Editor({ rawContent, onChange, placeholder = "Start typing your note here...", title, onTitleChange }: EditorProps) {
+function Editor({ rawContent, onChange, placeholder = "Start typing your note here...", title, onTitleChange, filePath }: EditorProps) {
   const content = useMemo(() => preserveMarkdownNewlines(rawContent), [rawContent]);
   
   const invalidChars = /[\\/:*?"<>|]/;
@@ -89,6 +91,9 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
         emptyEditorClass: 'is-editor-empty', 
       }),
       Indent,
+      NewFile.configure({
+        createUrl: (fileName) => filePath + '/' + fileName
+      }),
     ],
     content: content, 
     contentType: 'markdown',

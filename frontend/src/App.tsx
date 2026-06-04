@@ -134,7 +134,7 @@ function MainWorkspace() {
     if (e.buttons === 1 && sidebarRef.current) {
       const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
       const rawWidth = e.clientX - sidebarLeft;
-      const newWidth = Math.max(120, Math.min(rawWidth, 360));
+      const newWidth = Math.max(120, Math.min(rawWidth, 500));
       
       setSidebarWidth(newWidth); 
     }
@@ -377,6 +377,7 @@ function MainWorkspace() {
             onChange={(newContent) => { setContent(newContent); debouncedSave(newContent) }}
             title={fileName ? fileName : "Select or create a file"} 
             onTitleChange={renameFile}
+            filePath={filePath}
           />
         </div>
       </div>
