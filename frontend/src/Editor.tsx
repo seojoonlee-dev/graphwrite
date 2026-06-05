@@ -107,6 +107,9 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
           event.preventDefault(); 
           
           const filename = target.dataset.filename;
+          
+          editor?.commands.blur();
+          
           navigate(`${filename}`);
           
           return true;
@@ -117,6 +120,8 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
     },
     onUpdate: ({ editor }) => {
       const currentMarkdown = editor.getMarkdown();
+      
+      lastSavedContent.current = currentMarkdown;
       
       onChange(currentMarkdown);
     },
