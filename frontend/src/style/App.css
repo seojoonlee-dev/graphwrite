@@ -26,6 +26,8 @@ hr {
   grid-template-columns: auto auto 1fr;
   grid-template-areas: 
     "header nodes editor";
+  grid-template-rows: 100vh;
+  overflow: hidden;
 }
 
 #nodes {
