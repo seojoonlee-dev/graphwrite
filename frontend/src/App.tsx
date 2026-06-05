@@ -2,10 +2,8 @@ import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import Editor from './Editor';
 import './style/App.css';
+import { fetchFilesList, loadFile, saveFile, renameFile, createFile, deleteFile } from './Api';
 
-let serverIp = localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001";
-
-// file list in the sidebar
 const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
 
@@ -39,13 +37,6 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
         const segB = b.segments[i];
         
         if (segA.toLowerCase() !== segB.toLowerCase()) {
-          //const pathA = a.segments.slice(0, i + 1).join('/');
-          //const pathB = b.segments.slice(0, i + 1).join('/');
-          //const hasChildA = hasChildSet.has(pathA);
-          //const hasChildB = hasChildSet.has(pathB);
-          
-          //if (hasChildA !== hasChildB) return hasChildA ? -1 : 1;
-          
           return segA.localeCompare(segB);
         }
       }
@@ -101,19 +92,14 @@ function MainWorkspace() {
       return "";
     } else {
       const segments = path.split('/');
-
       const lastSegment = segments[segments.length - 1];
-
       return `${path}/${lastSegment}.md`;
     }
   };
 
   const navigate = useNavigate();
-
   const filePath = getFilePath(parsedFilePath);
-
   const [fileName, setFileName] = useState('');
-
   const [content, setContent] = useState('');
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -123,7 +109,6 @@ function MainWorkspace() {
   const [popupOpen, setPopupOpen] = useState(false);
   const [sideBarOpen, toggleSideBar] = useState(true);
 
-  // sidebar
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
     return saved ? parseInt(saved, 10) : 200;
@@ -135,12 +120,10 @@ function MainWorkspace() {
       const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
       const rawWidth = e.clientX - sidebarLeft;
       const newWidth = Math.max(120, Math.min(rawWidth, 400));
-      
       setSidebarWidth(newWidth); 
     }
   };
   
-  // saved popup
   useEffect(() => {
     if (popupOpen) {
       const timer = setTimeout(() => setPopupOpen(false), 2000);
@@ -150,9 +133,7 @@ function MainWorkspace() {
 
   const fetchFiles = useCallback(async () => {
     try {
-      const response = await fetch(`${serverIp}/api/files`);
-      const data = await response.json();
-            
+      const data = await fetchFilesList();
       if (data.success) {
         setFiles(data.files);
       } else {
@@ -164,14 +145,14 @@ function MainWorkspace() {
     } finally {
       setLoading(false);
     }
-  }, [serverIp]);
+  }, []);
 
   useEffect(() => {
     fetchFiles();
   }, [fetchFiles]);
 
   useEffect(() => {
-    const loadFile = async () => {
+    const handleLoadFile = async () => {
       if (!filePath) {
         setContent('');
         setFileName('');
@@ -186,9 +167,7 @@ function MainWorkspace() {
       }
       
       try {
-        const response = await fetch(`${serverIp}/api/load?filePath=${encodeURIComponent(filePath)}`);
-        const data = await response.json();
-        
+        const data = await loadFile(filePath);
         if (data.success) {
           if (cacheRef.current[filePath] !== data.content) {
             setContent(data.content);
@@ -200,38 +179,26 @@ function MainWorkspace() {
       }
     };
 
-    loadFile();
-  }, [filePath, serverIp]);
+    handleLoadFile();
+  }, [filePath, parsedFilePath]);
 
-  const saveFile = useCallback(async () => {
+  const handleSaveFile = useCallback(async () => {
     if (!filePath) return;
     
     try {
-      const response = await fetch(`${serverIp}/api/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath, content }),
-      });
-      
-      if (response.ok) {
-        setPopupOpen(true);
-        cacheRef.current[filePath] = content;
-      }
+      await saveFile(filePath, content);
+      setPopupOpen(true);
+      cacheRef.current[filePath] = content;
     } catch (error) {
       alert("Couldn't save: " + error);
     }
-  }, [filePath, content, serverIp]);
+  }, [filePath, content]);
 
-  const renameFile = useCallback(async (newTitle: string) => {
+  const handleRenameFile = useCallback(async (newTitle: string) => {
     if (!filePath || !newTitle.trim()) return;
 
     try {
-      const response = await fetch(`${serverIp}/api/rename`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath, newTitle }),
-      });
-      const data = await response.json();
+      const data = await renameFile(filePath, newTitle);
       
       if (data.success) {
         cacheRef.current[data.filePath] = content;
@@ -244,18 +211,11 @@ function MainWorkspace() {
     } catch (error) {
       alert("Couldn't rename: " + error);
     }
-  }, [filePath, content, navigate, fetchFiles, serverIp]);
+  }, [filePath, content, navigate, fetchFiles]);
 
-  const createFile = useCallback(async (path:string) => {
-    console.log(`Creating file at path ${path}`)
-
+  const handleCreateFile = useCallback(async (path:string) => {
     try {
-      const response = await fetch(`${serverIp}/api/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPath: path || '' }),
-      });
-      const data = await response.json();
+      const data = await createFile(path);
       
       if (data.success) {
         cacheRef.current[data.filePath] = '';
@@ -265,10 +225,9 @@ function MainWorkspace() {
     } catch (error) {
       console.error('Create failed:', error);
     }
-  }, [filePath, navigate, fetchFiles, serverIp]);
+  }, [navigate, fetchFiles]);
 
-
-  const deleteFile = useCallback(async () => {
+  const handleDeleteFile = useCallback(async () => {
     if (!filePath) {
       alert("No file selected to delete!");
       return;
@@ -278,50 +237,38 @@ function MainWorkspace() {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`${serverIp}/api/delete?filePath=${encodeURIComponent(filePath)}`, {
-        method: 'DELETE',
-      });
-      
-      if (response.ok) {
-        delete cacheRef.current[filePath];
-        await fetchFiles();
-        setContent('');
-        navigate('/');
-      }
+      await deleteFile(filePath);
+      delete cacheRef.current[filePath];
+      await fetchFiles();
+      setContent('');
+      navigate('/');
     } catch (error) {
       console.error('Delete failed:', error);
     }
-  }, [filePath, fileName, navigate, fetchFiles, serverIp]);
+  }, [filePath, fileName, navigate, fetchFiles]);
 
-  // save shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        saveFile();
+        handleSaveFile();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [saveFile]);
+  }, [handleSaveFile]);
 
-  // autosave
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const debouncedSave = useCallback((newContent: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       if (!filePath) return;
-      fetch(`${serverIp}/api/save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath, content: newContent }),
-      }).then(() => {
+      saveFile(filePath, newContent).then(() => {
         cacheRef.current[filePath] = newContent;
-        console.log("autosaved");
       }).catch(err => console.error('Autosave failed:', err))
-    }, 700); // 700ms after the user stops typing. fine tune this value later.
-  }, [filePath, serverIp]);
+    }, 700);
+  }, [filePath]);
 
   useEffect(() => {
     return () => {
@@ -333,12 +280,12 @@ function MainWorkspace() {
     <>
       <div id="view">
         <header id="header">
-          <button onClick={() => toggleSideBar(!sideBarOpen)} className='headerButton'><img src='/sidebar.png' style={{width: "100%"}} className='headerImage' /></button>
-          <button onClick={saveFile} className='headerButton'><img src='/save.png' style={{width: "100%"}} className='headerImage' /></button>
-          <button onClick={deleteFile} className='headerButton'><img src='/delete.png' style={{width: "100%"}} className='headerImage' /></button>
-          <button onClick={() => createFile("")} className='headerButton'><img src='/plus.png' style={{width: "100%"}} className='headerImage' /></button>
+          <button onClick={() => toggleSideBar(!sideBarOpen)} className='headerButton'><img src='/sidebar.png' style={{width: "100%"}} className='headerImage' alt="Toggle Sidebar"/></button>
+          <button onClick={handleSaveFile} className='headerButton'><img src='/save.png' style={{width: "100%"}} className='headerImage' alt="Save File"/></button>
+          <button onClick={handleDeleteFile} className='headerButton'><img src='/delete.png' style={{width: "100%"}} className='headerImage' alt="Delete File"/></button>
+          <button onClick={() => handleCreateFile("")} className='headerButton'><img src='/plus.png' style={{width: "100%"}} className='headerImage' alt="Create File"/></button>
           <div style={{marginTop: "auto"}} />
-          <button onClick={() => navigate("/settings")} className='headerButton'><img src='/settings.png' style={{width: "100%"}} className='headerImage' /></button>
+          <button onClick={() => navigate("/settings")} className='headerButton'><img src='/settings.png' style={{width: "100%"}} className='headerImage' alt="Settings"/></button>
         </header>
         <div id="nodes" ref={sidebarRef} style={{ width: `${sidebarWidth}px`, display: sideBarOpen ? "flex" : "none" }}>
             <div className='list'>
@@ -354,7 +301,7 @@ function MainWorkspace() {
               )}
 
               {!loading && !error && (
-                <FileList files={files} onCreate={createFile} />
+                <FileList files={files} onCreate={handleCreateFile} />
               )}
             </div>
             <div
@@ -376,7 +323,7 @@ function MainWorkspace() {
             rawContent={content} 
             onChange={(newContent) => { setContent(newContent); debouncedSave(newContent) }}
             title={fileName ? fileName : "Select or create a file"} 
-            onTitleChange={renameFile}
+            onTitleChange={handleRenameFile}
           />
         </div>
       </div>
@@ -396,7 +343,6 @@ function Settings() {
     let ip = prompt("Enter the address of the server. (example: http://xxx.xxx.xxx.xxx:3001) ");
     if (ip) { 
       localStorage.setItem('serverIp', ip);
-      serverIp = ip;
       navigate("/");
     }
   }
