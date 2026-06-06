@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef, type CSSProperties } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import Editor from './Editor';
 import './style/App.css';
-import { fetchFilesList, loadFile, saveFile, renameFile, createFile, deleteFile } from './Api';
+import { fetchFilesList, loadFile, saveFile, renameFile, createFile } from './Api';
 
 const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -80,6 +80,58 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
 
 FileList.displayName = 'FileList';
 
+interface TintedImageProps {
+  src: string;
+  alt: string;
+  tintColor?: string;
+  blendMode?: CSSProperties['mixBlendMode'];
+  className?: string;
+}
+
+export function TintedImage({
+  src,
+  alt,
+  tintColor = '#FFF0E3',
+  blendMode = 'multiply',
+  className,
+}: TintedImageProps) {
+  
+  const containerStyle: CSSProperties = {
+    position: 'relative',
+    display: 'inline-block', 
+    overflow: 'hidden',
+  };
+
+  const imageStyle: CSSProperties = {
+    display: 'block', 
+    width: '100%',
+    height: 'auto',
+  };
+
+  const overlayStyle: CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: tintColor,
+    mixBlendMode: blendMode,
+    pointerEvents: 'none',
+    
+    WebkitMaskImage: `url(${src})`,
+    WebkitMaskSize: '100% 100%',
+    maskImage: `url(${src})`,
+    maskSize: '100% 100%',
+  };
+
+  return (
+    <div className={className} style={containerStyle}>
+      <img src={src} alt={alt} style={imageStyle} />
+      <div style={overlayStyle} />
+    </div>
+  );
+}
+
 function MainWorkspace() {
   const { '*': parsedFilePath } = useParams();
 
@@ -116,7 +168,7 @@ function MainWorkspace() {
     if (e.buttons === 1 && sidebarRef.current) {
       const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
       const rawWidth = e.clientX - sidebarLeft;
-      const newWidth = Math.max(120, Math.min(rawWidth, 400));
+      const newWidth = Math.max(150, Math.min(rawWidth, 400));
       setSidebarWidth(newWidth); 
     }
   };
@@ -288,7 +340,7 @@ function MainWorkspace() {
       <div className="l-app">
         <div className="l-header">
           <button className="btn-toggle" onClick={() => toggleSideBar(!sideBarOpen)}>
-            <img src='/sidebar.png' alt="Toggle Sidebar" />
+            <TintedImage src='/sidebar.png' alt="Toggle Sidebar" />
           </button>
         </div>
         <div 

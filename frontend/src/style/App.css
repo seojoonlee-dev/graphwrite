@@ -64,7 +64,7 @@ hr {
   padding: 60px 20px 20px 20px;
   min-height: 100%;
   background-color: #1e1e1e;
-  border-right: #FFF0E3 solid 1px;
+  border-right: #323232 solid 1px;
 }
 
 .drag-handle {
@@ -115,6 +115,7 @@ hr {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .icon-arrow {
@@ -131,26 +132,33 @@ hr {
   width: 15px;
   cursor: default;
   text-align: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: bold;
 }
 
 .node-link {
   display: flex;
+  align-items: center;
   flex: 1;
   text-decoration: none;
+  min-width: 0;
 }
 
 .btn-link {
   padding-left: 5px;
   text-align: left;
   width: 100%;
+  display: block;
 }
 
 .btn-add {
   opacity: 0;
-  pointer-events: none;
   padding-left: 5px;
-  font-size: 16px;
-  transition: opacity 0.2s ease;
+  font-size: 14px;
+  flex-shrink: 0;
+  font-weight: bold;
+  transform: translateY(-1px);
 }
 
 .node:hover .btn-add {
@@ -160,7 +168,7 @@ hr {
 
 .btn-create {
   width: 100%;
-  padding: 5px;
+  padding: 4px;
   margin-top: 10px;
   font-size: 16px;
   background-color: #282828;
@@ -173,7 +181,7 @@ hr {
   top: 15px;
   right: 20px;
   background-color: #1e1e1e;
-  border: 1px solid #FFF0E3;
+  border: 1px solid #323232;
   border-radius: 8px;
   z-index: 1000;
   padding: 8px 16px;

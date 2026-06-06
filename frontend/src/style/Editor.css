@@ -9,7 +9,7 @@ body {
 
 hr {
   margin: 10px 15px 10px 0px;
-  color: #FFF0E3;
+  color: #3d3d3d;
 }
 
 a {
@@ -76,7 +76,7 @@ a:hover {
 .tiptap pre {
   background-color: #1e1e1e;
   color: #FFF0E3;
-  border: 1px solid #333333;
+  border: 1px solid #323232;
   border-radius: 6px;
   padding: 1rem;
   margin-right: 10px;
