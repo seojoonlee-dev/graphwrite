@@ -1,0 +1,68 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+h3 {
+    padding-bottom: 2px;
+}
+
+input {
+    margin-top: 10px;
+    padding: 6px;
+    background: #1e1e1e;
+    color: inherit;
+    border: none;
+    border-radius: 4px;
+    flex-grow: 1;
+}
+
+#settings-app {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0;
+    background-color: #1e1e1e;
+}
+
+.settings-tabbar {
+    display: flex;
+    padding: 60px 20px 0 20px;
+    gap: 5px;
+}
+
+.settings-link {
+    width: max(14vw, 100px);
+    padding: 10px 20px 10px 20px;
+    background-color: #1e1e1e;
+    border-radius: 8px 8px 0 0;
+    color: #9a928c;
+}
+
+.settings-link.is-active {
+    background-color: #282828;
+    color: inherit;
+}
+
+.btn-tabbar {
+    width: 100%;
+}
+
+.settings-main {
+    background-color: #282828;
+    flex-grow: 1;
+    margin: 0 20px 20px 20px;
+}
+
+.header-title {
+    padding-left: 10px;
+}
+
+.main-title {
+    padding: 20px 0px 20px 20px;
+}
+
+.setting-view {
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px;
+}

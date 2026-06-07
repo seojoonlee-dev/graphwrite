@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback, useMemo, memo, useRef, type CSSProperties } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
 import Editor from './Editor';
 import './style/App.css';
-import { fetchFilesList, loadFile, saveFile, renameFile, createFile } from './Api';
+import { TintedImage } from './helpers/TintedImage';
+import { Settings } from './Settings';
+import { fetchFilesList, loadFile, saveFile, renameFile, createFile } from './helpers/Api';
 
 const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -79,58 +81,6 @@ const FileList = memo(({ files, onCreate }: { files: string[], onCreate: (path:s
 });
 
 FileList.displayName = 'FileList';
-
-interface TintedImageProps {
-  src: string;
-  alt: string;
-  tintColor?: string;
-  blendMode?: CSSProperties['mixBlendMode'];
-  className?: string;
-}
-
-export function TintedImage({
-  src,
-  alt,
-  tintColor = '#FFF0E3',
-  blendMode = 'multiply',
-  className,
-}: TintedImageProps) {
-  
-  const containerStyle: CSSProperties = {
-    position: 'relative',
-    display: 'inline-block', 
-    overflow: 'hidden',
-  };
-
-  const imageStyle: CSSProperties = {
-    display: 'block', 
-    width: '100%',
-    height: 'auto',
-  };
-
-  const overlayStyle: CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: tintColor,
-    mixBlendMode: blendMode,
-    pointerEvents: 'none',
-    
-    WebkitMaskImage: `url(${src})`,
-    WebkitMaskSize: '100% 100%',
-    maskImage: `url(${src})`,
-    maskSize: '100% 100%',
-  };
-
-  return (
-    <div className={className} style={containerStyle}>
-      <img src={src} alt={alt} style={imageStyle} />
-      <div style={overlayStyle} />
-    </div>
-  );
-}
 
 function MainWorkspace() {
   const { '*': parsedFilePath } = useParams();
@@ -343,7 +293,7 @@ function MainWorkspace() {
             <TintedImage src='/sidebar.png' alt="Toggle Sidebar" />
           </button>
           <div className="spacer" />
-          <button className="btn-header" onClick={() => navigate("/settings")}>
+          <button className="btn-header" onClick={() => navigate("/settings/general")}>
             <TintedImage src='/settings.png' alt="Settings" tintColor='#FFF0E3'/>
           </button>
         </div>
@@ -400,31 +350,11 @@ function MainWorkspace() {
   );
 }
 
-function Settings() {
-  const navigate = useNavigate();
-
-  function changeServer() {
-    let ip = prompt("Enter the address of the server. (example: http://xxx.xxx.xxx.xxx:3001) ");
-    if (ip) { 
-      localStorage.setItem('serverIp', ip);
-      navigate("/");
-    }
-  }
-
-  return (
-    <div>
-      <p>Settings</p>
-      <button onClick={changeServer}>change server</button>
-      <button onClick={() => navigate("/")}>go back</button>
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/*" element={<Settings />} />
         <Route path="/*" element={<MainWorkspace />} />
       </Routes>
     </BrowserRouter>
