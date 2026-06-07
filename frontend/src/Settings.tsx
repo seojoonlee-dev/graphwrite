@@ -31,6 +31,16 @@ function General() {
   )
 }
 
+function Theme() {
+  return (
+    <>
+      <div className='setting-view'> 
+        <p>wip</p>
+      </div>
+    </>
+  )
+}
+
 function SettingsTabbar() {
   const { '*': setting } = useParams();
   return (
@@ -69,7 +79,7 @@ export function Settings() {
         <SettingsTabbar />
         <div className='settings-main'>
           <h1 className='main-title'>{capitalizeFirstLetter(setting)}</h1>
-          {setting === "general" ? <General></General> : <></>}
+          {setting === "general" ? <General /> : <Theme />}
         </div>
       </div>
     </>
