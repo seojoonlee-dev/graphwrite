@@ -14,7 +14,7 @@ export function getLayoutedElements(files: string[]) {
     data: { label: 'Notes' },
     position: { x: 0, y: 0 },
     type: 'input',
-    style: { background: '#1e1e1e', color: '#FFF0E3', border: '1px solid #FFF0E3' }
+    className: 'graph-node',
   });
 
   files.forEach((fullPath) => {
@@ -41,13 +41,7 @@ export function getLayoutedElements(files: string[]) {
             filePath: isFinalNode ? fullPath : undefined 
           },
           position: { x: 0, y: 0 },
-          style: {
-            background: '#1e1e1e',
-            color: '#FFF0E3',
-            border: '1px solid #FFF0E3',
-            borderRadius: '6px',
-            padding: '8px'
-          }
+          className: 'graph-node',
         });
       } else if (isFinalNode) {
         nodesMap.get(currentPath)!.data.filePath = fullPath;
@@ -61,7 +55,7 @@ export function getLayoutedElements(files: string[]) {
           source: parentPath,
           target: currentPath,
           type: 'bezier',
-          style: { stroke: '#5f5f5f' }
+          className: 'graph-edge',
         });
       }
     });

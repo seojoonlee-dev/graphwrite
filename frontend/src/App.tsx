@@ -89,7 +89,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
   );
 
   return (
-    <div className="file-tree" style={{ position: 'relative' }}>
+    <div className="file-tree">
       {visibleList.map(({ dirPath, name, depth, hasChildren }) => (
         <div 
           key={dirPath} 
@@ -99,7 +99,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
             setContextMenu({ x: e.clientX, y: e.clientY, path: dirPath });
           }}
         >
-          <div className={`node ${parsedFilePath === dirPath ? 'is-active' : ''}`}>
+          <div className={`file-tree-node ${parsedFilePath === dirPath ? 'is-active' : ''}`}>
             {hasChildren ? (
               <button 
                 onClick={() => setCollapsed(prev => ({ ...prev, [dirPath]: !prev[dirPath] }))}
@@ -109,10 +109,10 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
                   ❯
                 </span>
               </button>
-            ) : <p className="leaf-spacer">T</p>}
+            ) : <p className="file-tree-spacer">T</p>}
             {renaming?.path === dirPath ? (
               <input
-                className="rename-input"
+                className="file-tree-rename"
                 value={renaming.value}
                 autoFocus
                 onFocus={(e) => e.target.select()}
@@ -124,7 +124,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
                 onBlur={commitRename}
               />
             ) : (
-              <Link to={`/${dirPath}`} className="node-link">
+              <Link to={`/${dirPath}`} className="file-tree-link">
                 <button className="btn-link">{name}</button>
               </Link>
             )}
@@ -135,35 +135,34 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
       <button onClick={() => onCreate('')} className="btn-create">+</button>
 
       {contextMenu && (
-        <div className="context-menu" style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x }}>
-          {/* <p>{}</p> */}
-          <button 
+        <div className="context-menu" style={{ top: contextMenu.y, left: contextMenu.x }}>
+          <button
+            className="context-menu-item"
             onClick={(e) => {
               e.stopPropagation();
               navigator.clipboard.writeText(contextMenu.path);
               setContextMenu(null);
             }}
-            style={{ padding: '6px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', color: '#fff' }}
           >
             Copy File Path
           </button>
           <button
+            className="context-menu-item"
             onClick={(e) => {
               e.stopPropagation();
               setRenaming({ path: contextMenu.path, value: contextMenu.path.split('/').pop() || '' });
               setContextMenu(null);
             }}
-            style={{ padding: '6px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', color: '#fff' }}
           >
             Rename File
           </button>
           <button
+            className="context-menu-item is-danger"
             onClick={(e) => {
               e.stopPropagation();
               onDelete(contextMenu.path);
               setContextMenu(null);
             }}
-            style={{ padding: '6px 10px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', color: '#ff6b6b' }}
           >
             Delete File
           </button>
@@ -428,7 +427,7 @@ function MainWorkspace() {
         >
           <div className="sidebar-content">
             {loading && <p>Loading files...</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
+            {error && <p className="sidebar-error">{error}</p>}
             
             {!loading && !error && files.length === 0 && (
                 <p>No notes found. Create a new note!</p>

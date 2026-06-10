@@ -150,21 +150,21 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
 
   return (
     <div>
-      <div className="tiptap-container">
-        <div className='title'>
-          <input 
-            type="text" 
-            value={value} 
-            onChange={titleChange} 
-            onBlur={titleChangeSave} 
-            id="titleEdit"
+      <div className="editor">
+        <div className="editor-title">
+          <input
+            type="text"
+            value={value}
+            onChange={titleChange}
+            onBlur={titleChangeSave}
+            className="editor-title-input"
           />
-          <p className='path'>{parsedFilePath && ('/' + parsedFilePath)}</p>
+          <p className="editor-path">{parsedFilePath && ('/' + parsedFilePath)}</p>
         </div>
         <hr />
         <EditorContent editor={editor} />
       </div>
-      <p style={{ display: showTitleError ? "flex" : "none" }} className='errorMessage'>File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.</p>
+      <p className={`editor-error ${showTitleError ? 'is-visible' : ''}`}>File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.</p>
     </div>
   );
 }

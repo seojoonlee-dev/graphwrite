@@ -17,7 +17,7 @@ input {
     flex-grow: 1;
 }
 
-#settings-app {
+.l-settings {
     display: flex;
     flex-direction: column;
     padding-bottom: 0;
@@ -58,11 +58,11 @@ input {
     padding-left: 10px;
 }
 
-.main-title {
+.settings-title {
     padding: 20px 0px 20px 20px;
 }
 
-.setting-view {
+.settings-view {
     display: flex;
     flex-direction: column;
     padding: 0 20px;

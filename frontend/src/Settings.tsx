@@ -22,7 +22,7 @@ function General() {
   
   return (
     <>
-      <div className='setting-view'> 
+      <div className='settings-view'> 
         <h3>Server</h3>
         <p>Enter server IP address and port (example: http://192.168.0.1:3001): </p>
         <input type='text' name='server' defaultValue={serverIp!} onChange={saveServer} onBlur={changeServer}></input>
@@ -34,7 +34,7 @@ function General() {
 function Theme() {
   return (
     <>
-      <div className='setting-view'> 
+      <div className='settings-view'> 
         <p>wip</p>
       </div>
     </>
@@ -58,7 +58,7 @@ export function Settings({to}: SettingsProps) {
 
   return (
     <>
-      <div className="l-app" id="settings-app">
+      <div className="l-app l-settings">
         <div className="l-header">
           <button className="btn-header" onClick={() => {navigate(to); console.log(to);}}>
             <TintedImage src='/back.png' alt="Toggle Sidebar" />
@@ -76,7 +76,7 @@ export function Settings({to}: SettingsProps) {
         </div>
       </div>
         <div className='settings-main'>
-          <h1 className='main-title'>{capitalizeFirstLetter(setting)}</h1>
+          <h1 className='settings-title'>{capitalizeFirstLetter(setting)}</h1>
           {setting === "general" ? <General /> : <Theme />}
         </div>
       </div>

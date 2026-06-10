@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import { ReactFlow, useNodesState, type Node } from '@xyflow/react';
 import { getLayoutedElements } from './helpers/GraphLayout';
 import '@xyflow/react/dist/style.css';
+import './style/Graph.css';
 
 interface GraphViewProps {
   files: string[];
@@ -73,7 +74,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick }) => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', background: 'none' }}>
+    <div className="graph-view">
       <ReactFlow
         nodes={nodes}
         edges={edges}

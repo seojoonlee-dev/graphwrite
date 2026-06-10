@@ -21,7 +21,7 @@ a:hover {
   color: #bcb2ab;
 }
 
-#titleEdit {
+.editor-title-input {
   margin-top: 10px;
   border: 0;
   background-color: #282828;
@@ -34,22 +34,22 @@ a:hover {
   width: 100%;
 }
 
-#titleEdit:focus {
+.editor-title-input:focus {
   outline: none;
 }
 
-.title {
+.editor-title {
   display: flex;
   min-height: 70px;
 }
 
-.path {
+.editor-path {
   color: #747474;
   font-size: medium;
 }
 
 /* Container */
-.tiptap-container {
+.editor {
   display: flex;
   flex-direction: column;
   margin: 0px 16px 0px 12px;
@@ -58,7 +58,7 @@ a:hover {
   height: 100vh;
 }
 
-.tiptap-container > div {
+.editor > div {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
@@ -94,11 +94,16 @@ a:hover {
   font-family: 'Fira Code', 'Courier New', Courier, monospace;
 }
 
-.errorMessage {
+.editor-error {
+  display: none;
   position: absolute;
   top: 20px;
   right: 20px;
   color: red;
+}
+
+.editor-error.is-visible {
+  display: flex;
 }
 
 /*Indents*/
