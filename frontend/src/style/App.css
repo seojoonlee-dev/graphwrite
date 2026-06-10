@@ -86,11 +86,11 @@ hr {
 }
 
 .btn-header {
-  width: 24px;
+  width: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
+  padding: 6px;
   border-radius: 6px;
 }
 

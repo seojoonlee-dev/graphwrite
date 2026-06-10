@@ -4,22 +4,33 @@ import Editor from './Editor';
 import './style/App.css';
 import { TintedImage } from './helpers/TintedImage';
 import { Settings } from './Settings';
-// Added deleteFile to imports
 import { fetchFilesList, loadFile, saveFile, renameFile, createFile, deleteFile } from './helpers/Api';
 
 const FileList = memo(({ files, onCreate, onDelete }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  // Added state to track context menu position and selected file
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, path: string } | null>(null);
+  const closeMenu = () => setContextMenu(null);
 
-  // Close context menu when clicking anywhere else
   useEffect(() => {
-    const closeMenu = () => setContextMenu(null);
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
   }, []);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        closeMenu();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [closeMenu]);
 
   const parsedList = useMemo(() => {
     const parsed = files.map((fullPath) => {
