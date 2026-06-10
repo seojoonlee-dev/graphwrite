@@ -9,4 +9,7 @@ export default defineConfig({
       fileName: "THIRD-PARTY-LICENSES.md",
     },
   },
+  server: {
+    allowedHosts: true,
+  },
 })

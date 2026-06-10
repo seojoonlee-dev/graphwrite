@@ -5,7 +5,7 @@ import './style/App.css';
 import { TintedImage } from './helpers/TintedImage';
 import { Settings } from './Settings';
 import { fetchFilesList, loadFile, saveFile, renameFile, createFile, deleteFile } from './helpers/Api';
-import { GraphView } from './GraphView';
+import { GraphView, migrateSavedPositions } from './GraphView';
 
 const FileList = memo(({ files, onCreate, onDelete }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -272,6 +272,8 @@ function MainWorkspace() {
         if (data.filePath !== filePath) {
           delete cacheRef.current[filePath];
         }
+        const oldDirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+        migrateSavedPositions(oldDirPath, data.filePath);
         await fetchFiles();
         navigate(`/${data.filePath}`);
       }
