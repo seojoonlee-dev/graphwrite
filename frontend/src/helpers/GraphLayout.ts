@@ -1,7 +1,7 @@
 import { type Node, type Edge, Position } from '@xyflow/react';
 import dagre from 'dagre';
 
-const NODE_WIDTH = 120;
+const NODE_WIDTH = 100;
 const NODE_HEIGHT = 20;
 
 export function getLayoutedElements(files: string[]) {
@@ -60,7 +60,7 @@ export function getLayoutedElements(files: string[]) {
           id: edgeId,
           source: parentPath,
           target: currentPath,
-          type: 'smoothstep',
+          type: 'bezier',
           style: { stroke: '#5f5f5f' }
         });
       }
