@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import Editor from './Editor';
 import './style/App.css';
@@ -226,6 +227,14 @@ function MainWorkspace() {
   const updateShowGraph = useCallback((value: boolean) => {
     setShowGraph(value);
     localStorage.setItem('showGraph', String(value));
+  }, []);
+
+  const withViewTransition = useCallback((update: () => void) => {
+    if (!document.startViewTransition) {
+      update();
+      return;
+    }
+    document.startViewTransition(() => flushSync(update));
   }, []);
 
   useEffect(() => {
@@ -463,7 +472,7 @@ function MainWorkspace() {
             <TintedImage src='/settings.png' alt="Settings" tintColor='#FFF0E3'/>
           </button>
           <div className="spacer" />
-          <button className="btn-header" onClick={() => updateShowGraph(!showGraph)}>
+          <button className="btn-header" onClick={() => withViewTransition(() => updateShowGraph(!showGraph))}>
             {showGraph ?
               <TintedImage src='/file.png' alt="editor" /> :
               <TintedImage src='/graph.png' alt="graph" />
@@ -510,8 +519,10 @@ function MainWorkspace() {
             files={files} 
             onNodeClick={(path) => {
               const dirPath = path.substring(0, path.lastIndexOf('/'));
-              navigate(`/${dirPath}`);
-              updateShowGraph(false);
+              withViewTransition(() => {
+                navigate(`/${dirPath}`);
+                updateShowGraph(false);
+              });
             }}
           />
         ) : notFound ? (

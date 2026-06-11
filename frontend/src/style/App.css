@@ -284,3 +284,17 @@ hr {
   margin: 10px 0;
   color: #bcb2ab;
 }
+
+.l-main {
+  view-transition-name: main-view;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(main-view),
+::view-transition-new(main-view) {
+  animation-duration: 0.1s;
+}
