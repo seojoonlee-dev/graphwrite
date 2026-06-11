@@ -121,7 +121,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick }) => {
       >
         <Panel position="bottom-right">
           <button className= "btn-header" id="btn-reset" onClick={handleResetPositions}>
-            <TintedImage src='reset.png' alt='reset'></TintedImage>
+            <TintedImage src='/reset.png' alt='reset'></TintedImage>
           </button>
         </Panel>
       </ReactFlow>

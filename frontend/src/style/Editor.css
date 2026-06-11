@@ -52,7 +52,7 @@ a:hover {
 .editor {
   display: flex;
   flex-direction: column;
-  margin: 0px 16px 0px 12px;
+  margin: 0px 16px 0px 28px;
   background-color: #282828;
   cursor: text;
   height: 100vh;
