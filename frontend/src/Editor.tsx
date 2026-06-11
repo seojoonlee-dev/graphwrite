@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, type ChangeEvent } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -48,7 +48,6 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
 
   const lastSavedContent = useRef(rawContent);
 
-  const navigate = useNavigate();
   const invalidChars = /[\\/:*?"<>|]/;
 
   const [value, setTitle] = useState(title);
@@ -110,10 +109,7 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
           const filename = target.dataset.filename;
           createFile(filename);
           editor?.commands.blur();
-          
-          navigate(`${filename}`);
 
-          
           return true;
         }
         

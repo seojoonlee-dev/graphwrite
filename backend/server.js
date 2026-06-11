@@ -18,8 +18,8 @@ const NOTES_DIR = path.join(__dirname, 'notes');
 function getSafePath(userInputPath) {
   const safeBaseDir = path.resolve(NOTES_DIR);
   const resolvedPath = path.resolve(safeBaseDir, userInputPath);
-  
-  if (!resolvedPath.startsWith(safeBaseDir)) {
+
+  if (resolvedPath !== safeBaseDir && !resolvedPath.startsWith(safeBaseDir + path.sep)) {
     throw new Error("Invalid path");
   }
   
@@ -169,7 +169,7 @@ app.post('/api/rename', async (req, res) => {
     const newFullPath = path.join(newDir, `${cleanTitle}.md`);
     
     const safeBaseDir = path.resolve(NOTES_DIR);
-    if (!newDir.startsWith(safeBaseDir)) {
+    if (!newDir.startsWith(safeBaseDir + path.sep)) {
       throw new Error("Invalid path");
     }
     

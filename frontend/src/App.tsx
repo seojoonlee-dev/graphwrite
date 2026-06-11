@@ -4,7 +4,7 @@ import Editor from './Editor';
 import './style/App.css';
 import { TintedImage } from './helpers/TintedImage';
 import { Settings } from './Settings';
-import { fetchFilesList, loadFile, saveFile, renameFile, createFile, deleteFile } from './helpers/Api';
+import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, createFile, deleteFile } from './helpers/Api';
 import { GraphView, migrateSavedPositions } from './GraphView';
 
 const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void }) => {
@@ -174,18 +174,18 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
 
 FileList.displayName = 'FileList';
 
+const getFilePath = (path?:string) => {
+  if (!path) {
+    return "";
+  } else {
+    const segments = path.split('/');
+    const lastSegment = segments[segments.length - 1];
+    return `${path}/${lastSegment}.md`;
+  }
+};
+
 function MainWorkspace() {
   const { '*': parsedFilePath } = useParams();
-
-  const getFilePath = (path?:string) => {
-    if (!path) {
-      return "";
-    } else {
-      const segments = path.split('/');
-      const lastSegment = segments[segments.length - 1];
-      return `${path}/${lastSegment}.md`;
-    }
-  };
 
   const navigate = useNavigate();
   const filePath = getFilePath(parsedFilePath);
@@ -196,8 +196,13 @@ function MainWorkspace() {
   const [loading, setLoading] = useState(true);
 
   const cacheRef = useRef<Record<string, string>>({});
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingSaveRef = useRef<{ filePath: string; content: string } | null>(null);
   const [popupOpen, setPopupOpen] = useState(false);
-  const [sideBarOpen, toggleSideBar] = useState(true);
+  const [sideBarOpen, toggleSideBar] = useState(() => { const saved = localStorage.getItem("sideBarOpen"); return saved ? JSON.parse(saved) : true; })
+
+  const location = useLocation();
+  const prevLocationRef = useRef(location);
 
   // sidebar
   const [sidebarWidth, setSidebarWidth] = useState(() => {
@@ -221,9 +226,6 @@ function MainWorkspace() {
     setShowGraph(value);
     localStorage.setItem('showGraph', String(value));
   }, []);
-
-  const location = useLocation();
-  const prevLocationRef = useRef(location);
 
   useEffect(() => {
     if (prevLocationRef.current !== location) {
@@ -293,11 +295,43 @@ function MainWorkspace() {
     handleLoadFile();
   }, [filePath, parsedFilePath]);
 
+  // autosave
+  const flushPendingSave = useCallback(async () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    const pending = pendingSaveRef.current;
+    pendingSaveRef.current = null;
+    if (pending) {
+      await saveFile(pending.filePath, pending.content);
+      cacheRef.current[pending.filePath] = pending.content;
+    }
+  }, []);
+
+  const discardPendingSave = useCallback((dirPath: string) => {
+    const pending = pendingSaveRef.current;
+    if (pending && (pending.filePath === getFilePath(dirPath) || pending.filePath.startsWith(dirPath + '/'))) {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+      pendingSaveRef.current = null;
+    }
+  }, []);
+
+  const debouncedSave = useCallback((newContent: string) => {
+    if (!filePath) return;
+    pendingSaveRef.current = { filePath, content: newContent };
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      flushPendingSave().catch(err => console.error('Autosave failed:', err));
+    }, 700);
+  }, [filePath, flushPendingSave]);
+
   // save
   const handleSaveFile = useCallback(async () => {
     if (!filePath) return;
-    
+
     try {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      pendingSaveRef.current = null;
       await saveFile(filePath, content);
       setPopupOpen(true);
       cacheRef.current[filePath] = content;
@@ -312,6 +346,7 @@ function MainWorkspace() {
     const targetFilePath = getFilePath(dirPath);
 
     try {
+      await flushPendingSave();
       const data = await renameFile(targetFilePath, newTitle);
 
       if (data.success) {
@@ -334,7 +369,7 @@ function MainWorkspace() {
     } catch (error) {
       alert("Couldn't rename: " + error);
     }
-  }, [filePath, content, parsedFilePath, navigate, fetchFiles]);
+  }, [filePath, content, parsedFilePath, navigate, fetchFiles, flushPendingSave]);
 
   // create
   const handleCreateFile = useCallback(async (path:string, filename?:string) => {
@@ -362,6 +397,7 @@ function MainWorkspace() {
     if (!confirmDelete) return;
 
     try {
+      discardPendingSave(pathToDelete);
       await deleteFile(targetFilePath);
       delete cacheRef.current[targetFilePath];
       await fetchFiles();
@@ -374,7 +410,7 @@ function MainWorkspace() {
       console.error('Delete failed:', error);
       alert("Couldn't delete: " + error);
     }
-  }, [filePath, navigate, fetchFiles]);
+  }, [filePath, navigate, fetchFiles, discardPendingSave]);
 
   // save shortcut
   useEffect(() => {
@@ -389,17 +425,17 @@ function MainWorkspace() {
   }, [handleSaveFile]);
 
   // autosave
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const debouncedSave = useCallback((newContent: string) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      if (!filePath) return;
-      saveFile(filePath, newContent).then(() => {
-        cacheRef.current[filePath] = newContent;
-      }).catch(err => console.error('Autosave failed:', err))
-    }, 700);
-  }, [filePath]);
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const pending = pendingSaveRef.current;
+      if (!pending) return;
+      pendingSaveRef.current = null;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      saveFileOnUnload(pending.filePath, pending.content);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -411,7 +447,7 @@ function MainWorkspace() {
     <>
       <div className="l-app">
         <div className="l-header">
-          <button className="btn-header" onClick={() => toggleSideBar(!sideBarOpen)}>
+          <button className="btn-header" onClick={() => {toggleSideBar(!sideBarOpen); localStorage.setItem("sideBarOpen", JSON.stringify(!sideBarOpen))}}>
             <TintedImage src='/sidebar.png' alt="Toggle Sidebar" />
           </button>
           <button className="btn-header" onClick={() => navigate("/settings/general")}>
@@ -475,7 +511,7 @@ function MainWorkspace() {
             onChange={(newContent) => { setContent(newContent); debouncedSave(newContent) }}
             title={fileName ? fileName : "Select or create a file"}
             onTitleChange={(newTitle) => handleRenameFile(parsedFilePath, newTitle)}
-            createFile={(filename) => handleCreateFile((parsedFilePath ? parsedFilePath : '/'), filename)}
+            createFile={(filename) => handleCreateFile(parsedFilePath ?? '', filename)}
           />
         )}
       </div>

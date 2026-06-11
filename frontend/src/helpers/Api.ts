@@ -20,6 +20,15 @@ export const saveFile = async (filePath: string, content: string) => {
   return response;
 };
 
+export const saveFileOnUnload = (filePath: string, content: string) => {
+  fetch(`${getServerIp()}/api/save`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath, content }),
+    keepalive: true,
+  }).catch(() => {});
+};
+
 export const renameFile = async (filePath: string, newTitle: string) => {
   const response = await fetch(`${getServerIp()}/api/rename`, {
     method: 'POST',
