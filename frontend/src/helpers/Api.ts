@@ -7,7 +7,8 @@ export const fetchFilesList = async () => {
 
 export const loadFile = async (filePath: string) => {
   const response = await fetch(`${getServerIp()}/api/load?filePath=${encodeURIComponent(filePath)}`);
-  return response.json();
+  const data = await response.json();
+  return { ...data, notFound: response.status === 404 };
 };
 
 export const saveFile = async (filePath: string, content: string) => {
@@ -35,7 +36,11 @@ export const renameFile = async (filePath: string, newTitle: string) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ filePath, newTitle }),
   });
-  return response.json();
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to rename file");
+  }
+  return data;
 };
 
 export const createFile = async (currentPath: string, fileName?: string) => {

@@ -14,6 +14,7 @@ app.use(cors({
 app.use(express.json());
 
 const NOTES_DIR = path.join(__dirname, 'notes');
+const INVALID_NAME_CHARS = /[\\/:*?"<>|]/;
 
 function getSafePath(userInputPath) {
   const safeBaseDir = path.resolve(NOTES_DIR);
@@ -111,6 +112,9 @@ app.post('/api/create', async (req, res) => {
     console.log("base directory is " + baseDir);
     
     let candidateName = fileName ? fileName.trim() : "NewFile";
+    if (fileName && (!candidateName || INVALID_NAME_CHARS.test(candidateName))) {
+      return res.status(400).json({ success: false, message: 'File names can\'t contain \\, /, :, *, ?, ", <, >, and |.' });
+    }
     let finalDir = path.join(baseDir, candidateName);
     let finalFile = path.join(finalDir, `${candidateName}.md`);
     
@@ -158,21 +162,34 @@ app.post('/api/rename', async (req, res) => {
   if (!filePath || !newTitle) {
     return res.status(400).json({ success: false, message: 'Missing parameters' });
   }
-  
+
+  const cleanTitle = path.basename(newTitle).replace(/\.md$/, '').trim();
+  if (!cleanTitle || INVALID_NAME_CHARS.test(cleanTitle)) {
+    return res.status(400).json({ success: false, message: 'File names can\'t contain \\, /, :, *, ?, ", <, >, and |.' });
+  }
+
   try {
     const oldFullPath = getSafePath(filePath);
     const oldDir = path.dirname(oldFullPath);
     const parentDir = path.dirname(oldDir);
-    
-    const cleanTitle = path.basename(newTitle).replace(/\.md$/, '');
+
     const newDir = path.join(parentDir, cleanTitle);
     const newFullPath = path.join(newDir, `${cleanTitle}.md`);
-    
+
     const safeBaseDir = path.resolve(NOTES_DIR);
     if (!newDir.startsWith(safeBaseDir + path.sep)) {
       throw new Error("Invalid path");
     }
-    
+
+    try {
+      await fs.access(newDir);
+      return res.status(409).json({
+        success: false,
+        message: `A file named "${cleanTitle}" already exists in this location.`
+      });
+    } catch {
+    }
+
     await fs.rename(oldDir, newDir);
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
     await fs.rename(oldFileInNewDir, newFullPath);

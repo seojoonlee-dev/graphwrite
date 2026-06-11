@@ -4,8 +4,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from '@tiptap/markdown';
-import { Indent } from './extentions/Indent';
-import { NewFile } from './extentions/NewFile';
+import { Indent } from './extensions/Indent';
+import { NewFile } from './extensions/NewFile';
 import './style/Editor.css';
 
 interface EditorProps {
@@ -13,7 +13,7 @@ interface EditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   title: string;
-  onTitleChange: (value: string) => void;
+  onTitleChange: (value: string) => Promise<boolean>;
   createFile: (value?: string) => void;
 }
 
@@ -64,7 +64,7 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
     }
   };
 
-  const titleChangeSave = () => {
+  const titleChangeSave = async () => {
     const trimmedValue = value.trim();
 
     if(invalidChars.test(trimmedValue)) {
@@ -74,7 +74,10 @@ function Editor({ rawContent, onChange, placeholder = "Start typing your note he
     }
 
     if (trimmedValue && title !== trimmedValue) {
-      onTitleChange(trimmedValue);
+      const renamed = await onTitleChange(trimmedValue);
+      if (!renamed) setTitle(title);
+    } else {
+      setTitle(title);
     }
   };
 

@@ -13,7 +13,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, path: string } | null>(null);
   const [renaming, setRenaming] = useState<{ path: string, value: string } | null>(null);
-  const closeMenu = () => setContextMenu(null);
+  const closeMenu = useCallback(() => setContextMenu(null), []);
 
   const invalidChars = /[\\/:*?"<>|]/;
 
@@ -30,7 +30,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
   useEffect(() => {
     window.addEventListener('click', closeMenu);
     return () => window.removeEventListener('click', closeMenu);
-  }, []);
+  }, [closeMenu]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -194,6 +194,7 @@ function MainWorkspace() {
   const [files, setFiles] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const cacheRef = useRef<Record<string, string>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -266,6 +267,7 @@ function MainWorkspace() {
   // load
   useEffect(() => {
     const handleLoadFile = async () => {
+      setNotFound(false);
       if (!filePath) {
         setContent('');
         setFileName('');
@@ -278,7 +280,7 @@ function MainWorkspace() {
       } else {
         setContent('');
       }
-      
+
       try {
         const data = await loadFile(filePath);
         if (data.success) {
@@ -286,6 +288,10 @@ function MainWorkspace() {
             setContent(data.content);
             cacheRef.current[filePath] = data.content;
           }
+        } else if (data.notFound) {
+          delete cacheRef.current[filePath];
+          setContent('');
+          setNotFound(true);
         }
       } catch (error) {
         console.error('Load failed:', error);
@@ -341,8 +347,8 @@ function MainWorkspace() {
   }, [filePath, content]);
 
   // rename
-  const handleRenameFile = useCallback(async (dirPath: string | undefined, newTitle: string) => {
-    if (!dirPath || !newTitle.trim()) return;
+  const handleRenameFile = useCallback(async (dirPath: string | undefined, newTitle: string): Promise<boolean> => {
+    if (!dirPath || !newTitle.trim()) return false;
     const targetFilePath = getFilePath(dirPath);
 
     try {
@@ -365,9 +371,12 @@ function MainWorkspace() {
         } else if (parsedFilePath && parsedFilePath.startsWith(dirPath + '/')) {
           navigate(`/${data.filePath}${parsedFilePath.slice(dirPath.length)}`);
         }
+        return true;
       }
+      return false;
     } catch (error) {
-      alert("Couldn't rename: " + error);
+      alert("Couldn't rename: " + (error instanceof Error ? error.message : error));
+      return false;
     }
   }, [filePath, content, parsedFilePath, navigate, fetchFiles, flushPendingSave]);
 
@@ -505,9 +514,15 @@ function MainWorkspace() {
               updateShowGraph(false);
             }}
           />
+        ) : notFound ? (
+          <div className="not-found">
+            <h2>Note not found</h2>
+            <p>"/{parsedFilePath}" doesn't exist or may have been deleted.</p>
+            <Link to="/">Go back</Link>
+          </div>
         ) : (
-          <Editor 
-            rawContent={content} 
+          <Editor
+            rawContent={content}
             onChange={(newContent) => { setContent(newContent); debouncedSave(newContent) }}
             title={fileName ? fileName : "Select or create a file"}
             onTitleChange={(newTitle) => handleRenameFile(parsedFilePath, newTitle)}

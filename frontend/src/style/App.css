@@ -276,3 +276,11 @@ hr {
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
+.not-found {
+  margin: 10px 16px 0px 28px;
+}
+
+.not-found p {
+  margin: 10px 0;
+  color: #bcb2ab;
+}
