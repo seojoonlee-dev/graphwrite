@@ -7,7 +7,9 @@ import { TintedImage } from './helpers/TintedImage';
 import { Settings } from './Settings';
 import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, createFile, deleteFile } from './helpers/Api';
 import { ContextMenu } from './helpers/ContextMenu';
-import { GraphView, migrateSavedPositions } from './GraphView';
+import { toFilePath, toDirPath, nameOf, validateRename } from './helpers/paths';
+import { migrateSavedPositions } from './helpers/graphStorage';
+import { GraphView } from './GraphView';
 
 const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -17,14 +19,11 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
   const [renaming, setRenaming] = useState<{ path: string, value: string } | null>(null);
   const closeMenu = useCallback(() => setContextMenu(null), []);
 
-  const invalidChars = /[\\/:*?"<>|]/;
-
   const commitRename = () => {
     if (!renaming) return;
-    const trimmed = renaming.value.trim();
-    const currentName = renaming.path.split('/').pop();
-    if (trimmed && trimmed !== currentName && !invalidChars.test(trimmed)) {
-      onRename(renaming.path, trimmed);
+    const newTitle = validateRename(renaming.path, renaming.value);
+    if (newTitle) {
+      onRename(renaming.path, newTitle);
     }
     setRenaming(null);
   };
@@ -33,7 +32,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
     const parsed = files.map((fullPath) => {
       const parts = fullPath.split('/');
       return {
-        dirPath: fullPath.substring(0, fullPath.lastIndexOf('/')),
+        dirPath: toDirPath(fullPath),
         name: parts[parts.length - 1].replace(/\.md$/, ''),
         depth: Math.max(0, parts.length - 2),
         segments: parts.slice(0, -1),
@@ -123,7 +122,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
           y={contextMenu.y}
           path={contextMenu.path}
           onClose={closeMenu}
-          onRename={(path) => setRenaming({ path, value: path.split('/').pop() || '' })}
+          onRename={(path) => setRenaming({ path, value: nameOf(path) })}
           onDelete={onDelete}
         />
       )}
@@ -133,21 +132,11 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
 
 FileList.displayName = 'FileList';
 
-const getFilePath = (path?:string) => {
-  if (!path) {
-    return "";
-  } else {
-    const segments = path.split('/');
-    const lastSegment = segments[segments.length - 1];
-    return `${path}/${lastSegment}.md`;
-  }
-};
-
 function MainWorkspace() {
   const { '*': parsedFilePath } = useParams();
 
   const navigate = useNavigate();
-  const filePath = getFilePath(parsedFilePath);
+  const filePath = toFilePath(parsedFilePath);
   const [fileName, setFileName] = useState('');
   const [content, setContent] = useState('');
   const [files, setFiles] = useState<string[]>([]);
@@ -282,7 +271,7 @@ function MainWorkspace() {
 
   const discardPendingSave = useCallback((dirPath: string) => {
     const pending = pendingSaveRef.current;
-    if (pending && (pending.filePath === getFilePath(dirPath) || pending.filePath.startsWith(dirPath + '/'))) {
+    if (pending && (pending.filePath === toFilePath(dirPath) || pending.filePath.startsWith(dirPath + '/'))) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = null;
       pendingSaveRef.current = null;
@@ -316,7 +305,7 @@ function MainWorkspace() {
   // rename
   const handleRenameFile = useCallback(async (dirPath: string | undefined, newTitle: string): Promise<boolean> => {
     if (!dirPath || !newTitle.trim()) return false;
-    const targetFilePath = getFilePath(dirPath);
+    const targetFilePath = toFilePath(dirPath);
 
     try {
       await flushPendingSave();
@@ -329,7 +318,7 @@ function MainWorkspace() {
           }
         });
         if (targetFilePath === filePath) {
-          cacheRef.current[getFilePath(data.filePath)] = content;
+          cacheRef.current[toFilePath(data.filePath)] = content;
         }
         migrateSavedPositions(dirPath, data.filePath);
         await fetchFiles();
@@ -368,8 +357,8 @@ function MainWorkspace() {
   const handleDeleteFile = useCallback(async (pathToDelete: string) => {
     if (!pathToDelete) return;
 
-    const targetFilePath = getFilePath(pathToDelete); 
-    const targetFileName = pathToDelete.split('/').pop() || pathToDelete;
+    const targetFilePath = toFilePath(pathToDelete); 
+    const targetFileName = nameOf(pathToDelete) || pathToDelete;
 
     const confirmDelete = window.confirm(`Are you sure you want to delete "${targetFileName}"?`);
     if (!confirmDelete) return;
@@ -478,7 +467,7 @@ function MainWorkspace() {
           <GraphView
             files={files}
             onNodeClick={(path) => {
-              const dirPath = path.substring(0, path.lastIndexOf('/'));
+              const dirPath = toDirPath(path);
               withViewTransition(() => {
                 navigate(`/${dirPath}`);
                 updateShowGraph(false);

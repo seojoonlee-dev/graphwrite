@@ -3,6 +3,8 @@ import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, type 
 import { getLayoutedElements } from './helpers/GraphLayout';
 import { TintedImage } from './helpers/TintedImage';
 import { ContextMenu } from './helpers/ContextMenu';
+import { loadSavedViewport, saveViewport, loadSavedPositions, savePositions, clearPositions, type NodePositions } from './helpers/graphStorage';
+import { validateRename } from './helpers/paths';
 import '@xyflow/react/dist/style.css';
 import './style/Graph.css';
 
@@ -12,9 +14,6 @@ interface GraphViewProps {
   onNodeRename: (path: string, newTitle: string) => void;
   onNodeDelete: (path: string) => void;
 }
-
-const POSITIONS_KEY = 'graphNodePositions';
-const VIEWPORT_KEY = 'graphViewport';
 
 interface FileNodeData {
   label: string;
@@ -54,45 +53,6 @@ const FileNode = ({ data }: NodeProps) => {
 
 const nodeTypes = { fileNode: FileNode };
 
-function loadSavedViewport(): Viewport | null {
-  try {
-    const raw = localStorage.getItem(VIEWPORT_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function loadSavedPositions(): Record<string, { x: number; y: number }> {
-  try {
-    return JSON.parse(localStorage.getItem(POSITIONS_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-export function migrateSavedPositions(oldDirPath: string, newDirPath: string) {
-  const saved = loadSavedPositions();
-  const migrated: Record<string, { x: number; y: number }> = {};
-  let changed = false;
-
-  Object.entries(saved).forEach(([id, position]) => {
-    if (id === oldDirPath) {
-      migrated[newDirPath] = position;
-      changed = true;
-    } else if (id.startsWith(oldDirPath + '/')) {
-      migrated[newDirPath + id.slice(oldDirPath.length)] = position;
-      changed = true;
-    } else {
-      migrated[id] = position;
-    }
-  });
-
-  if (changed) {
-    localStorage.setItem(POSITIONS_KEY, JSON.stringify(migrated));
-  }
-}
-
 export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNodeRename, onNodeDelete }) => {
   const { nodes: layoutedNodes, edges } = useMemo(() => {
     const { nodes, edges } = getLayoutedElements(files);
@@ -130,10 +90,9 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
 
   const commitRename = useCallback((value: string) => {
     if (!renaming) return;
-    const trimmed = value.trim();
-    const currentName = renaming.split('/').pop();
-    if (trimmed && trimmed !== currentName && !/[\\/:*?"<>|]/.test(trimmed)) {
-      onNodeRename(renaming, trimmed);
+    const newTitle = validateRename(renaming, value);
+    if (newTitle) {
+      onNodeRename(renaming, newTitle);
     }
     setRenaming(null);
   }, [renaming, onNodeRename]);
@@ -150,21 +109,21 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
   const savedViewport = useMemo(() => loadSavedViewport(), []);
 
   const handleMoveEnd = (_event: unknown, viewport: Viewport) => {
-    localStorage.setItem(VIEWPORT_KEY, JSON.stringify(viewport));
+    saveViewport(viewport);
   };
 
   const handleNodeDragStop = () => {
-    const positions: Record<string, { x: number; y: number }> = {};
+    const positions: NodePositions = {};
     nodes.forEach((node) => {
       positions[node.id] = node.position;
     });
-    localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions));
+    savePositions(positions);
   };
 
   const instanceRef = useRef<ReactFlowInstance | null>(null);
 
   const handleResetPositions = () => {
-    localStorage.removeItem(POSITIONS_KEY);
+    clearPositions();
     const { nodes: freshNodes } = getLayoutedElements(files);
     setNodes(freshNodes);
 
