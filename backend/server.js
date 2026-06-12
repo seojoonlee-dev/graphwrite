@@ -221,6 +221,17 @@ app.delete('/api/delete', async (req, res) => {
   }
 });
 
-app.listen(3001, '0.0.0.0', () => {
+const server = app.listen(3001, '0.0.0.0', () => {
   console.log('Server running on port 3001');
 });
+
+const shutdown = (signal) => {
+  console.log(`Received ${signal}, shutting down...`);
+  server.close(() => process.exit(0));
+  server.closeIdleConnections();
+  // force-exit if an in-flight request never finishes
+  setTimeout(() => process.exit(1), 5000).unref();
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
