@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import Editor from './editor';
-import './style/app.css';
-import { TintedImage } from './helpers/tintedImage';
+import '../style/app.css';
+import { TintedImage } from './tintedImage';
 import { Settings } from './settings';
-import { ContextMenu } from './helpers/contextMenu';
-import { toDirPath, nameOf, validateRename } from './helpers/paths';
-import { useNotes } from './hooks/useNotes';
+import { ContextMenu } from './contextMenu';
+import { toDirPath, nameOf, validateRename } from '../helpers/paths';
+import { useNotes } from '../hooks/useNotes';
 import { GraphView } from './graphView';
 
 const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void }) => {

@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, type Node, type NodeProps, type Viewport, type ReactFlowInstance } from '@xyflow/react';
-import { getLayoutedElements } from './helpers/graphLayout';
-import { TintedImage } from './helpers/tintedImage';
-import { ContextMenu } from './helpers/contextMenu';
-import { loadSavedViewport, saveViewport, loadSavedPositions, savePositions, clearPositions, type NodePositions } from './helpers/graphStorage';
-import { validateRename } from './helpers/paths';
+import { getLayoutedElements } from '../helpers/graphLayout';
+import { TintedImage } from './tintedImage';
+import { ContextMenu } from './contextMenu';
+import { loadSavedViewport, saveViewport, loadSavedPositions, savePositions, clearPositions, type NodePositions } from '../helpers/graphStorage';
+import { validateRename } from '../helpers/paths';
 import '@xyflow/react/dist/style.css';
-import './style/graph.css';
+import '../style/graph.css';
 
 interface GraphViewProps {
   files: string[];
