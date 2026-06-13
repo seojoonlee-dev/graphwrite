@@ -7,6 +7,12 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
 
+    /* Both storage adapters share the same signatures; type-check against the
+       default (http) one. Vite swaps the actual module per build via VITE_STORAGE. */
+    "paths": {
+      "@notesApi": ["./src/helpers/api.http.ts"]
+    },
+
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

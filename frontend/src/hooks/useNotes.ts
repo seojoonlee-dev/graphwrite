@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, createFile, deleteFile } from '../helpers/api';
+import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, createFile, deleteFile } from '@notesApi';
 import { toFilePath, nameOf } from '../helpers/paths';
 import { migrateSavedPositions } from '../helpers/graphStorage';
 
