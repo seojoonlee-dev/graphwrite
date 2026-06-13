@@ -4,6 +4,10 @@ import { Link, useParams } from 'react-router-dom';
 import { useState, type ChangeEvent } from 'react';
 import '../style/settings.css';
 
+// The demo stores notes in the browser (IndexedDB) and has no backend, so the
+// server address setting is irrelevant there.
+const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
+
 function General() {
   const serverIp = localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001";
   const [value, setTitle] = useState(serverIp);
@@ -12,17 +16,25 @@ function General() {
     const inputValue = event.target.value;
     setTitle(inputValue);
   };
-  
+
   const changeServer = () => {
     if (value) {
       const trimmedValue = value.trim();
       localStorage.setItem('serverIp', trimmedValue);
     }
   };
-  
+
+  if (isDemo) {
+    return (
+      <div className='settings-view'>
+        <p>This is a demo. Your notes are saved locally in this browser.</p>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className='settings-view'> 
+      <div className='settings-view'>
         <h3>Server</h3>
         <p>Enter server IP address and port (example: http://192.168.0.1:3001): </p>
         <input type='text' name='server' defaultValue={serverIp!} onChange={saveServer} onBlur={changeServer}></input>
