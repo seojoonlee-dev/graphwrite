@@ -41,8 +41,7 @@ a:hover {
 .editor-title {
   display: flex;
   flex-direction: column;
-  min-height: 70px;
-  flex-shrink: 0;
+  flex: 0 0 70px;
   margin-bottom: 8px;
 }
 
@@ -58,7 +57,7 @@ a:hover {
   margin: 0px 16px 0px 28px;
   background-color: #282828;
   cursor: text;
-  height: 100vh;
+  height: 100%;
 }
 
 .editor > div:not(.editor-title) {
@@ -67,6 +66,7 @@ a:hover {
   flex-direction: column;
   overflow: auto;
   margin-bottom: 10px;
+  min-height: 0;
 }
 
 .ProseMirror {

@@ -63,6 +63,13 @@ hr {
   flex: 1;
   margin-top: 50px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.l-main > * {
+  flex: 1;
+  min-height: 0;
 }
 
 .sidebar-content {
