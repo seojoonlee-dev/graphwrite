@@ -121,7 +121,7 @@ export function Settings({to}: SettingsProps) {
           </button>
           <h2 className='header-title'>Settings</h2>
         </div>
-        <div>
+      <div>
       <div className='settings-tabbar'>
           <Link to={`/settings/general`} className={`settings-link ${setting === "general" ? 'is-active': ''}`}>
             <button className="btn-tabbar">General</button>

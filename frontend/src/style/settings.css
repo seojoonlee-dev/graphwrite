@@ -26,7 +26,7 @@ input {
 
 .settings-tabbar {
     display: flex;
-    padding: 60px 20px 0 20px;
+    padding: 80px 20px 0 20px;
     gap: 5px;
 }
 
@@ -45,6 +45,7 @@ input {
 
 .btn-tabbar {
     width: 100%;
+    font-size: large;
 }
 
 .settings-main {
