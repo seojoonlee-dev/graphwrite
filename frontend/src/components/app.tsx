@@ -8,6 +8,7 @@ import { Settings } from './settings';
 import { ContextMenu } from './contextMenu';
 import { toDirPath, nameOf, validateRename } from '../helpers/paths';
 import { useNotes } from '../hooks/useNotes';
+import { useLongPress } from '../hooks/useLongPress';
 import { GraphView } from './graphView';
 import { getStartupNote } from '../helpers/settings';
 
@@ -19,7 +20,9 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, path: string } | null>(null);
   const [renaming, setRenaming] = useState<{ path: string, value: string } | null>(null);
+  
   const closeMenu = useCallback(() => setContextMenu(null), []);
+  const longPress = useLongPress();
 
   const commitRename = () => {
     if (!renaming) return;
@@ -82,6 +85,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
             e.preventDefault();
             setContextMenu({ x: e.clientX, y: e.clientY, path: dirPath });
           }}
+          {...longPress((x, y) => setContextMenu({ x, y, path: dirPath }))}
         >
           <div className={`file-tree-node ${parsedFilePath === dirPath ? 'is-active' : ''}`}>
             {hasChildren ? (
@@ -287,12 +291,22 @@ function MainWorkspace() {
             onPointerDown={(e) => {
               isDragging.current = true;
               e.currentTarget.setPointerCapture(e.pointerId);
+
+              if (sidebarRef.current) {
+                sidebarRef.current.style.transition = 'none';
+              }
+
               document.body.style.userSelect = "none";
               document.body.style.setProperty('-webkit-user-select', 'none');
             }}
             onPointerUp={(e) => {
               isDragging.current = false;
               e.currentTarget.releasePointerCapture(e.pointerId);
+
+              if (sidebarRef.current) {
+                sidebarRef.current.style.transition = '';
+              }
+
               document.body.style.userSelect = "";
               document.body.style.removeProperty('-webkit-user-select');
 
@@ -301,6 +315,11 @@ function MainWorkspace() {
             onPointerCancel={(e) => {
               isDragging.current = false;
               e.currentTarget.releasePointerCapture(e.pointerId);
+
+              if (sidebarRef.current) {
+                sidebarRef.current.style.transition = '';
+              }
+
               document.body.style.userSelect = "";
               document.body.style.removeProperty('-webkit-user-select');
             }}
