@@ -67,3 +67,23 @@ input {
     flex-direction: column;
     padding: 0 20px;
 }
+
+.btn-reset {
+    margin-top: 14px;
+    align-self: flex-start;
+    padding: 8px 16px;
+    background-color: #5a1f1f;
+    color: #ffd9d4;
+    border: 1px solid #7a2a2a;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-reset:hover:not(:disabled) {
+    background-color: #6e2626;
+}
+
+.btn-reset:disabled {
+    opacity: 0.6;
+    cursor: default;
+}

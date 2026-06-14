@@ -46,11 +46,36 @@ function General() {
 function Theme() {
   return (
     <>
-      <div className='settings-view'> 
+      <div className='settings-view'>
         <p>wip</p>
       </div>
     </>
   )
+}
+
+function Demo() {
+  const [resetting, setResetting] = useState(false);
+
+  const handleReset = async () => {
+    if (!window.confirm('Reset the demo? This deletes all notes in this browser and restores the default note.')) {
+      return;
+    }
+    setResetting(true);
+    // Loaded lazily so demo-only code stays out of the self-hosted bundle.
+    const { resetDemo } = await import('../helpers/demoStore');
+    await resetDemo();
+    window.location.href = '/';
+  };
+
+  return (
+    <div className='settings-view'>
+      <h3>Reset demo</h3>
+      <p>Delete all notes saved in this browser and restore the default note.</p>
+      <button className='btn-reset' onClick={handleReset} disabled={resetting}>
+        {resetting ? 'Resetting…' : 'Reset demo'}
+      </button>
+    </div>
+  );
 }
 
 
@@ -85,11 +110,16 @@ export function Settings({to}: SettingsProps) {
           <Link to={`/settings/theme`} className={`settings-link ${setting === "theme" ? 'is-active': ''}`}>
             <button className="btn-tabbar">Theme</button>
           </Link>
+          {isDemo && (
+            <Link to={`/settings/demo`} className={`settings-link ${setting === "demo" ? 'is-active': ''}`}>
+              <button className="btn-tabbar">Demo</button>
+            </Link>
+          )}
         </div>
       </div>
         <div className='settings-main'>
           <h1 className='settings-title'>{capitalizeFirstLetter(setting)}</h1>
-          {setting === "general" ? <General /> : <Theme />}
+          {setting === "general" ? <General /> : setting === "demo" && isDemo ? <Demo /> : <Theme />}
         </div>
       </div>
     </>

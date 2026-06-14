@@ -3,24 +3,13 @@
 // containing a same-named ".md" file, so keys are full ".md" paths
 // (e.g. "Projects/Ideas/Ideas.md") and rename/delete operate on the folder.
 import { get, set, del, keys } from 'idb-keyval';
-import demoSeed from './demoSeed.md?raw';
+import { seedIfNeeded } from './demoStore';
 
 const INVALID = /[\\/:*?"<>|]/;
 const dirname = (p: string) => (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '');
 const basename = (p: string) => p.split('/').pop() || '';
 const join = (...parts: string[]) => parts.filter(Boolean).join('/');
 const allKeys = async () => (await keys()) as string[];
-
-// On first visit, drop a sample "Note" into an empty store so the demo isn't
-// blank. The flag ensures we never re-seed after the user clears their notes.
-const SEED_FLAG = 'graphwrite-demo-seeded';
-const seedIfNeeded = async () => {
-  if (localStorage.getItem(SEED_FLAG)) return;
-  if ((await allKeys()).length === 0) {
-    await set('Note/Note.md', demoSeed);
-  }
-  localStorage.setItem(SEED_FLAG, '1');
-};
 
 export const getServerIp = () => 'indexeddb'; // the demo has no server
 
