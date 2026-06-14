@@ -13,6 +13,8 @@ dist-ssr/
 *.local
 backend/notes/*
 !backend/notes/README/
+frontend/android-release-key.jks
+frontend/.env
 
 # Editor directories and files
 .vscode/*
