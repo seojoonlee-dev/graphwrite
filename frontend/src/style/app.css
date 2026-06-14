@@ -4,6 +4,28 @@
   box-sizing: border-box;
 }
 
+/* Scrollbars are styled solely via ::-webkit-scrollbar (color from --scrollbar,
+   Settings → Theme). The standard scrollbar-color/-width props are intentionally
+   omitted because WebKitGTK renders those as a GTK overlay with a visible trough. */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+  border: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar);
+  border-radius: 3px;
+  border: none;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+  border: none;
+}
+
 /* Semantic color tokens (dark preset defaults). Overridden at runtime by
    applySettings() in settings.ts based on the chosen theme / custom colors.
    Code-block surfaces and syntax-highlight colors are intentionally not tokens —
@@ -15,6 +37,7 @@
   --text: #FFF0E3;
   --text-muted: #9a928c;
   --border: #3a3a3a;
+  --scrollbar: #696969;
   --accent: #e0a96d;
   --danger: #6e2626;
   --icon: #FFF0E3;
@@ -73,14 +96,8 @@ hr {
 .l-sidebar {
   position: relative;
   height: 100vh;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
   transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.2s ease-in-out;
   white-space: nowrap;
-}
-
-.l-sidebar::-webkit-scrollbar {
-  display: none;
 }
 
 /* Mask scrolled-up content behind the (transparent) header so it doesn't
@@ -119,6 +136,13 @@ hr {
   height: 100%;
   background-color: var(--bg-secondary);
   border-right: var(--border) solid 1px;
+  /* Hide the sidebar's scrollbar (this is the actual scroll container). */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sidebar-content::-webkit-scrollbar {
+  display: none;
 }
 
 .drag-handle {

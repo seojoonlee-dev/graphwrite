@@ -34,6 +34,7 @@ export interface ThemeTokens {
   text: string;
   textMuted: string;
   border: string;
+  scrollbar: string;
   accent: string;
   danger: string;
   icon: string;
@@ -47,6 +48,7 @@ export const TOKEN_LABELS: Record<keyof ThemeTokens, string> = {
   text: 'Text',
   textMuted: 'Muted text',
   border: 'Border',
+  scrollbar: 'Scrollbar',
   accent: 'Accent',
   danger: 'Danger',
   icon: 'Icons',
@@ -61,6 +63,7 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     text: '#FFF0E3',
     textMuted: '#9a928c',
     border: '#3a3a3a',
+    scrollbar: '#696969',
     accent: '#e0a96d',
     danger: '#6e2626',
     icon: '#FFF0E3',
@@ -73,6 +76,7 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     text: '#2b2824',
     textMuted: '#6e675f',
     border: '#ddd6cc',
+    scrollbar: '#c0c0c0',
     accent: '#b97e2e',
     danger: '#b23b3b',
     icon: '#2b2824',
@@ -82,9 +86,10 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     bg: '#000000',
     bgSecondary: '#000000',
     bgTertiary: '#313133',
-    text: '#FFF0E3',
+    text: '#FFFFFF',
     textMuted: '#9a928c',
     border: '#3a3a3a',
+    scrollbar: '#1b1b1b',
     accent: '#e0a96d',
     danger: '#6e2626',
     icon: '#FFF0E3',

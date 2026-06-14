@@ -1,18 +1,23 @@
-import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
 import { BrowserRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import Editor from './editor';
 import '../style/app.css';
 import { TintedImage } from './tintedImage';
-import { Settings } from './settings';
 import { ContextMenu } from './contextMenu';
 import { toDirPath, nameOf, validateRename } from '../helpers/paths';
 import { useNotes } from '../hooks/useNotes';
 import { useLongPress } from '../hooks/useLongPress';
-import { GraphView } from './graphView';
+// Lazy-loaded into separate chunks so heavy deps (CodeMirror, @xyflow/react +
+// dagre) are only fetched when their view is actually shown — keeps the initial
+// bundle light. Each is wrapped in <Suspense> at its render site.
+const Editor = lazy(() => import('./editor'));
+const Settings = lazy(() => import('./settings').then((m) => ({ default: m.Settings })));
+const GraphView = lazy(() => import('./graphView').then((m) => ({ default: m.GraphView })));
 import { getStartupNote } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
+// True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void }) => {
   const { '*': parsedFilePath } = useParams();
@@ -223,7 +228,9 @@ function MainWorkspace() {
   }, []);
 
   const withViewTransition = useCallback((update: () => void) => {
-    if (!document.startViewTransition) {
+    // WebKitGTK (Tauri on Linux) ships startViewTransition but crashes during the
+    // transition snapshot, so skip it there. Browser/iOS WebKit keep the animation.
+    if (!document.startViewTransition || isTauri) {
       update();
       return;
     }
@@ -343,6 +350,7 @@ function MainWorkspace() {
           />
         </div>
         <div className="l-main">
+        <Suspense fallback={null}>
         {showGraph ? (
           <GraphView
             files={files}
@@ -371,6 +379,7 @@ function MainWorkspace() {
             createFile={(filename) => createFile(parsedFilePath ?? '', filename)}
           />
         )}
+        </Suspense>
       </div>
       </div>
       <div className={`popup ${popupOpen ? 'is-open' : ''}`}>
@@ -385,10 +394,12 @@ function MainWorkspace() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/settings/*" element={<Settings to={'/'} />} />
-        <Route path="/*" element={<MainWorkspace />} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/settings/*" element={<Settings to={'/'} />} />
+          <Route path="/*" element={<MainWorkspace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

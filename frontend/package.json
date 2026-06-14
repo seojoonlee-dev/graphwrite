@@ -9,7 +9,9 @@
     "build:demo": "VITE_STORAGE=indexeddb npm run build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@codemirror/commands": "^6.10.3",

@@ -51,6 +51,8 @@ input {
 .settings-main {
     background-color: var(--bg);
     flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
     margin: 0 20px 20px 20px;
     border-radius: 0 8px 8px 8px;
 }
@@ -87,12 +89,29 @@ input {
 .font-select {
     margin-top: 10px;
     align-self: flex-start;
-    padding: 8px;
-    background: var(--bg-secondary);
-    color: inherit;
+    /* Opt out of native widget styling so background applies in WebKitGTK
+       (otherwise the closed control renders white). */
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 8px 30px 8px 8px;
+    background-color: var(--bg-secondary);
+    /* Custom caret (native arrow is removed by appearance:none). Muted gray reads
+       on both light and dark themes. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.5l4 4 4-4' fill='none' stroke='%239a928c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 12px;
+    color: var(--text);
     border: none;
     border-radius: 4px;
     cursor: pointer;
+}
+
+/* The native option popup defaults to white bg + inherited light text
+   (unreadable on dark). Force matching dark colors. */
+.font-select option {
+    background-color: var(--bg-secondary);
+    color: var(--text);
 }
 
 .startup-input input {
