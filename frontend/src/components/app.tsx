@@ -186,13 +186,14 @@ function MainWorkspace() {
   }); 
 
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.buttons === 1 && sidebarRef.current) {
-      const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
-      const rawWidth = e.clientX - sidebarLeft;
-      const newWidth = Math.max(150, Math.min(rawWidth, 400));
-      setSidebarWidth(newWidth); 
-    }
+    if (!isDragging.current || !sidebarRef.current) return;
+    
+    const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
+    const rawWidth = e.clientX - sidebarLeft;
+    const newWidth = Math.max(150, Math.min(rawWidth, 400));
+    setSidebarWidth(newWidth); 
   };
 
   const [showGraph, setShowGraph] = useState(() => localStorage.getItem('showGraph') === 'true');
@@ -284,13 +285,24 @@ function MainWorkspace() {
           <div
             className="drag-handle"
             onPointerDown={(e) => {
+              isDragging.current = true;
               e.currentTarget.setPointerCapture(e.pointerId);
               document.body.style.userSelect = "none";
+              document.body.style.setProperty('-webkit-user-select', 'none');
             }}
             onPointerUp={(e) => {
+              isDragging.current = false;
               e.currentTarget.releasePointerCapture(e.pointerId);
               document.body.style.userSelect = "";
+              document.body.style.removeProperty('-webkit-user-select');
+
               localStorage.setItem("sidebarWidth", sidebarWidth.toString());
+            }}
+            onPointerCancel={(e) => {
+              isDragging.current = false;
+              e.currentTarget.releasePointerCapture(e.pointerId);
+              document.body.style.userSelect = "";
+              document.body.style.removeProperty('-webkit-user-select');
             }}
             onPointerMove={handlePointerMove}
           />
