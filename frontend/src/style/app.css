@@ -159,8 +159,10 @@ hr {
   border-radius: 6px;
 }
 
-.btn-header:hover {
-  background-color: var(--bg);
+@media (hover: hover) {
+  .btn-header:hover {
+    background-color: var(--bg);
+  }
 }
 
 .btn-header img {
@@ -187,9 +189,16 @@ hr {
   user-select: none;
 }
 
-.file-tree-node:hover,
 .file-tree-node.is-active {
   background-color: var(--bg);
+}
+
+/* Hover only on real pointing devices — on iOS, :hover styles cause the
+   first tap to just reveal hover instead of activating the link. */
+@media (hover: hover) {
+  .file-tree-node:hover {
+    background-color: var(--bg);
+  }
 }
 
 .btn-expand {
@@ -250,7 +259,6 @@ hr {
 }
 
 .btn-add {
-  opacity: 0;
   padding-left: 5px;
   font-size: 14px;
   flex-shrink: 0;
@@ -258,9 +266,17 @@ hr {
   font-family: var(--app-font, 'Times New Roman', Times, serif);
 }
 
-.file-tree-node:hover .btn-add {
-  opacity: 1;
-  pointer-events: auto;
+/* On hover-capable devices the add button stays hidden until row hover.
+   Touch devices have no hover, so it's shown by default instead. */
+@media (hover: hover) {
+  .btn-add {
+    opacity: 0;
+  }
+
+  .file-tree-node:hover .btn-add {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
 .btn-create {
