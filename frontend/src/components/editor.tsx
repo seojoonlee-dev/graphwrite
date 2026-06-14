@@ -84,6 +84,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   const createFileRef = useRef(createFile);
   createFileRef.current = createFile;
   const settingExternal = useRef(false);
+  const awaitingLoad = useRef(false);
 
   const invalidChars = /[\\/:*?"<>|]/;
 
@@ -183,20 +184,29 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
 
   // Sync external content changes (file switches, loads, autosave restores)
   // into the editor without clobbering what the user is actively typing.
+  //
+  // A file switch updates the URL one render before the new content arrives, so
+  // we latch `awaitingLoad` on the change and keep applying until the content
+  // actually differs from the editor. This matters when the navigation came
+  // from inside the editor (e.g. clicking a wikilink to create a note), where it
+  // stays focused — the focus guard below would otherwise skip the load.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
 
-    const isFileChange = prevFilePath.current !== parsedFilePath;
-    const current = view.state.doc.toString();
+    if (prevFilePath.current !== parsedFilePath) {
+      prevFilePath.current = parsedFilePath;
+      awaitingLoad.current = true;
+    }
 
-    if (isFileChange || (!view.hasFocus && rawContent !== current)) {
-      if (rawContent !== current) {
-        settingExternal.current = true;
-        view.dispatch({ changes: { from: 0, to: current.length, insert: rawContent } });
-        settingExternal.current = false;
-      }
-      if (isFileChange) prevFilePath.current = parsedFilePath;
+    const current = view.state.doc.toString();
+    if (!awaitingLoad.current && (view.hasFocus || rawContent === current)) return;
+
+    if (rawContent !== current) {
+      settingExternal.current = true;
+      view.dispatch({ changes: { from: 0, to: current.length, insert: rawContent } });
+      settingExternal.current = false;
+      awaitingLoad.current = false;
     }
   }, [rawContent, parsedFilePath]);
 

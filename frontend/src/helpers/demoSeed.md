@@ -45,7 +45,6 @@ Ordered lists, also nestable:
 
 ## Code
 Use `inline code` for short snippets, or a fenced block for longer ones:
-
 ```Java Script
 function greet(name) {
   return "Hi, " + name + "!";
