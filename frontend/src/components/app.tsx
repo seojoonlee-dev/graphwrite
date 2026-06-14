@@ -191,13 +191,28 @@ function MainWorkspace() {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  // Lower bound for the drag, so the sidebar can't shrink below its content.
+  const minSidebarWidth = useRef(150);
+
+  // Measures the content's natural width by briefly sizing it to max-content.
+  // scrollWidth alone can't tell us this — it only exceeds the box once already
+  // overflowing, so it can't reveal headroom while the content still fits.
+  const measureMinWidth = () => {
+    const content = sidebarRef.current?.querySelector('.sidebar-content') as HTMLElement | null;
+    if (!content) return;
+    const prev = content.style.width;
+    content.style.width = 'max-content';
+    minSidebarWidth.current = Math.max(150, content.offsetWidth);
+    content.style.width = prev;
+  };
+
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current || !sidebarRef.current) return;
-    
+
     const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
     const rawWidth = e.clientX - sidebarLeft;
-    const newWidth = Math.max(150, Math.min(rawWidth, 400));
-    setSidebarWidth(newWidth); 
+    const newWidth = Math.max(minSidebarWidth.current, Math.min(rawWidth, 800));
+    setSidebarWidth(newWidth);
   };
 
   const [showGraph, setShowGraph] = useState(() => localStorage.getItem('showGraph') === 'true');
@@ -290,6 +305,7 @@ function MainWorkspace() {
             className="drag-handle"
             onPointerDown={(e) => {
               isDragging.current = true;
+              measureMinWidth();
               e.currentTarget.setPointerCapture(e.pointerId);
 
               if (sidebarRef.current) {

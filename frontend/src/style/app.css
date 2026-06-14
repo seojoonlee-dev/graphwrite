@@ -115,7 +115,7 @@ hr {
   overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
-  padding: 60px 20px 20px 20px;
+  padding: 60px 10px 20px 20px;
   height: 100%;
   background-color: var(--bg-secondary);
   border-right: var(--border) solid 1px;
