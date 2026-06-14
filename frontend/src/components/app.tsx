@@ -7,6 +7,7 @@ import { ContextMenu } from './contextMenu';
 import { toDirPath, nameOf, validateRename } from '../helpers/paths';
 import { useNotes } from '../hooks/useNotes';
 import { useLongPress } from '../hooks/useLongPress';
+import { useZoom } from '../hooks/useZoom';
 // Lazy-loaded into separate chunks so heavy deps (CodeMirror, @xyflow/react +
 // dagre) are only fetched when their view is actually shown — keeps the initial
 // bundle light. Each is wrapped in <Suspense> at its render site.
@@ -392,6 +393,7 @@ function MainWorkspace() {
 }
 
 export default function App() {
+  useZoom();
   return (
     <BrowserRouter>
       <Suspense fallback={null}>
