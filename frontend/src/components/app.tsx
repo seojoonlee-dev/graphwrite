@@ -9,7 +9,7 @@ import { ContextMenu } from './contextMenu';
 import { toDirPath, nameOf, validateRename } from '../helpers/paths';
 import { useNotes } from '../hooks/useNotes';
 import { GraphView } from './graphView';
-import { getStartupNote } from '../helpers/startupNote';
+import { getStartupNote } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 
@@ -251,7 +251,7 @@ function MainWorkspace() {
             <TintedImage src='/sidebar.png' alt="Toggle Sidebar" />
           </button>
           <button className="btn-header" onClick={() => navigate("/settings/general")}>
-            <TintedImage src='/settings.png' alt="Settings" tintColor='#FFF0E3'/>
+            <TintedImage src='/settings.png' alt="Settings" />
           </button>
           <div className="spacer" />
           <button className="btn-header" onClick={() => withViewTransition(() => updateShowGraph(!showGraph))}>

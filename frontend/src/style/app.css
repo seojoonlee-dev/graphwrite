@@ -4,9 +4,26 @@
   box-sizing: border-box;
 }
 
+/* Semantic color tokens (dark preset defaults). Overridden at runtime by
+   applySettings() in settings.ts based on the chosen theme / custom colors.
+   Code-block surfaces and syntax-highlight colors are intentionally not tokens —
+   they stay dark in every theme. */
+:root {
+  --bg: #282828;
+  --bg-secondary: #1e1e1e;
+  --bg-tertiary: #2e2e2e;
+  --text: #FFF0E3;
+  --text-muted: #9a928c;
+  --border: #3a3a3a;
+  --accent: #b08cff;
+  --danger: #6e2626;
+  --icon: #FFF0E3;
+  --code-bg: #1e1e1e;
+}
+
 body {
-  background-color: #282828;
-  color: #FFF0E3;
+  background-color: var(--bg);
+  color: var(--text);
   font-family: var(--app-font, 'Times New Roman', Times, serif);
 }
 
@@ -76,8 +93,8 @@ hr {
   width: 100%;
   padding: 60px 20px 20px 20px;
   min-height: 100%;
-  background-color: #1e1e1e;
-  border-right: #323232 solid 1px;
+  background-color: var(--bg-secondary);
+  border-right: var(--border) solid 1px;
 }
 
 .drag-handle {
@@ -102,7 +119,7 @@ hr {
 }
 
 .btn-header:hover {
-  background-color: #282828;
+  background-color: var(--bg);
 }
 
 .btn-header img {
@@ -127,7 +144,7 @@ hr {
 
 .file-tree-node:hover,
 .file-tree-node.is-active {
-  background-color: #282828;
+  background-color: var(--bg);
 }
 
 .btn-expand {
@@ -179,7 +196,7 @@ hr {
   margin: -1px 0;
   padding: 0 0 0 4px;
   background: transparent;
-  border: 1px solid #6e6e6e;
+  border: 1px solid var(--border);
   border-radius: 2px;
   color: inherit;
   font-family: inherit;
@@ -206,7 +223,7 @@ hr {
   padding: 4px;
   margin-top: 10px;
   font-size: 16px;
-  background-color: #282828;
+  background-color: var(--bg);
   border-radius: 6px;
   text-align: center;
 }
@@ -215,8 +232,8 @@ hr {
   position: fixed;
   bottom: 15px;
   right: 20px;
-  background-color: #1e1e1e;
-  border: 1px solid #323232;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 6px;
   z-index: 1000;
   padding: 8px 16px;
@@ -236,8 +253,8 @@ hr {
 
 .context-menu {
   position: fixed;
-  background: #282828;
-  border: 1px solid #444;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 6px;
   box-shadow: 2px 3px 6px rgba(0,0,0,0.3);
   z-index: 1000;
@@ -250,7 +267,7 @@ hr {
 .context-menu-item {
   padding: 6px 10px;
   text-align: left;
-  color: #fff;
+  color: var(--text);
 }
 
 .context-menu-item.is-danger {
@@ -289,7 +306,7 @@ hr {
 
 .not-found p {
   margin: 10px 0;
-  color: #bcb2ab;
+  color: var(--accent);
 }
 
 .l-main {

@@ -2,8 +2,22 @@ import { useNavigate } from 'react-router-dom';
 import { TintedImage } from './tintedImage';
 import { Link, useParams } from 'react-router-dom';
 import { useState, type ChangeEvent } from 'react';
-import { getStartupNote, setStartupNote } from '../helpers/startupNote';
-import { FONTS, getFontName, setFont } from '../helpers/font';
+import {
+  FONTS,
+  TOKEN_LABELS,
+  type ThemeName,
+  type ThemeTokens,
+  effectiveColors,
+  getFont,
+  getStartupNote,
+  getTheme,
+  resetColors,
+  saveSettings,
+  setColor,
+  setFont,
+  setStartupNote,
+  setTheme,
+} from '../helpers/settings';
 import '../style/settings.css';
 
 // The demo stores notes in the browser (IndexedDB) and has no backend, so the
@@ -40,7 +54,7 @@ function General() {
             type='text'
             name='startup'
             value={startup}
-            placeholder='e.g. Note or Projects/Ideas'
+            placeholder='e.g. /Note, /Note/tasks...'
             onChange={(e) => setStartup(e.target.value.replace(/^\/+/, ''))}
             onBlur={changeStartup}
           />
@@ -63,8 +77,12 @@ function General() {
   )
 }
 
+const TOKEN_KEYS = Object.keys(TOKEN_LABELS) as (keyof ThemeTokens)[];
+
 function Theme() {
-  const [font, setFontState] = useState(getFontName());
+  const [font, setFontState] = useState(getFont());
+  const [theme, setThemeState] = useState<ThemeName>(getTheme());
+  const [colors, setColors] = useState<ThemeTokens>(effectiveColors());
 
   const changeFont = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value;
@@ -72,15 +90,67 @@ function Theme() {
     setFont(next);
   };
 
+  const changePreset = (event: ChangeEvent<HTMLSelectElement>) => {
+    const next = event.target.value as ThemeName;
+    setThemeState(next);
+    if (next === 'custom') {
+      // Seed the custom palette from whatever is currently displayed.
+      saveSettings({ theme: 'custom', colors: effectiveColors() });
+    } else {
+      setTheme(next); // presets ignore custom colors; clear them for tidiness
+      resetColors();
+    }
+    setColors(effectiveColors());
+  };
+
+  const changeColor = (token: keyof ThemeTokens) => (event: ChangeEvent<HTMLInputElement>) => {
+    setColor(token, event.target.value);
+    setColors(effectiveColors());
+  };
+
+  const handleResetColors = () => {
+    resetColors();
+    setColors(effectiveColors());
+  };
+
   return (
     <>
+      <div className='settings-view'>
+        <h3>Theme</h3>
+        <p>Pick a preset, or choose Custom to set every color yourself.</p>
+        <select className='font-select' value={theme} onChange={changePreset}>
+          <option value='dark'>Dark (default)</option>
+          <option value='black'>Black (AMOLED)</option>
+          <option value='light'>Light</option>
+          <option value='custom'>Custom</option>
+        </select>
+      </div>
+
+      {theme === 'custom' && (
+        <div className='settings-view'>
+          <h3>Colors</h3>
+          <p>Customize individual colors. Code blocks keep their own syntax colors.</p>
+          <div className='color-list'>
+            {TOKEN_KEYS.map((key) => (
+              <label key={key} className='color-row'>
+                <input type='color' value={colors[key]} onChange={changeColor(key)} />
+                <span>{TOKEN_LABELS[key]}</span>
+              </label>
+            ))}
+          </div>
+          <button className='btn-secondary' onClick={handleResetColors}>
+            Reset colors
+          </button>
+        </div>
+      )}
+
       <div className='settings-view'>
         <h3>Font</h3>
         <p>Font used throughout the app (code blocks stay monospaced).</p>
         <select className='font-select' value={font} onChange={changeFont}>
           {FONTS.map((f) => (
             <option key={f.name} value={f.name} style={{ fontFamily: f.stack }}>
-              {f.name}
+              {f.name === "Domine" ? `${f.name} (default)` : f.name}
             </option>
           ))}
         </select>

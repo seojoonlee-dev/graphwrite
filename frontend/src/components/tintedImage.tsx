@@ -11,7 +11,7 @@ interface TintedImageProps {
 export function TintedImage({
   src,
   alt,
-  tintColor = '#FFF0E3',
+  tintColor = 'var(--icon, #FFF0E3)',
   blendMode = 'multiply',
   className,
 }: TintedImageProps) {

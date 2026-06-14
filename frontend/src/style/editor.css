@@ -9,7 +9,7 @@ body {
 
 hr {
   margin: 0 15px 10px 0px;
-  color: #3d3d3d;
+  color: var(--border);
 }
 
 a {
@@ -18,14 +18,15 @@ a {
 }
 
 a:hover {
-  color: #bcb2ab;
+  color: var(--accent);
 }
 
 .editor-title-input {
   margin-top: 10px;
   border: 0;
-  background-color: #282828;
-  color: #FFF0E3;
+  /* matches the .editor parent background, so no fill needed */
+  background: none;
+  color: var(--text);
   font-size: larger;
   font-size: 2em;
   font-weight: bold;
@@ -46,7 +47,7 @@ a:hover {
 }
 
 .editor-path {
-  color: #747474;
+  color: var(--text-muted);
   font-size: medium;
 }
 
@@ -55,7 +56,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   margin: 0px 16px 0px 28px;
-  background-color: #282828;
+  background-color: var(--bg);
   cursor: text;
   height: 100%;
 }
@@ -79,7 +80,7 @@ a:hover {
   display: inline-block;
   width: 100%;
   height: 0;
-  border-top: 1px solid #3d3d3d;
+  border-top: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -87,7 +88,7 @@ a:hover {
    Selectors are .cm-line.cm-code-block so they outrank CodeMirror's own
    .cm-line padding (same class count would otherwise let CM win). */
 .cm-line.cm-code-block {
-  background-color: #1e1e1e;
+  background-color: var(--code-bg);
   font-family: 'Fira Code', 'Courier New', Courier, monospace;
   padding-left: 16px;
   padding-right: 16px;
@@ -121,16 +122,16 @@ a:hover {
 }
 
 .cm-code-lang {
-  color: rgb(189, 189, 189);
+  color: var(--text-muted);
   font-size: 0.85em;
   text-transform: lowercase;
   font-family: var(--app-font, 'Times New Roman', Times, serif);
 }
 
 .cm-code-copy {
-  background-color: #2e2e2e;
-  color: #ddd;
-  border: 1px solid #323232;
+  background-color: var(--bg-tertiary);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.8em;
   padding: 1px 8px;
@@ -139,19 +140,19 @@ a:hover {
 }
 
 .cm-code-copy:hover {
-  background-color: #262626;
+  filter: brightness(1.2);
 }
 
 /* Inline code chip */
 .cm-inline-code {
-  background-color: #1e1e1e;
+  background-color: var(--code-bg);
   border-radius: 4px;
   padding: 0.1em 0.35em;
 }
 
 /* Bullet-list marker */
 .cm-bullet {
-  color: #b8b8b8;
+  color: var(--text-muted);
 }
 
 /* Clickable rendered links and wikilinks */
@@ -161,7 +162,7 @@ a:hover {
 
 .cm-wikilink {
   cursor: pointer;
-  color: #b08cff;
+  color: var(--accent);
   text-decoration: underline;
 }
 

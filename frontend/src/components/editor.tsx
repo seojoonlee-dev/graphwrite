@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
-import { EditorState } from '@codemirror/state';
+import { Compartment, EditorState } from '@codemirror/state';
 import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view';
 import { history, historyKeymap, defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage, markdownKeymap } from '@codemirror/lang-markdown';
@@ -9,6 +9,7 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { livePreview } from '../extensions/livePreview';
 import { WikiLink } from '../extensions/wikiLink';
+import { effectiveColors, subscribe } from '../helpers/settings';
 import '../style/editor.css';
 
 interface EditorProps {
@@ -22,10 +23,8 @@ interface EditorProps {
   createFile: (value?: string) => void;
 }
 
-// Phase 1: source-mode markdown highlighting. Live Preview decorations (hiding
-// the markers, rendering inline) arrive in a later phase. The CodeMirror
-// document IS the markdown, so there is no lossy round-trip — what you type is
-// exactly what gets saved.
+// Markdown chrome styling — theme-independent. The CodeMirror document IS the
+// markdown, so there is no lossy round-trip; what you type is what gets saved.
 const markdownHighlight = HighlightStyle.define([
   { tag: t.heading1, fontSize: '1.5em', fontWeight: 'bold' },
   { tag: t.heading2, fontSize: '1.4em', fontWeight: 'bold' },
@@ -36,12 +35,14 @@ const markdownHighlight = HighlightStyle.define([
   { tag: t.strong, fontWeight: 'bold' },
   { tag: t.emphasis, fontStyle: 'italic' },
   { tag: t.strikethrough, textDecoration: 'line-through' },
-  { tag: t.monospace, fontFamily: "'Fira Code', 'Courier New', monospace", color: '#e0c9a6' },
+  { tag: t.monospace, fontFamily: "'Fira Code', 'Courier New', monospace" },
   { tag: [t.link, t.url], color: '#7aa2f7', textDecoration: 'underline' },
   { tag: t.quote, color: '#9aaab0', fontStyle: 'italic' },
   { tag: [t.processingInstruction, t.meta], color: '#6f6f6f' },
+]);
 
-  // Code-token colors for highlighted fenced code blocks (dark, VS Code-ish).
+// Code-token colors, swapped by code-block background brightness (see below).
+const codeHighlightDark = HighlightStyle.define([
   { tag: [t.keyword, t.controlKeyword, t.moduleKeyword, t.operatorKeyword], color: '#c586c0' },
   { tag: [t.string, t.special(t.string)], color: '#ce9178' },
   { tag: [t.comment, t.lineComment, t.blockComment], color: '#6a9955', fontStyle: 'italic' },
@@ -54,22 +55,53 @@ const markdownHighlight = HighlightStyle.define([
   { tag: t.regexp, color: '#d16969' },
   { tag: t.tagName, color: '#569cd6' },
   { tag: [t.punctuation, t.bracket, t.escape], color: '#d4d4d4' },
+  { tag: t.monospace, color: '#e0c9a6' },
 ]);
 
-const editorTheme = EditorView.theme(
-  {
-    '&': { color: '#FFF0E3', backgroundColor: 'transparent', height: '100%' },
-    '&.cm-focused': { outline: 'none' },
-    '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', paddingBottom: '50vh' },
-    '.cm-content': { caretColor: '#FFF0E3', paddingRight: '10px' },
-    '.cm-cursor, .cm-dropCursor': { borderLeftColor: '#FFF0E3' },
-    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
-      backgroundColor: '#3a3a3a',
-    },
-    '.cm-placeholder': { color: '#959595' },
+// Light-optimized (VS Code Light+ inspired) for a light code background.
+const codeHighlightLight = HighlightStyle.define([
+  { tag: [t.keyword, t.controlKeyword, t.moduleKeyword, t.operatorKeyword], color: '#0000ff' },
+  { tag: [t.string, t.special(t.string)], color: '#a31515' },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: '#008000', fontStyle: 'italic' },
+  { tag: [t.number, t.integer, t.float], color: '#098658' },
+  { tag: [t.bool, t.null, t.atom], color: '#0000ff' },
+  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: '#795e26' },
+  { tag: [t.typeName, t.className, t.namespace], color: '#267f99' },
+  { tag: [t.propertyName, t.attributeName, t.definition(t.variableName)], color: '#001080' },
+  { tag: [t.operator], color: '#444444' },
+  { tag: t.regexp, color: '#811f3f' },
+  { tag: t.tagName, color: '#800000' },
+  { tag: [t.punctuation, t.bracket, t.escape], color: '#444444' },
+  { tag: t.monospace, color: '#a31515' },
+]);
+
+// Perceived-brightness check on the (possibly customized) code-block bg, used to
+// pick the matching syntax theme automatically.
+const isLightHex = (hex: string): boolean => {
+  const h = hex.replace('#', '');
+  if (h.length < 6) return false;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 140;
+};
+
+const codeHighlight = () =>
+  syntaxHighlighting(isLightHex(effectiveColors().codeBg) ? codeHighlightLight : codeHighlightDark);
+
+// Editor chrome only — references the same semantic tokens so it follows the
+// theme. Syntax-highlight colors above are deliberately left untouched.
+const editorTheme = EditorView.theme({
+  '&': { color: 'var(--text)', backgroundColor: 'transparent', height: '100%' },
+  '&.cm-focused': { outline: 'none' },
+  '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', paddingBottom: '50vh' },
+  '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px' },
+  '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+    backgroundColor: 'var(--bg-tertiary)',
   },
-  { dark: true },
-);
+  '.cm-placeholder': { color: 'var(--text-muted)' },
+});
 
 function Editor({ rawContent, onChange, placeholder = 'Start typing your note here...', title, onTitleChange, createFile }: EditorProps) {
   const { '*': parsedFilePath } = useParams();
@@ -85,6 +117,8 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   createFileRef.current = createFile;
   const settingExternal = useRef(false);
   const awaitingLoad = useRef(false);
+  // Holds the code-syntax highlight style so it can be swapped on theme change.
+  const codeHlRef = useRef(new Compartment());
 
   const invalidChars = /[\\/:*?"<>|]/;
 
@@ -131,6 +165,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
           keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
           markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [WikiLink] }),
           syntaxHighlighting(markdownHighlight),
+          codeHlRef.current.of(codeHighlight()),
           livePreview,
           EditorView.lineWrapping,
           cmPlaceholder(placeholder),
@@ -181,6 +216,15 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
     // Created once; content/file syncing is handled by the effect below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-pick code syntax highlighting (dark vs light) when settings change.
+  useEffect(
+    () =>
+      subscribe(() => {
+        viewRef.current?.dispatch({ effects: codeHlRef.current.reconfigure(codeHighlight()) });
+      }),
+    [],
+  );
 
   // Sync external content changes (file switches, loads, autosave restores)
   // into the editor without clobbering what the user is actively typing.
