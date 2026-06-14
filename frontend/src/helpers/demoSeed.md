@@ -5,6 +5,8 @@ This note shows off every formatting feature the editor currently supports (vers
 ## Architecture
 Inspired by folder structures, GraphWrite save files in a branching format. Each file can have a child file. Infinitely. You can add links to the child files like this [[child]].
 
+If you find the file list on the left of the screen too frustrating to use, you can alternatively open the graphview by pressing the button to the top right.
+
 ## Text formatting
 You can write **bold text**, *italic text*, ~~strikethrough~~, and `inline code`. Mix them together for things like ***bold italics*** when one emphasis just isn't enough.
 
@@ -21,11 +23,17 @@ Six levels of headings are available:
 ## Lists
 Unordered lists, with nesting:
 
-- Apples
-- Vegetables
-  - Carrots
-  - Spinach
-- Grains
+- Never gonna
+  - give you up
+  - let you down
+  - run around
+  - desert you
+
+- Additionally, never gonna
+  - make you cry
+  - say goodbye
+  - tell a lie
+  - hurt you
 
 Ordered lists, also nestable:
 

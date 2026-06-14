@@ -213,6 +213,24 @@ function buildDecorations(view: EditorView): DecorationSet {
           return false;
         }
 
+        // Nested list items get extra left indent (per level) so the hierarchy
+        // reads more clearly than the source whitespace alone conveys.
+        if (node.name === 'ListItem') {
+          let depth = 0;
+          for (let p = node.node.parent; p; p = p.parent) {
+            if (p.name === 'BulletList' || p.name === 'OrderedList') depth++;
+          }
+          if (depth >= 2) {
+            const line = doc.lineAt(node.from);
+            builder.add(
+              line.from,
+              line.from,
+              Decoration.line({ attributes: { style: `margin-left: ${(depth - 1) * 0.8}em` } }),
+            );
+          }
+          return;
+        }
+
         if (node.name === 'HorizontalRule') {
           if (!onActiveLine) builder.add(node.from, node.to, ruleDeco);
           return;

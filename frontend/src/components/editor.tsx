@@ -27,10 +27,12 @@ interface EditorProps {
 // document IS the markdown, so there is no lossy round-trip — what you type is
 // exactly what gets saved.
 const markdownHighlight = HighlightStyle.define([
-  { tag: t.heading1, fontSize: '1.6em', fontWeight: 'bold' },
+  { tag: t.heading1, fontSize: '1.5em', fontWeight: 'bold' },
   { tag: t.heading2, fontSize: '1.4em', fontWeight: 'bold' },
-  { tag: t.heading3, fontSize: '1.25em', fontWeight: 'bold' },
-  { tag: [t.heading4, t.heading5, t.heading6], fontWeight: 'bold' },
+  { tag: t.heading3, fontSize: '1.3em', fontWeight: 'bold' },
+  { tag: t.heading4, fontSize: '1.2em', fontWeight: 'bold' },
+  { tag: t.heading5, fontSize: '1.1em', fontWeight: 'bold' },
+  { tag: t.heading6, fontSize: '1em', fontWeight: 'bold' },
   { tag: t.strong, fontWeight: 'bold' },
   { tag: t.emphasis, fontStyle: 'italic' },
   { tag: t.strikethrough, textDecoration: 'line-through' },
