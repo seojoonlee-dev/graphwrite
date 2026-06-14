@@ -259,6 +259,7 @@ hr {
 }
 
 .btn-add {
+  opacity: 0;
   padding-left: 5px;
   font-size: 14px;
   flex-shrink: 0;
@@ -266,14 +267,17 @@ hr {
   font-family: var(--app-font, 'Times New Roman', Times, serif);
 }
 
-/* On hover-capable devices the add button stays hidden until row hover.
-   Touch devices have no hover, so it's shown by default instead. */
+/* Hover-capable devices reveal the add button on row hover. */
 @media (hover: hover) {
-  .btn-add {
-    opacity: 0;
-  }
-
   .file-tree-node:hover .btn-add {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Touch devices have no hover, so reveal it on the active row only. */
+@media (hover: none) {
+  .file-tree-node.is-active .btn-add {
     opacity: 1;
     pointer-events: auto;
   }
