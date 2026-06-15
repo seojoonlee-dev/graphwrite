@@ -1,4 +1,17 @@
-# GraphWrite
+<div align="center">
+  <img width="128" height="128" alt="icon_corner_radius" src="https://github.com/user-attachments/assets/8574f1df-e830-4d76-a290-790f26eb4f4f" />
+  <h1>GraphWrite</h1>
+</div>
+
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![Tauri](https://img.shields.io/badge/tauri-%2324C8DB.svg?style=for-the-badge&logo=tauri&logoColor=%23FFFFFF)
+![Markdown](https://img.shields.io/badge/markdown-%23000000.svg?style=for-the-badge&logo=markdown&logoColor=white)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F.svg?style=for-the-badge&logo=node.js&logoColor=white)
+
+<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/056be0e3-8694-4d21-9c02-db2311ef29a1" />
+
+
 
 GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no drawing, no telemetry, no bloat. Just good old note taking.
 
