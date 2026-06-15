@@ -10,15 +10,26 @@ pub fn run() {
         )?;
       }
 
-      // Tiling WMs like Hyprland don't use title bars, but GTK still draws its
-      // own client-side decorations. Strip them only under Hyprland (detected
-      // via the env var it sets for clients), leaving other Linux DEs / macOS /
-      // Windows with their native title bars.
       #[cfg(target_os = "linux")]
-      if std::env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_some() {
+      {
         use tauri::Manager;
         if let Some(window) = app.get_webview_window("main") {
-          let _ = window.set_decorations(false);
+          // Tiling WMs like Hyprland don't use title bars, but GTK still draws
+          // its own client-side decorations. Strip them only under Hyprland
+          // (detected via the env var it sets for clients), leaving other Linux
+          // DEs / macOS / Windows with their native title bars.
+          if std::env::var_os("HYPRLAND_INSTANCE_SIGNATURE").is_some() {
+            let _ = window.set_decorations(false);
+          }
+
+          // WebKitGTK ships with smooth (animated) wheel scrolling disabled, so
+          // scrolling feels stepped/jagged. Turn it on for the desktop app.
+          let _ = window.with_webview(|webview| {
+            use webkit2gtk::{SettingsExt, WebViewExt};
+            if let Some(settings) = WebViewExt::settings(&webview.inner()) {
+              settings.set_enable_smooth_scrolling(true);
+            }
+          });
         }
       }
 

@@ -24,6 +24,12 @@ log = "0.4"
 tauri = { version = "2.11.2", features = [] }
 tauri-plugin-log = "2"
 
+# Linux-only: used to flip WebKitGTK's enable-smooth-scrolling setting on the
+# webview (off by default, which makes wheel scrolling feel stepped/jagged).
+# Pinned to the version Tauri itself uses so the WebView types match.
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "2.0"
+
 [profile.release]
 codegen-units = 1
 lto = true

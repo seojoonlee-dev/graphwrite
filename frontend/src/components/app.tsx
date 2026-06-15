@@ -122,7 +122,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { fi
                 onBlur={commitRename}
               />
             ) : (
-              <Link to={`/${dirPath}`} className="file-tree-link" onClick={onNavigate}>
+              <Link to={`/${dirPath}`} className="file-tree-link" onClick={onNavigate} draggable={false}>
                 <button className="btn-link">{name}</button>
               </Link>
             )}
@@ -166,7 +166,13 @@ function MainWorkspace() {
   } = useNotes();
 
   const [popupOpen, setPopupOpen] = useState(false);
-  const [sideBarOpen, toggleSideBar] = useState(() => { const saved = localStorage.getItem("sideBarOpen"); return saved ? JSON.parse(saved) : true; })
+  const [sideBarOpen, toggleSideBar] = useState(() => {
+    // Phones get a full-screen sidebar overlay, so always start closed there
+    // regardless of the saved preference.
+    if (window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches) return false;
+    const saved = localStorage.getItem("sideBarOpen");
+    return saved ? JSON.parse(saved) : true;
+  })
 
   const location = useLocation();
   const prevLocationRef = useRef(location);
@@ -301,7 +307,7 @@ function MainWorkspace() {
             <TintedImage src='/settings.svg' alt="Settings" />
           </button>
           <div className="spacer" />
-          <button className="btn-header" onClick={() => withViewTransition(() => updateShowGraph(!showGraph))}>
+          <button className="btn-header" onClick={() => { closeSidebarOnPhone(); withViewTransition(() => updateShowGraph(!showGraph)); }}>
             {showGraph ?
               <TintedImage src='/editor.svg' alt="editor" /> :
               <TintedImage src='/graph.svg' alt="graph" />

@@ -100,6 +100,7 @@ export interface Settings {
   startupNote: string;
   theme: ThemeName;
   colors: Partial<ThemeTokens>;
+  centerEditor: boolean;
 }
 
 const KEY = 'graphwrite-settings';
@@ -110,6 +111,8 @@ const DEFAULTS: Settings = {
   startupNote: '',
   theme: 'dark',
   colors: {},
+  // Default to the original full-width editor layout.
+  centerEditor: false,
 };
 
 export const loadSettings = (): Settings => {
@@ -160,6 +163,8 @@ export const applySettings = (s: Settings = loadSettings()): void => {
   (Object.keys(colors) as (keyof ThemeTokens)[]).forEach((token) => {
     root.setProperty(cssVar(token), colors[token]);
   });
+  // Drives the optional centered editor layout (see editor.css).
+  document.documentElement.classList.toggle('center-editor', s.centerEditor);
 };
 
 // Convenience accessors for the settings UI.
@@ -172,6 +177,9 @@ export const setStartupNote = (value: string) =>
 
 export const getTheme = () => loadSettings().theme;
 export const setTheme = (theme: ThemeName) => saveSettings({ theme });
+
+export const getCenterEditor = () => loadSettings().centerEditor;
+export const setCenterEditor = (value: boolean) => saveSettings({ centerEditor: value });
 
 export const setColor = (token: keyof ThemeTokens, value: string) =>
   saveSettings({ colors: { ...loadSettings().colors, [token]: value } });

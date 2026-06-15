@@ -61,6 +61,15 @@ a:hover {
   height: 100%;
 }
 
+/* Optional centered layout (Settings → "Align editor to the center"), matching
+   the Start screen's column. Toggled by the .center-editor class on <html>. */
+.center-editor .editor {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
 .editor > div:not(.editor-title) {
   flex-grow: 1;
   display: flex;

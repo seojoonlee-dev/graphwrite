@@ -26,6 +26,16 @@
   border: none;
 }
 
+/* Tauri builds (class set on <html> in main.tsx) get a thinner scrollbar. */
+.tauri ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.tauri ::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+}
+
 /* Semantic color tokens (dark preset defaults). Overridden at runtime by
    applySettings() in settings.ts based on the chosen theme / custom colors.
    Code-block surfaces and syntax-highlight colors are intentionally not tokens —
@@ -45,6 +55,10 @@
   /* Status-bar/notch inset, divided by the phone/tablet zoom transform so the
      gap stays a physically-constant size; 0 on desktop/web (no inset). */
   --safe-top: calc(env(safe-area-inset-top, 0px) / var(--zoom, 1));
+  /* Desktop/web defaults for the header clearance and bottom safe zone; the
+     touch (coarse) block overrides these with device-aware values. */
+  --content-top: 80px;
+  --safe-bottom: 16px;
 }
 
 html, body {
@@ -58,6 +72,10 @@ body {
   background-color: var(--bg);
   color: var(--text);
   font-family: var(--app-font, 'Times New Roman', Times, serif);
+  /* Kill the Android webview's tap/long-press highlight box on UI elements
+     (e.g. long-pressing a file row for its context menu). Doesn't affect real
+     text selection — the editor's CodeMirror text stays selectable. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -298,18 +316,34 @@ hr {
   .drag-handle {
     display: none;
   }
+
+  /* Slightly larger file-list text on phones for easier reading/tapping. */
+  .btn-link {
+    font-size: 1.1em;
+  }
 }
 
 .btn-header {
-  /* Sized in em (relative to the inherited font-size) so the buttons scale with
-     the text — including the OS/webview text-size setting on phones, which
-     scales cascaded font-sizes but not always the root that rem depends on. */
-  width: 1.75em;
+  /* Explicit square (em-based, so it scales with text/zoom). An explicit height
+     beats the flex row's default stretch, and flex:none stops it being squeezed
+     — the icon then fills it via the .tinted-image rule below. Mobile overrides
+     these with the measured --btn-size via the higher-specificity
+     `.l-header .btn-header` rules. */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.375em;
+  flex: none;
+  width: 2.1em;
+  height: 2.1em;
+  padding: 0.4em;
   border-radius: 6px;
+}
+
+/* Icon fills the button box (minus padding); the .tinted-image wrapper would
+   otherwise cap/govern the size. */
+.btn-header .tinted-image {
+  width: 100%;
+  height: 100%;
 }
 
 @media (hover: hover) {
@@ -387,6 +421,9 @@ hr {
   flex: 1;
   text-decoration: none;
   min-width: 0;
+  /* Suppress the webview's long-press link preview/drag-ghost on the file rows. */
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .btn-link {

@@ -8,11 +8,13 @@ import {
   type ThemeName,
   type ThemeTokens,
   effectiveColors,
+  getCenterEditor,
   getFont,
   getStartupNote,
   getTheme,
   resetColors,
   saveSettings,
+  setCenterEditor,
   setColor,
   setFont,
   setStartupNote,
@@ -62,7 +64,7 @@ function General() {
             type='text'
             name='startup'
             value={startup}
-            placeholder='(leave blank to start in start screen)'
+            placeholder='Note, Note/Tasks ...'
             onChange={(e) => setStartup(e.target.value.replace(/^\/+/, ''))}
             onBlur={changeStartup}
           />
@@ -71,7 +73,7 @@ function General() {
       <div className='settings-view'>
         <h3>Note history</h3>
         <p>Resets the "Recent notes" list shown on the start screen.</p>
-        <button className='btn-secondary' onClick={handleClearHistory} disabled={historyCleared}>
+        <button className='btn-secondary btn-fixed' onClick={handleClearHistory} disabled={historyCleared}>
           {historyCleared ? 'Cleared' : 'Clear note history'}
         </button>
       </div>
@@ -102,6 +104,7 @@ function Appearance() {
   const [theme, setThemeState] = useState<ThemeName>(getTheme());
   const [colors, setColors] = useState<ThemeTokens>(effectiveColors());
   const [zoom, setZoomState] = useState(getZoom());
+  const [centerEditor, setCenterEditorState] = useState(getCenterEditor());
 
   const changeFont = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value;
@@ -136,6 +139,12 @@ function Appearance() {
     setZoomState(setZoom(parseFloat(event.target.value)));
   };
 
+  const changeCenterEditor = (event: ChangeEvent<HTMLInputElement>) => {
+    const next = event.target.checked;
+    setCenterEditorState(next);
+    setCenterEditor(next);
+  };
+
   // Always include the current level so a value set via keyboard still shows.
   const zoomLevels = ZOOM_LEVELS.includes(zoom)
     ? ZOOM_LEVELS
@@ -166,7 +175,7 @@ function Appearance() {
               </label>
             ))}
           </div>
-          <button className='btn-secondary' onClick={handleResetColors}>
+          <button className='btn-secondary btn-fixed' onClick={handleResetColors}>
             Reset colors
           </button>
         </div>
@@ -196,6 +205,15 @@ function Appearance() {
             </option>
           ))}
         </select>
+      </div>
+
+      <div className='settings-view'>
+        <h3>Align editor to the center</h3>
+        <p>Center the editor in a fixed-width column instead of spanning the full width.</p>
+        <label className='settings-checkbox'>
+          <input type='checkbox' checked={centerEditor} onChange={changeCenterEditor} />
+          <span>Enabled</span>
+        </label>
       </div>
     </>
   )
