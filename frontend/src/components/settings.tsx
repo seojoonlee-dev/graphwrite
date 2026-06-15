@@ -18,6 +18,7 @@ import {
   setStartupNote,
   setTheme,
 } from '../helpers/settings';
+import { getZoom, isTauri, setZoom } from '../helpers/zoom';
 import '../style/settings.css';
 
 // The demo stores notes in the browser (IndexedDB) and has no backend, so the
@@ -79,10 +80,14 @@ function General() {
 
 const TOKEN_KEYS = Object.keys(TOKEN_LABELS) as (keyof ThemeTokens)[];
 
-function Theme() {
+// Zoom presets offered in the dropdown (mirrors a browser's zoom menu).
+const ZOOM_LEVELS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+
+function Appearance() {
   const [font, setFontState] = useState(getFont());
   const [theme, setThemeState] = useState<ThemeName>(getTheme());
   const [colors, setColors] = useState<ThemeTokens>(effectiveColors());
+  const [zoom, setZoomState] = useState(getZoom());
 
   const changeFont = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value;
@@ -113,6 +118,15 @@ function Theme() {
     setColors(effectiveColors());
   };
 
+  const changeZoom = (event: ChangeEvent<HTMLSelectElement>) => {
+    setZoomState(setZoom(parseFloat(event.target.value)));
+  };
+
+  // Always include the current level so a value set via keyboard still shows.
+  const zoomLevels = ZOOM_LEVELS.includes(zoom)
+    ? ZOOM_LEVELS
+    : [...ZOOM_LEVELS, zoom].sort((a, b) => a - b);
+
   return (
     <>
       <div className='settings-view'>
@@ -141,6 +155,20 @@ function Theme() {
           <button className='btn-secondary' onClick={handleResetColors}>
             Reset colors
           </button>
+        </div>
+      )}
+
+      {isTauri() && (
+        <div className='settings-view'>
+          <h3>Screen zoom</h3>
+          <p>Scale the whole interface. Handy on touch devices where the keyboard zoom shortcuts aren't available.</p>
+          <select className='font-select' value={zoom} onChange={changeZoom}>
+            {zoomLevels.map((z) => (
+              <option key={z} value={z}>
+                {Math.round(z * 100)}%{z === 1 ? ' (default)' : ''}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -213,8 +241,8 @@ export function Settings({to}: SettingsProps) {
           <Link to={`/settings/general`} className={`settings-link ${setting === "general" ? 'is-active': ''}`}>
             <button className="btn-tabbar">General</button>
           </Link>
-          <Link to={`/settings/theme`} className={`settings-link ${setting === "theme" ? 'is-active': ''}`}>
-            <button className="btn-tabbar">Theme</button>
+          <Link to={`/settings/appearance`} className={`settings-link ${setting === "appearance" ? 'is-active': ''}`}>
+            <button className="btn-tabbar">Appearance</button>
           </Link>
           {isDemo && (
             <Link to={`/settings/demo`} className={`settings-link ${setting === "demo" ? 'is-active': ''}`}>
@@ -225,7 +253,7 @@ export function Settings({to}: SettingsProps) {
       </div>
         <div className='settings-main'>
           <h1 className='settings-title'>{capitalizeFirstLetter(setting)}</h1>
-          {setting === "general" ? <General /> : setting === "demo" && isDemo ? <Demo /> : <Theme />}
+          {setting === "general" ? <General /> : setting === "demo" && isDemo ? <Demo /> : <Appearance />}
         </div>
       </div>
     </>
