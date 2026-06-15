@@ -95,12 +95,15 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
   },
 };
 
+export type VibrationLevel = 'off' | 'low' | 'medium' | 'high';
+
 export interface Settings {
   font: string;
   startupNote: string;
   theme: ThemeName;
   colors: Partial<ThemeTokens>;
   centerEditor: boolean;
+  vibration: VibrationLevel;
 }
 
 const KEY = 'graphwrite-settings';
@@ -113,6 +116,7 @@ const DEFAULTS: Settings = {
   colors: {},
   // Default to the original full-width editor layout.
   centerEditor: false,
+  vibration: 'medium',
 };
 
 export const loadSettings = (): Settings => {
@@ -180,6 +184,13 @@ export const setTheme = (theme: ThemeName) => saveSettings({ theme });
 
 export const getCenterEditor = () => loadSettings().centerEditor;
 export const setCenterEditor = (value: boolean) => saveSettings({ centerEditor: value });
+
+// Vibration length (ms) per intensity level; 'off' disables it.
+const VIBRATION_MS: Record<VibrationLevel, number> = { off: 0, low: 10, medium: 25, high: 50 };
+export const getVibration = () => loadSettings().vibration;
+export const setVibration = (value: VibrationLevel) => saveSettings({ vibration: value });
+export const getVibrationMs = (level: VibrationLevel = loadSettings().vibration) =>
+  VIBRATION_MS[level] ?? 0;
 
 export const setColor = (token: keyof ThemeTokens, value: string) =>
   saveSettings({ colors: { ...loadSettings().colors, [token]: value } });

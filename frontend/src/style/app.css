@@ -313,6 +313,11 @@ hr {
     border-right: none;
   }
 
+  /* A little breathing room below the file list on phones. */
+  .sidebar-content {
+    padding-bottom: calc(var(--safe-bottom) + 12px);
+  }
+
   .drag-handle {
     display: none;
   }

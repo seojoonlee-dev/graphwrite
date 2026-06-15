@@ -7,11 +7,14 @@ import {
   TOKEN_LABELS,
   type ThemeName,
   type ThemeTokens,
+  type VibrationLevel,
   effectiveColors,
   getCenterEditor,
   getFont,
   getStartupNote,
   getTheme,
+  getVibration,
+  getVibrationMs,
   resetColors,
   saveSettings,
   setCenterEditor,
@@ -19,14 +22,19 @@ import {
   setFont,
   setStartupNote,
   setTheme,
+  setVibration,
 } from '../helpers/settings';
 import { getZoom, isTauri, setZoom } from '../helpers/zoom';
 import { clearRecents } from '../helpers/recents';
+import { vibrate } from '../helpers/haptics';
 import '../style/settings.css';
 
 // The demo stores notes in the browser (IndexedDB) and has no backend, so the
 // server address setting is irrelevant there.
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
+
+// Vibration only applies to touch devices, so the setting is hidden elsewhere.
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 
 function General() {
   const serverIp = localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001";
@@ -219,6 +227,31 @@ function Appearance() {
   )
 }
 
+function Misc() {
+  const [vibration, setVibrationState] = useState(getVibration());
+
+  const changeVibration = (event: ChangeEvent<HTMLSelectElement>) => {
+    const next = event.target.value as VibrationLevel;
+    setVibrationState(next);
+    setVibration(next);
+    // Preview the chosen strength.
+    void vibrate(getVibrationMs(next));
+  };
+
+  return (
+    <div className='settings-view'>
+      <h3>Vibration</h3>
+      <p>Haptic feedback strength for actions like opening the menu.</p>
+      <select className='font-select' value={vibration} onChange={changeVibration}>
+        <option value='off'>Disabled</option>
+        <option value='low'>Low</option>
+        <option value='medium'>Medium</option>
+        <option value='high'>High</option>
+      </select>
+    </div>
+  )
+}
+
 function Demo() {
   const [resetting, setResetting] = useState(false);
 
@@ -276,6 +309,11 @@ export function Settings({to}: SettingsProps) {
           <Link to={`/settings/appearance`} className={`settings-link ${setting === "appearance" ? 'is-active': ''}`}>
             <button className="btn-tabbar">Appearance</button>
           </Link>
+          {isTouch && (
+            <Link to={`/settings/misc`} className={`settings-link ${setting === "misc" ? 'is-active': ''}`}>
+              <button className="btn-tabbar">Misc</button>
+            </Link>
+          )}
           {isDemo && (
             <Link to={`/settings/demo`} className={`settings-link ${setting === "demo" ? 'is-active': ''}`}>
               <button className="btn-tabbar">Demo</button>
@@ -285,7 +323,7 @@ export function Settings({to}: SettingsProps) {
       </div>
         <div className='settings-main'>
           <h1 className='settings-title'>{capitalizeFirstLetter(setting)}</h1>
-          {setting === "general" ? <General /> : setting === "demo" && isDemo ? <Demo /> : <Appearance />}
+          {setting === "general" ? <General /> : setting === "misc" && isTouch ? <Misc /> : setting === "demo" && isDemo ? <Demo /> : <Appearance />}
         </div>
       </div>
     </>

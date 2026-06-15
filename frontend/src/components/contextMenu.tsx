@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { nameOf } from '../helpers/paths';
+import { getVibrationMs } from '../helpers/settings';
+import { vibrate } from '../helpers/haptics';
 
 interface ContextMenuProps {
   x: number;
@@ -27,6 +29,13 @@ export function ContextMenu({ x, y, path, onClose, onRename, onDelete }: Context
     setClosing(true);
     setTimeout(onClose, 190);
   }, [isMobile, onClose]);
+
+  // Short haptic tick when the sheet appears on mobile (length per the setting).
+  useEffect(() => {
+    if (isMobile) void vibrate(getVibrationMs());
+    // Fires once when the menu opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

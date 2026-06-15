@@ -10,6 +10,10 @@ pub fn run() {
         )?;
       }
 
+      // Native haptics for the mobile context-menu vibration.
+      #[cfg(mobile)]
+      app.handle().plugin(tauri_plugin_haptics::init())?;
+
       #[cfg(target_os = "linux")]
       {
         use tauri::Manager;
