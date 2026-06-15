@@ -50,7 +50,7 @@ export function StartScreen({ files, onCreate, onOpenNote, onOpenGraph, onOpenSe
             </span>
             <span className="start-action-text">
               <strong>Settings</strong>
-              <small>Theme, font &amp; zoom ...</small>
+              <small>Theme, font, zoom, etc.</small>
             </span>
           </button>
         </div>
