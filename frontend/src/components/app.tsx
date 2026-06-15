@@ -10,23 +10,21 @@ import { useLongPress } from '../hooks/useLongPress';
 import { useZoom } from '../hooks/useZoom';
 import { StartScreen } from './startScreen';
 import { pushRecent } from '../helpers/recents';
-// Lazy-loaded into separate chunks so heavy deps (CodeMirror, @xyflow/react +
-// dagre) are only fetched when their view is actually shown — keeps the initial
-// bundle light. Each is wrapped in <Suspense> at its render site.
+import { applyTextScale } from '../helpers/textScale';
+// Editor + Settings stay lazy (heavy CodeMirror deps; rarely-first views) so the
+// initial bundle stays light. Each is wrapped in <Suspense> at its render site.
 const Editor = lazy(() => import('./editor'));
 const Settings = lazy(() => import('./settings').then((m) => ({ default: m.Settings })));
-// Named factory so we can warm the chunk in the background (see prefetch effect)
-// before the user opens the graph — the module is fetched once and cached, so
-// React.lazy resolves instantly when they actually switch to it.
-const importGraphView = () => import('./graphView');
-const GraphView = lazy(() => importGraphView().then((m) => ({ default: m.GraphView })));
+// GraphView is imported eagerly: lazy-loading it added a measurable delay when
+// switching to the graph, even with prefetching.
+import { GraphView } from './graphView';
 import { getStartupNote } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 // True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
-const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void }) => {
+const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void, onNavigate?: () => void }) => {
   const { '*': parsedFilePath } = useParams();
 
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -124,7 +122,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename }: { files: string[
                 onBlur={commitRename}
               />
             ) : (
-              <Link to={`/${dirPath}`} className="file-tree-link">
+              <Link to={`/${dirPath}`} className="file-tree-link" onClick={onNavigate}>
                 <button className="btn-link">{name}</button>
               </Link>
             )}
@@ -256,23 +254,6 @@ function MainWorkspace() {
     if (parsedFilePath && !notFound) pushRecent(parsedFilePath);
   }, [parsedFilePath, notFound]);
 
-  // Warm the graph-view chunk in the background once the app is idle, so the
-  // first switch to the graph doesn't pay the download cost. Only matters until
-  // the graph has been opened (the module caches after that).
-  useEffect(() => {
-    if (showGraph) return;
-    const prefetch = () => { void importGraphView(); };
-    const ric = window.requestIdleCallback;
-    if (ric) {
-      const id = ric(prefetch, { timeout: 3000 });
-      return () => window.cancelIdleCallback?.(id);
-    }
-    const t = setTimeout(prefetch, 1500);
-    return () => clearTimeout(t);
-    // Run once after mount; the import is idempotent.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  
   // popup
   useEffect(() => {
     if (popupOpen) {
@@ -298,6 +279,16 @@ function MainWorkspace() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSave]);
+
+  // On phones the sidebar is a full-screen overlay, so close it after opening a
+  // note to reveal the editor. No-op on larger screens (matches the CSS phone
+  // breakpoint).
+  const closeSidebarOnPhone = useCallback(() => {
+    if (window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches) {
+      toggleSideBar(false);
+      localStorage.setItem('sideBarOpen', JSON.stringify(false));
+    }
+  }, []);
 
   return (
     <>
@@ -334,7 +325,7 @@ function MainWorkspace() {
             )}
 
             {!loading && !error && (
-              <FileList files={files} onCreate={createFile} onDelete={deleteFile} onRename={renameFile} />
+              <FileList files={files} onCreate={createFile} onDelete={deleteFile} onRename={renameFile} onNavigate={closeSidebarOnPhone} />
             )}
           </div>
           <div
@@ -430,6 +421,16 @@ function MainWorkspace() {
 
 export default function App() {
   useZoom();
+
+  // Measure the webview's text-inflation factor into --text-scale so the header
+  // buttons can match the (Android-inflated) text size. Re-measure on resize /
+  // orientation change, since font auto-sizing is width-dependent.
+  useEffect(() => {
+    applyTextScale();
+    window.addEventListener('resize', applyTextScale);
+    return () => window.removeEventListener('resize', applyTextScale);
+  }, []);
+
   return (
     <BrowserRouter>
       <Suspense fallback={null}>

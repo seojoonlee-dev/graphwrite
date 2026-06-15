@@ -94,8 +94,8 @@ function General() {
 
 const TOKEN_KEYS = Object.keys(TOKEN_LABELS) as (keyof ThemeTokens)[];
 
-// Zoom presets offered in the dropdown (mirrors a browser's zoom menu).
-const ZOOM_LEVELS = [0.5, 0.67, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+// Zoom presets offered in the dropdown: 50% → 300% in 10% increments.
+const ZOOM_LEVELS = Array.from({ length: 26 }, (_, i) => (50 + i * 10) / 100);
 
 function Appearance() {
   const [font, setFontState] = useState(getFont());
