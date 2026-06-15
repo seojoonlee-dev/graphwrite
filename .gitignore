@@ -18,6 +18,9 @@ frontend/.env
 # Built image tarballs (docker buildx output)
 images/
 
+# Official marketing website (kept out of the app repo)
+website/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
