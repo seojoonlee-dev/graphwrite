@@ -41,6 +41,9 @@ For reference, GraphWrite's own footprint:
 
 ## Graph View
 
+<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/502ac829-97bf-4a5e-b02e-b1a9e3e5e920" />
+
+
 Because notes in GraphWrite branch into child notes, your whole collection naturally forms a tree, and the graph view shows you that tree at a glance. Each note is a node, and every branch from a parent note to its children is drawn as an edge, so you can see how your notes connect rather than scrolling a flat list.
 
 The layout is generated automatically (left to right, using dagre), and from there it is yours to rearrange:
@@ -56,10 +59,9 @@ The graph is rendered with React Flow.
 
 - **Branching notes.** Inspired by a literal tree, any note can contain child notes, so your notes form a tree instead of a flat list. The sidebar shows the full hierarchy with inline renaming, collapsing, and a context menu (right-click on desktop, long-press on mobile).
 - **Live-preview markdown editing.** Markdown is rendered inline as you type. The syntax markers stay hidden until your cursor enters them, Obsidian-style. There is no formatting toolbar; you just write plain markdown. Headings, bold/italic/strikethrough, inline and fenced code (syntax-highlighted, with a copy button), ordered and unordered lists, blockquotes, links, and horizontal rules are all supported. Built on CodeMirror.
-- **Graph view.** See your notes as a graph and rearrange them freely. Click and drag to pan, shift + drag to select multiple nodes, double click a node to open the note, and right click a node for file actions. Node positions are remembered, and a reset button restores the automatic layout.
-- **Wiki links.** Type `[[name]]` followed by a space to create a link inside your note. Clicking it opens the child note with that name, creating it first if it does not exist yet. This makes branching a new note off the one you are writing as simple as naming it. Links are stored as plain `[[name]]` text in the markdown file.
+- **Wiki links.** Type `[[name]]` to create a link inside your note. Clicking it opens the child note with that name, creating it first if it does not exist yet. This makes branching a new note off the one you are writing as simple as naming it. Links are stored as plain `[[name]]` text in the markdown file.
 - **Themes and appearance.** Built-in Dark, AMOLED Black and Light themes, a fully custom color palette, several fonts, and interface zoom, all in Settings. Optionally center the editor in a column for a more focused layout.
-- **Cross-platform.** Use GraphWrite in the browser, on the desktop, or on mobile. The desktop and mobile apps add niceties like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
+- **Cross-platform.** Use GraphWrite in the browser, on the desktop, or on mobile. The mobile apps add niceties like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
 - **Autosave.** Changes are saved automatically as you type. Ctrl/Cmd + S still works if you want the peace of mind.
 
 ## Platforms
