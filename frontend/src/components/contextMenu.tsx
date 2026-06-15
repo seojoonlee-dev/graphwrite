@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
-import { getCssZoomScale } from '../helpers/zoom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { nameOf } from '../helpers/paths';
 
 interface ContextMenuProps {
   x: number;
@@ -11,49 +12,74 @@ interface ContextMenuProps {
 }
 
 export function ContextMenu({ x, y, path, onClose, onRename, onDelete }: ContextMenuProps) {
+  // On phones the menu is a bottom sheet over a dark scrim (positioned by CSS);
+  // elsewhere it's a popup at the cursor.
+  const isMobile = typeof window !== 'undefined'
+    && window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
+
+  // Play an exit animation (mobile) before actually unmounting.
+  const [closing, setClosing] = useState(false);
+  const closingRef = useRef(false);
+  const close = useCallback(() => {
+    if (closingRef.current) return;
+    if (!isMobile) { onClose(); return; }
+    closingRef.current = true;
+    setClosing(true);
+    setTimeout(onClose, 190);
+  }, [isMobile, onClose]);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape') close();
     }
-
-    window.addEventListener('click', onClose);
     document.addEventListener('keydown', handleKeyDown);
-
+    // Desktop closes on any outside click; mobile closes via the scrim (so a tap
+    // on the sheet itself doesn't dismiss it).
+    if (!isMobile) window.addEventListener('click', close);
     return () => {
-      window.removeEventListener('click', onClose);
       document.removeEventListener('keydown', handleKeyDown);
+      if (!isMobile) window.removeEventListener('click', close);
     };
-  }, [onClose]);
+  }, [close, isMobile]);
 
-  // The menu is fixed inside .l-app, which is scaled by a CSS transform on
-  // touch devices. Its coordinates live in the pre-scale space, so divide the
-  // viewport click position by the scale to land it under the cursor/finger.
-  const scale = getCssZoomScale();
+  const cls = (base: string) => `${base}${closing ? ' is-closing' : ''}`;
 
-  return (
-    <div className="context-menu" style={{ top: y / scale, left: x / scale }}>
-      <button
-        className="context-menu-item"
-        onClick={(e) => {
-          e.stopPropagation();
-          onRename(path);
-          onClose();
-        }}
+  // Portaled to <body> so the scrim/sheet sit above everything (the sidebar's
+  // stacking context would otherwise trap them below the header on mobile).
+  return createPortal(
+    <>
+      <div className={cls('context-menu-backdrop')} onClick={close} />
+      <div
+        className={cls('context-menu')}
+        style={isMobile ? undefined : { top: y, left: x }}
+        onClick={(e) => e.stopPropagation()}
       >
-        Rename File
-      </button>
-      <button
-        className="context-menu-item is-danger"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(path);
-          onClose();
-        }}
-      >
-        Delete File
-      </button>
-    </div>
+        <div className="context-menu-header">
+          <span className="context-menu-name">{nameOf(path)}</span>
+          <span className="context-menu-path">/{path}</span>
+        </div>
+        <button
+          className="context-menu-item"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRename(path);
+            close();
+          }}
+        >
+          Rename File
+        </button>
+        <button
+          className="context-menu-item is-danger"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(path);
+            close();
+          }}
+        >
+          Delete File
+        </button>
+      </div>
+    </>,
+    document.body,
   );
 }

@@ -172,6 +172,12 @@ function MainWorkspace() {
   const titleHiddenRef = useRef(false);
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const lastScrollTop = useRef(0);
+  // Only react to scrolls from a user gesture (a real drag, plus the momentum
+  // window after release). This ignores programmatic scrolls — the keyboard's
+  // viewport resize, cursor moves on tap, and the title's own reflow.
+  const draggingRef = useRef(false);
+  const touchStartY = useRef(0);
+  const momentumUntil = useRef(0);
   // After a toggle the title's collapse/expand reflows the editor and fires more
   // scroll events; ignore them until this timestamp so they can't bounce it back.
   const scrollLockUntil = useRef(0);
@@ -269,9 +275,11 @@ function MainWorkspace() {
     }
   }, [location, updateShowGraph]);
 
-  // Auto-hide the editor title on scroll-down / reveal on scroll-up. Listens in
-  // the capture phase so it catches scrolling from the (descendant) editor
-  // scroller, which doesn't bubble scroll events. CSS gates the effect to phones.
+  // Auto-hide the editor title on scroll-down / reveal on scroll-up, but only in
+  // response to a real finger drag — so programmatic scrolls (the keyboard's
+  // viewport resize, cursor moves on tap, the title's own reflow) are ignored.
+  // Listens in the capture phase to catch the (descendant) editor scroller, which
+  // doesn't bubble scroll events. CSS gates the visual effect to phones.
   useEffect(() => {
     const el = mainScrollRef.current;
     if (!el) return;
@@ -288,8 +296,10 @@ function MainWorkspace() {
       const max = target.scrollHeight - target.clientHeight;
       // Clamp out overscroll/bounce so it can't flip the direction at the edges.
       const top = Math.max(0, Math.min(target.scrollTop, max));
-      // Skip events fired by the title's own collapse/expand reflow.
-      if (performance.now() < scrollLockUntil.current) {
+      // Honor scrolls only from a user gesture (active drag or its momentum), and
+      // skip the title's own reflow.
+      const userScrolling = draggingRef.current || performance.now() < momentumUntil.current;
+      if (!userScrolling || performance.now() < scrollLockUntil.current) {
         lastScrollTop.current = top;
         return;
       }
@@ -300,8 +310,35 @@ function MainWorkspace() {
       else if (top < last - 6) apply(false);      // scrolling up
       lastScrollTop.current = top;
     };
-    el.addEventListener('scroll', onScroll, { capture: true, passive: true });
-    return () => el.removeEventListener('scroll', onScroll, { capture: true });
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0]?.clientY ?? 0;
+      draggingRef.current = false; // not a drag until the finger actually moves
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY ?? 0;
+      if (Math.abs(y - touchStartY.current) > 10) draggingRef.current = true;
+    };
+    const onTouchEnd = () => {
+      // Keep honoring scroll events through the post-release momentum (flicks do
+      // most of their scrolling there).
+      if (draggingRef.current) momentumUntil.current = performance.now() + 600;
+      draggingRef.current = false;
+    };
+
+    const opts = { capture: true, passive: true } as const;
+    el.addEventListener('scroll', onScroll, opts);
+    window.addEventListener('touchstart', onTouchStart, opts);
+    window.addEventListener('touchmove', onTouchMove, opts);
+    window.addEventListener('touchend', onTouchEnd, opts);
+    window.addEventListener('touchcancel', onTouchEnd, opts);
+    return () => {
+      el.removeEventListener('scroll', onScroll, { capture: true });
+      window.removeEventListener('touchstart', onTouchStart, { capture: true });
+      window.removeEventListener('touchmove', onTouchMove, { capture: true });
+      window.removeEventListener('touchend', onTouchEnd, { capture: true });
+      window.removeEventListener('touchcancel', onTouchEnd, { capture: true });
+    };
   }, []);
 
   // Remember opened notes so the Start screen can list recents.

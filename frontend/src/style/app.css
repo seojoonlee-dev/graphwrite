@@ -517,6 +517,38 @@ hr {
   flex-direction: column;
   padding: 4px;
   min-width: 120px;
+  max-width: 280px;
+}
+
+/* The target file's name + path, shown above the actions. */
+.context-menu-header {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.context-menu-name {
+  font-weight: bold;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.context-menu-path {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  /* Truncate from the start so the end of the path (the note itself) stays
+     visible: rtl flips the ellipsis to the leading edge, text-align keeps it
+     left-aligned. The path text is LTR so it still reads correctly. */
+  direction: rtl;
+  text-align: left;
 }
 
 .context-menu-item {
@@ -527,6 +559,85 @@ hr {
 
 .context-menu-item.is-danger {
   color: #ff6b6b;
+}
+
+.context-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  /* Desktop/web: invisible & click-through (the window listener handles close). */
+  pointer-events: none;
+}
+
+/* Phones: dark scrim + a sheet that slides up from the bottom. */
+@media (max-width: 600px) and (pointer: coarse) {
+  .context-menu-backdrop {
+    pointer-events: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: context-fade 0.18s ease;
+  }
+
+  .context-menu {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    border: none;
+    border-radius: 18px 18px 0 0;
+    /* env() (not --safe-bottom) since this is portaled outside the zoom transform. */
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
+    animation: context-slide-up 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .context-menu-header {
+    padding: 8px 18px 12px;
+    margin-bottom: 6px;
+  }
+
+  .context-menu-name {
+    font-size: 1.1em;
+  }
+
+  .context-menu-item {
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-size: 1.05em;
+  }
+
+  .context-menu-item:active {
+    background-color: var(--bg-secondary);
+  }
+
+  /* Exit animations (mobile only — desktop closes instantly). */
+  .context-menu-backdrop.is-closing {
+    animation: context-fade-out 0.19s ease forwards;
+  }
+
+  .context-menu.is-closing {
+    animation: context-slide-down 0.19s ease forwards;
+  }
+}
+
+@keyframes context-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes context-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes context-slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes context-slide-down {
+  to { transform: translateY(100%); }
 }
 
 .sidebar-error {
