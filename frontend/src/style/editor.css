@@ -51,6 +51,36 @@ a:hover {
   font-size: medium;
 }
 
+/* Phones: auto-hide the note title on scroll-down (collapses it + its divider so
+   the content reclaims the space), reveal on scroll-up. Toggled by the
+   .title-hidden class on .l-app (see app.tsx). */
+@media (max-width: 600px) and (pointer: coarse) {
+  .editor-title {
+    overflow: hidden;
+    /* Reserve room for the (text-inflated) title so it isn't clipped into the
+       divider; scales with the measured webview text inflation. */
+    flex-basis: calc(70px * var(--text-scale, 1));
+    transition: flex-basis 0.25s ease, opacity 0.2s ease, margin-bottom 0.25s ease;
+  }
+
+  .editor > hr {
+    transition: opacity 0.2s ease, margin 0.25s ease;
+  }
+
+  .title-hidden .editor-title {
+    flex-basis: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    pointer-events: none;
+  }
+
+  .title-hidden .editor > hr {
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
 /* Container */
 .editor {
   display: flex;

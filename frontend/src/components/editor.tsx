@@ -94,7 +94,7 @@ const codeHighlight = () =>
 const editorTheme = EditorView.theme({
   '&': { color: 'var(--text)', backgroundColor: 'transparent', height: '100%' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', paddingBottom: '50vh' },
+  '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', overscrollBehavior: 'none', paddingBottom: '50vh' },
   '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {

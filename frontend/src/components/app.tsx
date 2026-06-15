@@ -166,6 +166,15 @@ function MainWorkspace() {
   } = useNotes();
 
   const [popupOpen, setPopupOpen] = useState(false);
+  // Auto-hiding editor title (phones): collapses on scroll-down, returns on
+  // scroll-up — like a mobile browser's URL bar.
+  const [titleHidden, setTitleHidden] = useState(false);
+  const titleHiddenRef = useRef(false);
+  const mainScrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollTop = useRef(0);
+  // After a toggle the title's collapse/expand reflows the editor and fires more
+  // scroll events; ignore them until this timestamp so they can't bounce it back.
+  const scrollLockUntil = useRef(0);
   const [sideBarOpen, toggleSideBar] = useState(() => {
     // Phones get a full-screen sidebar overlay, so always start closed there
     // regardless of the saved preference.
@@ -252,8 +261,48 @@ function MainWorkspace() {
     if (prevLocationRef.current !== location) {
       prevLocationRef.current = location;
       updateShowGraph(false);
+      // Reveal the title again when switching views.
+      setTitleHidden(false);
+      titleHiddenRef.current = false;
+      lastScrollTop.current = 0;
+      scrollLockUntil.current = 0;
     }
   }, [location, updateShowGraph]);
+
+  // Auto-hide the editor title on scroll-down / reveal on scroll-up. Listens in
+  // the capture phase so it catches scrolling from the (descendant) editor
+  // scroller, which doesn't bubble scroll events. CSS gates the effect to phones.
+  useEffect(() => {
+    const el = mainScrollRef.current;
+    if (!el) return;
+    const apply = (hidden: boolean) => {
+      if (titleHiddenRef.current === hidden) return;
+      titleHiddenRef.current = hidden;
+      setTitleHidden(hidden);
+      // Ignore the scroll events caused by the resulting reflow.
+      scrollLockUntil.current = performance.now() + 350;
+    };
+    const onScroll = (e: Event) => {
+      const target = e.target as HTMLElement | null;
+      if (!target || typeof target.scrollTop !== 'number') return;
+      const max = target.scrollHeight - target.clientHeight;
+      // Clamp out overscroll/bounce so it can't flip the direction at the edges.
+      const top = Math.max(0, Math.min(target.scrollTop, max));
+      // Skip events fired by the title's own collapse/expand reflow.
+      if (performance.now() < scrollLockUntil.current) {
+        lastScrollTop.current = top;
+        return;
+      }
+      const last = lastScrollTop.current;
+      if (top <= 8) apply(false);                 // at top → show
+      else if (top >= max - 8) apply(true);       // at bottom → stay hidden
+      else if (top > last + 6) apply(true);       // scrolling down
+      else if (top < last - 6) apply(false);      // scrolling up
+      lastScrollTop.current = top;
+    };
+    el.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => el.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
 
   // Remember opened notes so the Start screen can list recents.
   useEffect(() => {
@@ -298,7 +347,7 @@ function MainWorkspace() {
 
   return (
     <>
-      <div className="l-app">
+      <div className={`l-app ${titleHidden ? 'title-hidden' : ''}`}>
         <div className="l-header">
           <button className="btn-header" onClick={() => {toggleSideBar(!sideBarOpen); localStorage.setItem("sideBarOpen", JSON.stringify(!sideBarOpen))}}>
             <TintedImage src='/menu.svg' alt="Toggle Sidebar" />
@@ -375,7 +424,7 @@ function MainWorkspace() {
             onPointerMove={handlePointerMove}
           />
         </div>
-        <div className="l-main">
+        <div className="l-main" ref={mainScrollRef}>
         <Suspense fallback={null}>
         {showGraph ? (
           <GraphView
