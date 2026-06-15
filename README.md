@@ -1,20 +1,20 @@
 # GraphWrite
 
-GraphWrite is a self-hosted, no-bs, extremely lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no drawing, no telemetry, no bloat. Just good old note taking.
+GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no drawing, no telemetry, no bloat. Just good old note taking.
 
 The whole point of GraphWrite is to stay small. The backend is an Express server with exactly two dependencies. The desktop and mobile apps are built on Tauri, which uses the operating system's own webview instead of shipping a full copy of Chromium, so a Windows installer is around 2 MB rather than the hundreds of megabytes a typical Electron note app weighs. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 
 ## Why so light?
 
-Most modern note apps bundle an entire browser engine into every install and keep it resident in memory the whole time they run. GraphWrite does not. It reuses the webview already on your system, ships a tiny native binary, and keeps the server down to Express plus a couple hundred lines of code.
+I believe being lightweight is a prerequisite for note taking apps. GraphWrite was built to have as small as a footprint as possible while having all the features I wanted to pack into it.
 
-| | Installer / download | Typical RAM in use | Storage model |
+| | Installer / download | Startup time | Storage model |
 | --- | --- | --- | --- |
-| **GraphWrite** | ~2 MB (Windows `.msi`/`.exe`, Linux `.deb`) | Tens of MB (shares the OS webview) | Plain `.md` files on your own machine |
-| Obsidian | ~150 MB+ install | ~180-250 MB, spiking to 700 MB+ or several GB with large vaults and plugins | Local files, Electron app |
-| Notion | ~200 MB install | ~400-600 MB, spiking past 800 MB | Cloud-hosted, Electron app |
+| **GraphWrite** | ~2 MB (Windows `.msi`/`.exe`, Linux `.deb`) | ~216-272ms | Saves wherever you want on the backend, Tauri app |
+| Obsidian | ~150 MB+ install | ~915-1010ms, **~4.2x slower** | Local files, Electron app |
+| Notion | ~200 MB install | ~960-1035ms, **~4.4x slower** | Cloud-hosted, Electron app |
 
-Numbers for Obsidian and Notion vary heavily with vault size, plugins, and open content; the figures above are representative ranges, not fixed measurements. The takeaway is the order of magnitude: GraphWrite is built to be the small one.
+(All numbers are measured on my arch linux desktop running hyprland with a similar amount of notes loaded with minimum amout of plugins and extentions installed on both. These are "window on screen" times and not "fully painted/interactive" times. For all three, content finishes rendering shortly after.)
 
 For reference, GraphWrite's own footprint:
 
@@ -24,7 +24,7 @@ For reference, GraphWrite's own footprint:
 - Native desktop binary: ~5.2 MB
 - Backend runtime: Express 5 plus `cors`, and nothing else
 
-(The Linux AppImage is larger, around 95 MB, because an AppImage bundles its own webview runtime so it can run anywhere. The `.deb`, which uses the system `webkit2gtk`, is the lightweight option on Linux.)
+(The Linux AppImage is larger, around 95 MB, because an AppImage bundles its own webview runtime so it can run anywhere. This is one of the main limitations of the current version and I am actively working on migrating away from WebKit to using native elements. This applies to the android version. The `.deb`, which uses the system `webkit2gtk`, is the lightweight option on Linux.)
 
 ## Features
 
@@ -40,14 +40,20 @@ For reference, GraphWrite's own footprint:
 
 | Platform | Status |
 | --- | --- |
-| Browser | Supported |
-| Linux (desktop) | Supported |
-| Windows (desktop) | Supported |
-| Android | Supported |
-| macOS (desktop) | Planned before launch |
-| iOS | In progress |
+| Browser | ✅ Supported |
+| Linux (desktop) | ✅ Supported |
+| Windows (desktop) | ✅ Supported |
+| Android | ✅ Supported |
+| macOS (desktop) | ✅ Supported |
+| iOS | 🚧 In progress |
 
-All clients talk to the same self-hosted backend, so your notes are the same everywhere.
+> [!NOTE]
+> Android app is not on Google Play Store just yet. You can download and install the apk in the Release tab.
+
+> [!NOTE]
+> I am planning on releasing it on the aur and even flatpak for linux.
+
+All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also host the backend on multiple computers and change between them. It is extremely easy to change the backend server in the frontend.
 
 ## Quick Start
 
@@ -82,6 +88,70 @@ Then bring it up:
 docker compose up -d
 ```
 
+
+### Hosting only the backend
+
+Run just the backend if you want a central note store that your GraphWrite clients (the desktop, mobile, or a frontend hosted elsewhere) connect to. Your notes live wherever you mount the volume.
+
+```
+services:
+  backend:
+    image: seojoonleedev/graphwrite-backend:latest
+    container_name: graphwrite-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./notes:/app/notes
+    restart: always
+```
+
+```
+docker compose up -d
+```
+
+Or without a compose file:
+
+```
+docker run -d --name graphwrite-backend \
+  -p 3001:3001 \
+  -e NODE_ENV=production \
+  -v "$(pwd)/notes:/app/notes" \
+  --restart always \
+  seojoonleedev/graphwrite-backend:latest
+```
+
+The backend is now reachable at http://your-machine-ip:3001. In each GraphWrite client, open Settings and set the server address to that URL.
+
+### Hosting only the frontend
+
+Run just the frontend if your backend already runs somewhere else and you only need to serve the web app. The frontend is a static site; it does not bundle a backend, so you point it at one from Settings.
+
+```
+services:
+  frontend:
+    image: seojoonleedev/graphwrite-frontend:latest
+    container_name: graphwrite-frontend
+    ports:
+      - "8080:80"
+    restart: always
+```
+
+Or without a compose file:
+
+```
+docker run -d --name graphwrite-frontend \
+  -p 8080:80 \
+  --restart always \
+  seojoonleedev/graphwrite-frontend:latest
+```
+
+Open http://localhost:8080, then in Settings set the server address to your backend (for example http://192.168.0.1:3001). The frontend will not store or load any notes until it can reach a backend.
+
+> [!NOTE]
+> It is recommended to use port 3001 as the frontend defaults to it.
+
 You will now be able to access the frontend at [http://localhost:8080](http://localhost:8080). The backend uses port 3001 by default. To change which ports are used, edit the port mappings in `docker-compose.yml`.
 
 Notes are stored in `./notes` by default. To keep them somewhere else, change the volume path in `docker-compose.yml`.
@@ -97,17 +167,14 @@ docker compose up -d
 
 ### Desktop and mobile apps
 
-The desktop and mobile apps live in the `frontend/` directory and are built with [Tauri](https://tauri.app). They talk to the same self-hosted backend, so set its address in Settings (see below). From `frontend/`:
-
-- Desktop (Linux / Windows / macOS): `npm run tauri build`
-- Android: `npm run tauri android build` (requires the Android SDK and NDK)
+Installers for Windows and Mac are available in the Release tab along side the android apk.
 
 ### Accessing from other devices
 
 The frontend looks for the backend at `http://localhost:3001` by default. To use GraphWrite from another device on your network, open Settings and set the server address to the IP of the machine running the backend (for example `http://192.168.0.1:3001`).
 
 > [!WARNING]
-> GraphWrite has no authentication. Anyone who can reach the backend port can read, edit, and delete your notes. Keep it on a trusted network, and do not expose it to the internet without putting it behind a reverse proxy with authentication. Authentication is planned.
+> GraphWrite has no authentication. Anyone who can reach the backend port can read, edit, and delete your notes. Keep it on a trusted network, and do not expose it to the internet without putting it behind a reverse proxy with authentication. I personally recommend you use Tailscale to access your notes anywhere for now. Authentication is planned.
 
 ## Building from source
 
@@ -118,7 +185,7 @@ If you would rather build from the latest source instead of using the prebuilt i
 ```
 git clone https://github.com/seojoonlee-dev/graphwrite
 cd graphwrite
-docker compose up --build
+docker compose up --build -d
 ```
 
 The frontend will be available at [http://localhost:8080](http://localhost:8080) and the backend on port 3001, the same as the prebuilt setup. Notes are stored in `./backend/notes` by default; change the volume path in `docker-compose.yml` to keep them elsewhere.
@@ -130,17 +197,22 @@ Pull the repo inside your `graphwrite` directory and rebuild.
 ```
 cd graphwrite
 git pull
-docker compose up --build
+docker compose up --build -d
 ```
 
-## Note
+### Desktop and mobile apps
+
+The desktop and mobile apps live in the `frontend/` directory and are built with [Tauri](https://tauri.app). To build manually, run these commands:
+
+- Desktop (Linux / Windows / macOS): `npm run tauri build`
+- Android: `npm run tauri android build` (requires the Android SDK and NDK)
 
 > [!NOTE]
-> This is a very early version of GraphWrite (0.1.0). Authentication, macOS support, and much more are on the way.
+> This is a very early version of GraphWrite (currently v0.1.0). Authentication, native UI(instead of using WebKit with Tauri), a custom graph library instead of react flow and much MUCH more are on the way. Stay tuned!
 
 ## AI Disclosure
 
 > [!NOTE]
-> AI tools (Claude Code) were used during development to help prototype parts of the app, including the custom CodeMirror live-preview extensions and the graph view, and to draft this README. All generated code was reviewed, and edited or rewritten where needed, by the author. GraphWrite itself ships no AI features and sends your notes to no AI service.
+> AI tools (Claude Code) were used during development to help prototype parts of the app, including the custom CodeMirror live-preview extensions and the graph view. All generated code was reviewed, and edited or rewritten where needed, by yours truly. GraphWrite itself ships no AI features and sends your notes to no AI service.
 
 GraphWrite is licensed under the MIT license.
