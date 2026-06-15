@@ -2,3 +2,10 @@ node_modules
 .git
 Dockerfile
 .env
+
+# Notes live in a mounted volume, never bake them into the image
+notes
+
+# Logs
+*.log
+npm-debug.log*

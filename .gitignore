@@ -12,9 +12,11 @@ dist/
 dist-ssr/
 *.local
 backend/notes/*
-!backend/notes/README/
 frontend/android-release-key.jks
 frontend/.env
+
+# Built image tarballs (docker buildx output)
+images/
 
 # Editor directories and files
 .vscode/*

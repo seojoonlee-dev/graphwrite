@@ -2,3 +2,10 @@ node_modules
 .git
 Dockerfile
 .env
+
+# Tauri desktop/mobile build artifacts and source — not needed for the web build,
+# and the Rust target/gen dirs are many gigabytes, which bloats the build context.
+src-tauri
+
+# Build output (regenerated inside the image)
+dist
