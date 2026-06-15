@@ -8,6 +8,8 @@ import { toDirPath, nameOf, validateRename } from '../helpers/paths';
 import { useNotes } from '../hooks/useNotes';
 import { useLongPress } from '../hooks/useLongPress';
 import { useZoom } from '../hooks/useZoom';
+import { StartScreen } from './startScreen';
+import { pushRecent } from '../helpers/recents';
 // Lazy-loaded into separate chunks so heavy deps (CodeMirror, @xyflow/react +
 // dagre) are only fetched when their view is actually shown — keeps the initial
 // bundle light. Each is wrapped in <Suspense> at its render site.
@@ -244,6 +246,11 @@ function MainWorkspace() {
       updateShowGraph(false);
     }
   }, [location, updateShowGraph]);
+
+  // Remember opened notes so the Start screen can list recents.
+  useEffect(() => {
+    if (parsedFilePath && !notFound) pushRecent(parsedFilePath);
+  }, [parsedFilePath, notFound]);
   
   // popup
   useEffect(() => {
@@ -371,6 +378,14 @@ function MainWorkspace() {
             <p>"/{parsedFilePath}" doesn't exist or may have been deleted.</p>
             <Link to="/">Go back</Link>
           </div>
+        ) : !parsedFilePath ? (
+          <StartScreen
+            files={files}
+            onCreate={() => createFile('')}
+            onOpenNote={(dirPath) => navigate(`/${dirPath}`)}
+            onOpenGraph={() => withViewTransition(() => updateShowGraph(true))}
+            onOpenSettings={() => navigate('/settings/general')}
+          />
         ) : (
           <Editor
             rawContent={content}

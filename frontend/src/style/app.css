@@ -166,11 +166,35 @@ hr {
     position: absolute;
     top: 0;
     bottom: 0;
-    
-    left: -16px; 
+
+    left: -16px;
     right: -16px;
-    
-    z-index: 100; 
+
+    z-index: 100;
+  }
+}
+
+/* Phones: the sidebar is a full-screen overlay rather than a resizable panel.
+   Targets phone-sized touchscreens (tablets are wider, desktops aren't coarse).
+   The inline width is overridden with !important; the drag handle is removed so
+   the sidebar can't be resized — it's either full width or hidden. */
+@media (max-width: 600px) and (pointer: coarse) {
+  .l-sidebar {
+    /* Overlay on top of the main view instead of pushing it aside. */
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 97;
+    width: 0 !important;
+  }
+
+  .l-sidebar.is-open {
+    width: 100vw !important;
+    width: 100dvw !important;
+  }
+
+  .drag-handle {
+    display: none;
   }
 }
 

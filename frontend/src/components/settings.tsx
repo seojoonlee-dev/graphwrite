@@ -55,7 +55,7 @@ function General() {
             type='text'
             name='startup'
             value={startup}
-            placeholder='e.g. /Note, /Note/tasks...'
+            placeholder='(leave blank to start in start screen)'
             onChange={(e) => setStartup(e.target.value.replace(/^\/+/, ''))}
             onBlur={changeStartup}
           />
