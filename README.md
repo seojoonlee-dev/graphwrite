@@ -39,6 +39,19 @@ For reference, GraphWrite's own footprint:
 
 (The Linux AppImage is larger, around 95 MB, because an AppImage bundles its own webview runtime so it can run anywhere. This is one of the main limitations of the current version and I am actively working on migrating away from WebKit to using native elements. This applies to the android version. The `.deb`, which uses the system `webkit2gtk`, is the lightweight option on Linux.)
 
+## Graph View
+
+Because notes in GraphWrite branch into child notes, your whole collection naturally forms a tree, and the graph view shows you that tree at a glance. Each note is a node, and every branch from a parent note to its children is drawn as an edge, so you can see how your notes connect rather than scrolling a flat list.
+
+The layout is generated automatically (left to right, using dagre), and from there it is yours to rearrange:
+
+- Click and drag to pan around the canvas.
+- Shift + drag to box-select multiple nodes.
+- Double click a node to open that note.
+- Right click a node for file actions.
+
+The graph is rendered with React Flow.
+
 ## Features
 
 - **Branching notes.** Inspired by a literal tree, any note can contain child notes, so your notes form a tree instead of a flat list. The sidebar shows the full hierarchy with inline renaming, collapsing, and a context menu (right-click on desktop, long-press on mobile).
