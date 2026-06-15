@@ -389,6 +389,9 @@ function MainWorkspace() {
           <button className="btn-header" onClick={() => {toggleSideBar(!sideBarOpen); localStorage.setItem("sideBarOpen", JSON.stringify(!sideBarOpen))}}>
             <TintedImage src='/menu.svg' alt="Toggle Sidebar" />
           </button>
+          <button className="btn-header" onClick={() => { closeSidebarOnPhone(); navigate("/"); }}>
+            <TintedImage src='/home.svg' alt="Home" />
+          </button>
           <button className="btn-header" onClick={() => navigate("/settings/general")}>
             <TintedImage src='/settings.svg' alt="Settings" />
           </button>

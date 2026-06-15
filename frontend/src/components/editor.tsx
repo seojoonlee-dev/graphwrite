@@ -10,6 +10,7 @@ import { tags as t } from '@lezer/highlight';
 import { livePreview } from '../extensions/livePreview';
 import { WikiLink } from '../extensions/wikiLink';
 import { effectiveColors, subscribe } from '../helpers/settings';
+import { openExternal } from '../helpers/openExternal';
 import '../style/editor.css';
 
 interface EditorProps {
@@ -181,7 +182,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
                 const href = linkEl.getAttribute('data-href') || '';
                 if (/^(https?:|mailto:)/i.test(href)) {
                   event.preventDefault();
-                  window.open(href, '_blank', 'noopener,noreferrer');
+                  openExternal(href);
                   return true;
                 }
                 return false;

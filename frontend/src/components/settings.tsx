@@ -270,7 +270,7 @@ function Demo() {
     <div className='settings-view'>
       <h3>Reset demo</h3>
       <p>Delete all notes and settings saved in this browser and restore the default note.</p>
-      <button className='btn-reset' onClick={handleReset} disabled={resetting}>
+      <button className='btn-reset btn-fixed' onClick={handleReset} disabled={resetting}>
         {resetting ? 'Resetting…' : 'Reset demo'}
       </button>
     </div>
