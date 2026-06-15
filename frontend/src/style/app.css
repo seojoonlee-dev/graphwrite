@@ -65,6 +65,13 @@ button {
   cursor: pointer;
 }
 
+/* Base link color lives here (eager) rather than only in editor.css — otherwise
+   sidebar links render in the browser's default purple/blue until the lazy
+   editor chunk loads and applies its own `a` rule. */
+a {
+  color: inherit;
+}
+
 hr {
   margin-right: 0;
 }

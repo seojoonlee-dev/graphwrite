@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { TintedImage } from './tintedImage';
 import { nameOf, toDirPath } from '../helpers/paths';
-import { getRecents } from '../helpers/recents';
+import { clearRecents, getRecents } from '../helpers/recents';
 import '../style/startScreen.css';
 
 interface StartScreenProps {
@@ -15,9 +16,17 @@ interface StartScreenProps {
 // landing screen some purpose: a primary "new note" action, shortcuts, and a
 // list of recently opened notes.
 export function StartScreen({ files, onCreate, onOpenNote, onOpenGraph, onOpenSettings }: StartScreenProps) {
-  // Keep only recents that still exist (notes may have been renamed/deleted).
+  // Recomputed each render so the list reflects `files` once it loads (it's
+  // empty on the first render while notes are still being fetched). Keep only
+  // recents that still exist (notes may have been renamed/deleted).
+  const [cleared, setCleared] = useState(false);
   const validDirs = new Set(files.map(toDirPath));
-  const recents = getRecents().filter((p) => validDirs.has(p)).slice(0, 6);
+  const recents = cleared ? [] : getRecents().filter((p) => validDirs.has(p)).slice(0, 6);
+
+  const handleClearRecents = () => {
+    clearRecents();
+    setCleared(true);
+  };
 
   return (
     <div className="start-screen">
@@ -56,7 +65,19 @@ export function StartScreen({ files, onCreate, onOpenNote, onOpenGraph, onOpenSe
         </div>
 
         <section className="start-recents">
-          <h2 className="start-section-title">Recent notes</h2>
+          <div className="start-section-header">
+            <h2 className="start-section-title">Recent notes</h2>
+            {recents.length > 0 && (
+              <button
+                className="start-clear-recents"
+                onClick={handleClearRecents}
+                title="Clear note history"
+                aria-label="Clear note history"
+              >
+                <TintedImage src="/reset.svg" alt="" />
+              </button>
+            )}
+          </div>
           {recents.length > 0 ? (
             <ul className="start-recent-list">
               {recents.map((dirPath) => (

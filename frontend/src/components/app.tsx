@@ -15,7 +15,11 @@ import { pushRecent } from '../helpers/recents';
 // bundle light. Each is wrapped in <Suspense> at its render site.
 const Editor = lazy(() => import('./editor'));
 const Settings = lazy(() => import('./settings').then((m) => ({ default: m.Settings })));
-const GraphView = lazy(() => import('./graphView').then((m) => ({ default: m.GraphView })));
+// Named factory so we can warm the chunk in the background (see prefetch effect)
+// before the user opens the graph — the module is fetched once and cached, so
+// React.lazy resolves instantly when they actually switch to it.
+const importGraphView = () => import('./graphView');
+const GraphView = lazy(() => importGraphView().then((m) => ({ default: m.GraphView })));
 import { getStartupNote } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
@@ -251,6 +255,23 @@ function MainWorkspace() {
   useEffect(() => {
     if (parsedFilePath && !notFound) pushRecent(parsedFilePath);
   }, [parsedFilePath, notFound]);
+
+  // Warm the graph-view chunk in the background once the app is idle, so the
+  // first switch to the graph doesn't pay the download cost. Only matters until
+  // the graph has been opened (the module caches after that).
+  useEffect(() => {
+    if (showGraph) return;
+    const prefetch = () => { void importGraphView(); };
+    const ric = window.requestIdleCallback;
+    if (ric) {
+      const id = ric(prefetch, { timeout: 3000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(prefetch, 1500);
+    return () => clearTimeout(t);
+    // Run once after mount; the import is idempotent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // popup
   useEffect(() => {

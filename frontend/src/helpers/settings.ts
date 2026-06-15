@@ -9,8 +9,6 @@
 import '@fontsource/domine/latin-400.css';
 import '@fontsource/domine/latin-700.css';
 
-const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
-
 export interface FontOption {
   name: string;
   stack: string;
@@ -108,7 +106,8 @@ const KEY = 'graphwrite-settings';
 
 const DEFAULTS: Settings = {
   font: 'Domine',
-  startupNote: isDemo ? 'Note' : '',
+  // Empty = land on the Start screen (the demo used to auto-open the sample note).
+  startupNote: '',
   theme: 'dark',
   colors: {},
 };

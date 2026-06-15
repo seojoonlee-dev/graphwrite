@@ -19,3 +19,7 @@ export function pushRecent(dirPath: string) {
   const next = [dirPath, ...getRecents().filter((p) => p !== dirPath)].slice(0, MAX);
   localStorage.setItem(KEY, JSON.stringify(next));
 }
+
+export function clearRecents() {
+  localStorage.removeItem(KEY);
+}

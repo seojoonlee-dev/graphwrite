@@ -19,6 +19,7 @@ import {
   setTheme,
 } from '../helpers/settings';
 import { getZoom, isTauri, setZoom } from '../helpers/zoom';
+import { clearRecents } from '../helpers/recents';
 import '../style/settings.css';
 
 // The demo stores notes in the browser (IndexedDB) and has no backend, so the
@@ -29,6 +30,12 @@ function General() {
   const serverIp = localStorage.getItem('serverIp') ? localStorage.getItem('serverIp') : "http://localhost:3001";
   const [value, setTitle] = useState(serverIp);
   const [startup, setStartup] = useState(getStartupNote());
+  const [historyCleared, setHistoryCleared] = useState(false);
+
+  const handleClearHistory = () => {
+    clearRecents();
+    setHistoryCleared(true);
+  };
 
   const saveServer = (event: ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -60,6 +67,13 @@ function General() {
             onBlur={changeStartup}
           />
         </div>
+      </div>
+      <div className='settings-view'>
+        <h3>Note history</h3>
+        <p>Resets the "Recent notes" list shown on the start screen.</p>
+        <button className='btn-secondary' onClick={handleClearHistory} disabled={historyCleared}>
+          {historyCleared ? 'Cleared' : 'Clear note history'}
+        </button>
       </div>
       <div className='settings-view'>
         <h3>Server</h3>
