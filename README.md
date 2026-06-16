@@ -1,6 +1,8 @@
-<img width="128" height="128" alt="icon_corner_radius" src="https://github.com/user-attachments/assets/8574f1df-e830-4d76-a290-790f26eb4f4f" />
+<div align="center" id="user-content-toc">
+  <img width="128" height="128" alt="icon_corner_radius" src="https://github.com/user-attachments/assets/8574f1df-e830-4d76-a290-790f26eb4f4f" />
+</div>
 
-<div id="user-content-toc">
+<div align="center" id="user-content-toc">
   <ul align="center" style="list-style: none;">
     <summary align="center">
       <h1>GraphWrite</h1>
