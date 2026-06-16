@@ -25,6 +25,9 @@
 
 GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no drawing, no telemetry, no bloat. Just good old note taking.
 
+> [!TIP]
+> Try GraphWrite right now in your browser — no account, nothing to install: **[demo.graphwrite.app](https://demo.graphwrite.app)**
+
 The whole point of GraphWrite is to stay small. The backend is an Express server with exactly two dependencies. The desktop and mobile apps are built on Tauri, which uses the operating system's own webview instead of shipping a full copy of Chromium, so a Windows installer is around 2 MB rather than the hundreds of megabytes a typical Electron note app weighs. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 
 ## Why so light?
@@ -33,9 +36,9 @@ I believe being lightweight is a prerequisite for note taking apps. GraphWrite w
 
 | | Installer / download | Startup time | Storage model |
 | --- | --- | --- | --- |
-| **GraphWrite** | ~2 MB (Windows `.msi`/`.exe`, Linux `.deb`) | ~216-272ms | Saves wherever you want on the backend, Tauri app |
-| Obsidian | ~150 MB+ install | ~915-1010ms, **~4.2x slower** | Local files, Electron app |
-| Notion | ~200 MB install | ~960-1035ms, **~4.4x slower** | Cloud-hosted, Electron app |
+| **GraphWrite** | ~2 MB (Windows `.msi`/`.exe`, Linux `.deb`) | ~216-272ms | Plain `.md` files, wherever you want |
+| Obsidian | ~150 MB+, **~75x larger** | ~915-1010ms, **~4.2x slower** | Plain `.md` files, Electron app |
+| Notion | ~200 MB, **~100x larger** | ~960-1035ms, **~4.4x slower** | Cloud-hosted, Electron app |
 
 (All numbers are measured on my arch linux desktop running hyprland with a similar amount of notes loaded with minimum amout of plugins and extentions installed on both. These are "window on screen" times and not "fully painted/interactive" times. For all three, content finishes rendering shortly after.)
 
@@ -68,11 +71,11 @@ The graph is rendered with React Flow.
 ## Features
 
 - **Branching notes.** Inspired by a literal tree, any note can contain child notes, so your notes form a tree instead of a flat list. The sidebar shows the full hierarchy with inline renaming, collapsing, and a context menu (right-click on desktop, long-press on mobile).
-- **Live-preview markdown editing.** Markdown is rendered inline as you type. The syntax markers stay hidden until your cursor enters them, Obsidian-style. There is no formatting toolbar; you just write plain markdown. Headings, bold/italic/strikethrough, inline and fenced code (syntax-highlighted, with a copy button), ordered and unordered lists, blockquotes, links, and horizontal rules are all supported. Built on CodeMirror.
+- **Live-preview markdown editing.** Markdown renders inline as you type, and the syntax markers hide until you need them — no formatting toolbar, just plain markdown. Headings, bold/italic/strikethrough, inline and fenced code (syntax-highlighted, with a copy button), lists, blockquotes, links, and horizontal rules are all supported. Built on CodeMirror.
 - **Wiki links.** Type `[[name]]` to create a link inside your note. Clicking it opens the child note with that name, creating it first if it does not exist yet. This makes branching a new note off the one you are writing as simple as naming it. Links are stored as plain `[[name]]` text in the markdown file.
 - **Themes and appearance.** Built-in Dark, AMOLED Black and Light themes, a fully custom color palette, several fonts, and interface zoom, all in Settings. Optionally center the editor in a column for a more focused layout.
 - **Cross-platform.** Use GraphWrite in the browser, on the desktop, or on mobile. The mobile apps add niceties like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
-- **Autosave.** Changes are saved automatically as you type. Ctrl/Cmd + S still works if you want the peace of mind.
+- **Autosave.** Changes are saved automatically as you type (Ctrl/Cmd + S works too).
 
 ## Platforms
 
@@ -91,7 +94,7 @@ The graph is rendered with React Flow.
 > [!NOTE]
 > I am planning on releasing it on the aur and even flatpak for linux.
 
-All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also host the backend on multiple computers and change between them. It is extremely easy to change the backend server in the frontend.
+All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also run more than one backend and switch between them — changing the server address takes a moment in Settings.
 
 ## Quick Start
 
