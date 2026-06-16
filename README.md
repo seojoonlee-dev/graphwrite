@@ -19,6 +19,25 @@
 
 <hr></hr>
 
+## Table of Contents
+
+- [Why GraphWrite](#why-graphwrite)
+- [Graph View](#graph-view)
+- [Features](#features)
+- [Platforms](#platforms)
+- [Quick Start](#quick-start)
+  - [Installation (Docker)](#installation-docker)
+  - [Hosting only the backend](#hosting-only-the-backend)
+  - [Hosting only the frontend](#hosting-only-the-frontend)
+  - [Updating (Docker)](#updating-docker)
+  - [Desktop and mobile apps](#desktop-and-mobile-apps)
+  - [Accessing from other devices](#accessing-from-other-devices)
+- [Building from source](#building-from-source)
+  - [Install latest (git)](#install-latest-git)
+  - [Update to latest (git)](#update-to-latest-git)
+  - [Desktop and mobile apps](#desktop-and-mobile-apps-1)
+- [AI Disclosure](#ai-disclosure)
+
 <img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/056be0e3-8694-4d21-9c02-db2311ef29a1" />
 
 
@@ -30,9 +49,9 @@ GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app wi
 
 The whole point of GraphWrite is to stay small. The backend is an Express server with exactly two dependencies. The desktop and mobile apps are built on Tauri, which uses the operating system's own webview instead of shipping a full copy of Chromium, so a Windows installer is around 2 MB rather than the hundreds of megabytes a typical Electron note app weighs. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 
-## Why so light?
+## Why GraphWrite
 
-I believe being lightweight is a prerequisite for note taking apps. GraphWrite was built to have as small as a footprint as possible while having all the features I wanted to pack into it.
+Being lightweight is a prerequisite. Most note apps bundle an entire browser engine into every install and keep it resident in memory the whole time. GraphWrite reuses the webview already on your system, ships a tiny native binary, and keeps the backend down to Express plus a couple hundred lines of code.
 
 | | Installer / download | Startup time | Storage model |
 | --- | --- | --- | --- |
