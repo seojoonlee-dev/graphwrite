@@ -107,6 +107,11 @@ const TOKEN_KEYS = Object.keys(TOKEN_LABELS) as (keyof ThemeTokens)[];
 // Zoom presets offered in the dropdown: 50% → 300% in 10% increments.
 const ZOOM_LEVELS = Array.from({ length: 26 }, (_, i) => (50 + i * 10) / 100);
 
+// Phones are too narrow for the fixed-width centered column to make sense, so the
+// "Align editor to the center" toggle is hidden there (matches the app's phone
+// breakpoint elsewhere).
+const isPhone = window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
+
 function Appearance() {
   const [font, setFontState] = useState(getFont());
   const [theme, setThemeState] = useState<ThemeName>(getTheme());
@@ -215,14 +220,16 @@ function Appearance() {
         </select>
       </div>
 
-      <div className='settings-view'>
-        <h3>Align editor to the center</h3>
-        <p>Center the editor in a fixed-width column instead of spanning the full width.</p>
-        <label className='settings-checkbox'>
-          <input type='checkbox' checked={centerEditor} onChange={changeCenterEditor} />
-          <span>Enabled</span>
-        </label>
-      </div>
+      {!isPhone && (
+        <div className='settings-view'>
+          <h3>Align editor to the center</h3>
+          <p>Center the editor in a fixed-width column instead of spanning the full width.</p>
+          <label className='settings-checkbox'>
+            <input type='checkbox' checked={centerEditor} onChange={changeCenterEditor} />
+            <span>Enabled</span>
+          </label>
+        </div>
+      )}
     </>
   )
 }

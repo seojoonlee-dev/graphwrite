@@ -24,6 +24,11 @@ const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 // True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
+// Base height (px, before text-inflation) of the editor title / the reserved top
+// region the editor content pads for it. MUST match the `.cm-content` padding-top
+// base in editor.css (calc(80px * var(--text-scale))).
+const TITLE_ZONE_PX = 80;
+
 const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void, onNavigate?: () => void }) => {
   const { '*': parsedFilePath } = useParams();
 
@@ -166,21 +171,22 @@ function MainWorkspace() {
   } = useNotes();
 
   const [popupOpen, setPopupOpen] = useState(false);
-  // Auto-hiding editor title (phones): collapses on scroll-down, returns on
-  // scroll-up — like a mobile browser's URL bar.
-  const [titleHidden, setTitleHidden] = useState(false);
-  const titleHiddenRef = useRef(false);
+  // Editor title on phones. Within the reserved top region (the .cm-content
+  // padding, TITLE_ZONE_PX tall) the title is glued to the content and scrolls
+  // away with it; once that region has scrolled past, the title becomes a pure
+  // overlay — peeking in on scroll-up, hiding on scroll-down. Positioned
+  // imperatively via a CSS var + class on .l-app so per-scroll updates don't
+  // re-render React.
+  const lAppRef = useRef<HTMLDivElement>(null);
+  const overlayShownRef = useRef(true); // is the title currently revealed?
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const lastScrollTop = useRef(0);
-  // Only react to scrolls from a user gesture (a real drag, plus the momentum
-  // window after release). This ignores programmatic scrolls — the keyboard's
-  // viewport resize, cursor moves on tap, and the title's own reflow.
+  // Only a real gesture (a drag + its momentum window) flips reveal/hide intent;
+  // programmatic scrolls (keyboard resize, cursor moves) don't — though the glued
+  // position still tracks them so the title stays attached to the content.
   const draggingRef = useRef(false);
   const touchStartY = useRef(0);
   const momentumUntil = useRef(0);
-  // After a toggle the title's collapse/expand reflows the editor and fires more
-  // scroll events; ignore them until this timestamp so they can't bounce it back.
-  const scrollLockUntil = useRef(0);
   const [sideBarOpen, toggleSideBar] = useState(() => {
     // Phones get a full-screen sidebar overlay, so always start closed there
     // regardless of the saved preference.
@@ -212,6 +218,15 @@ function MainWorkspace() {
     };
     // Run once on mount (a fresh page load); in-app nav keeps this mounted.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Ask the on-screen keyboard to overlay the content rather than resize the
+  // viewport. This is what exposes env(keyboard-inset-height) to CSS, which the
+  // .l-app height uses to lift non-editor views (graph/settings/start) above the
+  // keyboard while the editor (.editor-active) keeps full height and ignores it.
+  useEffect(() => {
+    const vk = (navigator as unknown as { virtualKeyboard?: { overlaysContent: boolean } }).virtualKeyboard;
+    if (vk) vk.overlaysContent = true;
   }, []);
 
   // sidebar
@@ -268,47 +283,71 @@ function MainWorkspace() {
       prevLocationRef.current = location;
       updateShowGraph(false);
       // Reveal the title again when switching views.
-      setTitleHidden(false);
-      titleHiddenRef.current = false;
+      overlayShownRef.current = true;
       lastScrollTop.current = 0;
-      scrollLockUntil.current = 0;
+      const app = lAppRef.current;
+      if (app) {
+        app.style.setProperty('--title-shift', '0px');
+        app.classList.remove('title-gluing');
+      }
     }
   }, [location, updateShowGraph]);
 
-  // Auto-hide the editor title on scroll-down / reveal on scroll-up, but only in
-  // response to a real finger drag — so programmatic scrolls (the keyboard's
-  // viewport resize, cursor moves on tap, the title's own reflow) are ignored.
+  // Position the editor title on scroll (see the state block above for the model).
   // Listens in the capture phase to catch the (descendant) editor scroller, which
   // doesn't bubble scroll events. CSS gates the visual effect to phones.
   useEffect(() => {
     const el = mainScrollRef.current;
-    if (!el) return;
-    const apply = (hidden: boolean) => {
-      if (titleHiddenRef.current === hidden) return;
-      titleHiddenRef.current = hidden;
-      setTitleHidden(hidden);
-      // Ignore the scroll events caused by the resulting reflow.
-      scrollLockUntil.current = performance.now() + 350;
+    const app = lAppRef.current;
+    if (!el || !app) return;
+
+    // Height of the reserved top region — equals the `.cm-content` padding-top
+    // (calc(80px * --text-scale)). The title is exactly this tall, so when glued
+    // it finishes leaving just as the padding scrolls out of view.
+    let zone = TITLE_ZONE_PX;
+    const measureZone = () => {
+      const scale =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-scale')) || 1;
+      zone = TITLE_ZONE_PX * scale;
     };
+    measureZone();
+
+    // shift = title translateY (px, negative = up); glue = track scroll 1:1 (no
+    // transition) vs. animate as an overlay.
+    const render = (shift: number, glue: boolean) => {
+      app.style.setProperty('--title-shift', `${shift}px`);
+      app.classList.toggle('title-gluing', glue);
+    };
+
     const onScroll = (e: Event) => {
       const target = e.target as HTMLElement | null;
       if (!target || typeof target.scrollTop !== 'number') return;
       const max = target.scrollHeight - target.clientHeight;
       // Clamp out overscroll/bounce so it can't flip the direction at the edges.
       const top = Math.max(0, Math.min(target.scrollTop, max));
-      // Honor scrolls only from a user gesture (active drag or its momentum), and
-      // skip the title's own reflow.
+
+      // Reveal/hide intent flips only on a real gesture; the glued position below
+      // still tracks every scroll so the title stays attached to the content.
       const userScrolling = draggingRef.current || performance.now() < momentumUntil.current;
-      if (!userScrolling || performance.now() < scrollLockUntil.current) {
-        lastScrollTop.current = top;
-        return;
-      }
       const last = lastScrollTop.current;
-      if (top <= 8) apply(false);                 // at top → show
-      else if (top >= max - 8) apply(true);       // at bottom → stay hidden
-      else if (top > last + 6) apply(true);       // scrolling down
-      else if (top < last - 6) apply(false);      // scrolling up
+      if (userScrolling) {
+        if (top > last + 6) overlayShownRef.current = false;      // scrolling down
+        else if (top < last - 6) overlayShownRef.current = true;  // scrolling up
+      }
+      if (top <= 0) overlayShownRef.current = true;               // at rest at the top
       lastScrollTop.current = top;
+
+      if (top <= zone && !overlayShownRef.current) {
+        // Top zone, heading down: glue to the content so the title scrolls away
+        // together with the reserved padding (1:1, no transition).
+        render(-top, true);
+      } else if (top <= zone) {
+        // Top zone, revealed / at rest: pin the title at the very top.
+        render(0, false);
+      } else {
+        // Past the zone: pure overlay — peek in on scroll-up, hide on scroll-down.
+        render(overlayShownRef.current ? 0 : -zone, false);
+      }
     };
 
     const onTouchStart = (e: TouchEvent) => {
@@ -332,12 +371,14 @@ function MainWorkspace() {
     window.addEventListener('touchmove', onTouchMove, opts);
     window.addEventListener('touchend', onTouchEnd, opts);
     window.addEventListener('touchcancel', onTouchEnd, opts);
+    window.addEventListener('resize', measureZone);
     return () => {
       el.removeEventListener('scroll', onScroll, { capture: true });
       window.removeEventListener('touchstart', onTouchStart, { capture: true });
       window.removeEventListener('touchmove', onTouchMove, { capture: true });
       window.removeEventListener('touchend', onTouchEnd, { capture: true });
       window.removeEventListener('touchcancel', onTouchEnd, { capture: true });
+      window.removeEventListener('resize', measureZone);
     };
   }, []);
 
@@ -384,7 +425,7 @@ function MainWorkspace() {
 
   return (
     <>
-      <div className={`l-app ${titleHidden ? 'title-hidden' : ''}`}>
+      <div ref={lAppRef} className={`l-app ${!showGraph && !notFound && parsedFilePath ? 'editor-active' : ''}`}>
         <div className="l-header">
           <button className="btn-header" onClick={() => {toggleSideBar(!sideBarOpen); localStorage.setItem("sideBarOpen", JSON.stringify(!sideBarOpen))}}>
             <TintedImage src='/menu.svg' alt="Toggle Sidebar" />

@@ -51,33 +51,58 @@ a:hover {
   font-size: medium;
 }
 
-/* Phones: auto-hide the note title on scroll-down (collapses it + its divider so
-   the content reclaims the space), reveal on scroll-up. Toggled by the
-   .title-hidden class on .l-app (see app.tsx). */
+/* Phones: the note title sits over the editor as an absolute layer whose vertical
+   position is driven by app.tsx through --title-shift. Near the top it's glued to
+   the content (scrolls away with the reserved padding); once that's scrolled past
+   it acts as an overlay that peeks in on scroll-up and hides on scroll-down. While
+   glued (.title-gluing) the transition is dropped so it tracks the scroll 1:1. */
 @media (max-width: 600px) and (pointer: coarse) {
+  .editor {
+    position: relative;
+  }
+
   .editor-title {
-    overflow: hidden;
-    /* Reserve room for the (text-inflated) title so it isn't clipped into the
-       divider; scales with the measured webview text inflation. */
-    flex-basis: calc(70px * var(--text-scale, 1));
-    transition: flex-basis 0.25s ease, opacity 0.2s ease, margin-bottom 0.25s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Stop short of the right edge so the opaque overlay doesn't sit on top of
+       the editor's scrollbar. 10px matches the editor content's own right padding,
+       so no scrolling text is exposed in the gap. */
+    right: 10px;
+    z-index: 2;
+    flex: none;
+    margin-bottom: 0;
+    padding-bottom: 8px;
+    /* Match the editor content's reserved top padding exactly, so the opaque
+       overlay reaches all the way down to where the first line begins. Without
+       this the title renders a few px shorter than the padding (and the gap grows
+       with text inflation), leaving a thin strip where scrolling text peeks
+       through below the divider. */
+    box-sizing: border-box;
+    min-height: calc(80px * var(--text-scale, 1));
+    /* Opaque so the text scrolling beneath is covered by the overlay. */
+    background-color: var(--bg);
+    border-bottom: 1px solid var(--border);
+    transform: translateY(var(--title-shift, 0px));
+    transition: transform 0.25s ease;
   }
 
+  .title-gluing .editor-title {
+    transition: none;
+  }
+
+  /* The overlay carries its own divider; drop the in-flow one. */
   .editor > hr {
-    transition: opacity 0.2s ease, margin 0.25s ease;
+    display: none;
   }
 
-  .title-hidden .editor-title {
-    flex-basis: 0;
-    opacity: 0;
-    margin-bottom: 0;
-    pointer-events: none;
-  }
-
-  .title-hidden .editor > hr {
-    opacity: 0;
-    margin-top: 0;
-    margin-bottom: 0;
+  /* Pad the top of the scrollable content so the first line clears the title and,
+     crucially, so it can scroll away. It lives on .cm-content (inside CodeMirror's
+     scroller); the glued title above is sized to match this exact height. Scales
+     with the webview's text inflation. Higher specificity than CodeMirror's own
+     injected `.cm-content { padding: 4px 0 }`, which would otherwise win. */
+  .editor .cm-content {
+    padding-top: calc(80px * var(--text-scale, 1));
   }
 }
 
@@ -133,18 +158,21 @@ a:hover {
   padding-right: 16px;
 }
 
+/* NOTE: no vertical margins here. CodeMirror's height map measures each line's
+   border box (margins excluded), so margins on .cm-line desync the cursor/click
+   coordinate mapping — the error accumulates with every code block above, making
+   clicks and arrow up/down land off-target. The former 12px margins are folded
+   into padding (24px), which CM does measure, keeping the same visual footprint. */
 .cm-line.cm-code-block-first {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
-  padding-top: 12px;
-  margin-top: 12px;
+  padding-top: 24px;
 }
 
 .cm-line.cm-code-block-last {
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
-  padding-bottom: 12px;
-  margin-bottom: 12px;
+  padding-bottom: 24px;
 }
 
 .cm-code-block .cm-widgetBuffer {

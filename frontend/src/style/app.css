@@ -223,7 +223,21 @@ hr {
     transform: scale(var(--zoom, 1));
     transform-origin: top left;
     width: calc(100dvw / var(--zoom, 1));
+    /* Base on the large-viewport height (lvh), which ignores the on-screen
+       keyboard, then subtract the keyboard's height so views shrink to sit above
+       it. The VirtualKeyboard API (app.tsx) keeps the keyboard overlaying — that's
+       what exposes env(keyboard-inset-height); it's 0 when the keyboard is closed.
+       dvh stays as a fallback for webviews without lvh support. */
+    height: calc((100dvh - env(keyboard-inset-height, 0px)) / var(--zoom, 1));
+    height: calc((100lvh - env(keyboard-inset-height, 0px)) / var(--zoom, 1));
+  }
+
+  /* The editor alone ignores the keyboard (it overlays the text instead of
+     reflowing the layout while typing); every other view — graph, settings,
+     start — keeps the inset subtraction above so the keyboard pushes content up. */
+  .l-app.editor-active {
     height: calc(100dvh / var(--zoom, 1));
+    height: calc(100lvh / var(--zoom, 1));
   }
 
   .l-sidebar {
@@ -250,10 +264,49 @@ hr {
        transform; applied as padding on content so the app background still fills
        the screen behind the nav bar. */
     --safe-bottom: calc(env(safe-area-inset-bottom, 0px) / var(--zoom, 1) + 12px);
+    /* App-wide left/right gutter on phones — tighter than desktop to reclaim
+       horizontal space. Drives every top-level screen's side inset below. */
+    --app-gutter: 12px;
   }
 
   .l-header {
     align-items: center;
+  }
+
+  /* Pull the major screens in to the shared gutter (was 20–28px each).
+     !important because the editor / settings / start-screen styles ship in
+     lazy-loaded chunks that inject AFTER app.css, so their own margin/padding
+     shorthands would otherwise win the cascade at equal specificity. */
+  .l-header {
+    left: var(--app-gutter) !important;
+    right: var(--app-gutter) !important;
+  }
+  /* The editor text has no inner card padding (unlike the start/settings
+     screens), so it needs a little more gutter to sit at the same visual inset
+     rather than hugging the screen edge. */
+  .editor {
+    margin-left: calc(var(--app-gutter) + 8px) !important;
+    margin-right: calc(var(--app-gutter) + 8px) !important;
+  }
+  .not-found {
+    margin-left: var(--app-gutter) !important;
+    margin-right: var(--app-gutter) !important;
+  }
+  /* Sidebar links are plain text too — give them the wider gutter so they don't
+     hug the edge. */
+  .sidebar-content {
+    padding-left: calc(var(--app-gutter) + 8px) !important;
+    padding-right: calc(var(--app-gutter) + 8px) !important;
+  }
+  /* Like the editor, the start screen's header text has no card padding, so it
+     gets the wider gutter to avoid hugging the edge. */
+  .start-inner {
+    padding-left: calc(var(--app-gutter) + 8px) !important;
+    padding-right: calc(var(--app-gutter) + 8px) !important;
+  }
+  .settings-main {
+    margin-left: var(--app-gutter) !important;
+    margin-right: var(--app-gutter) !important;
   }
 
   /* Scoped under .l-header to outrank the base `.btn-header { width: 1.75em }`
