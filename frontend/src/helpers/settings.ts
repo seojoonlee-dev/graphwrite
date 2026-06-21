@@ -37,6 +37,14 @@ export interface ThemeTokens {
   danger: string;
   icon: string;
   codeBg: string;
+  // Live-preview tables: a background + matching text color for the header row,
+  // normal rows, and the alternating (striped) rows.
+  tableHeaderBg: string;
+  tableHeaderText: string;
+  tableRowBg: string;
+  tableRowText: string;
+  tableAltBg: string;
+  tableAltText: string;
 }
 
 export const TOKEN_LABELS: Record<keyof ThemeTokens, string> = {
@@ -51,7 +59,24 @@ export const TOKEN_LABELS: Record<keyof ThemeTokens, string> = {
   danger: 'Danger',
   icon: 'Icons',
   codeBg: 'Code block',
+  tableHeaderBg: 'Header background',
+  tableHeaderText: 'Header text',
+  tableRowBg: 'Row background',
+  tableRowText: 'Row text',
+  tableAltBg: 'Alternate row background',
+  tableAltText: 'Alternate row text',
 };
+
+// Color tokens that belong to the "Table" group in the custom-color editor;
+// the rest render in the general color list.
+export const TABLE_TOKEN_KEYS: (keyof ThemeTokens)[] = [
+  'tableHeaderBg',
+  'tableHeaderText',
+  'tableRowBg',
+  'tableRowText',
+  'tableAltBg',
+  'tableAltText',
+];
 
 export const PRESETS: Record<PresetName, ThemeTokens> = {
   dark: {
@@ -66,6 +91,12 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     danger: '#6e2626',
     icon: '#FFF0E3',
     codeBg: '#1e1e1e',
+    tableHeaderBg: '#322f2c',
+    tableHeaderText: '#FFF0E3',
+    tableRowBg: '#282828',
+    tableRowText: '#FFF0E3',
+    tableAltBg: '#2e2c2a',
+    tableAltText: '#FFF0E3',
   },
   light: {
     bg: '#ffffff',
@@ -75,10 +106,16 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     textMuted: '#6e675f',
     border: '#ddd6cc',
     scrollbar: '#c0c0c0',
-    accent: '#b97e2e',
+    accent: '#e0a96d',
     danger: '#b23b3b',
     icon: '#2b2824',
     codeBg: '#F7F6F3',
+    tableHeaderBg: '#efece6',
+    tableHeaderText: '#2b2824',
+    tableRowBg: '#ffffff',
+    tableRowText: '#2b2824',
+    tableAltBg: '#f7f6f3',
+    tableAltText: '#2b2824',
   },
   black: {
     bg: '#000000',
@@ -92,6 +129,12 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
     danger: '#6e2626',
     icon: '#FFF0E3',
     codeBg: '#171717',
+    tableHeaderBg: '#161616',
+    tableHeaderText: '#FFFFFF',
+    tableRowBg: '#000000',
+    tableRowText: '#FFFFFF',
+    tableAltBg: '#0d0d0d',
+    tableAltText: '#FFFFFF',
   },
 };
 
@@ -103,6 +146,7 @@ export interface Settings {
   theme: ThemeName;
   colors: Partial<ThemeTokens>;
   centerEditor: boolean;
+  tableRounded: boolean;
   vibration: VibrationLevel;
 }
 
@@ -116,6 +160,7 @@ const DEFAULTS: Settings = {
   colors: {},
   // Default to the original full-width editor layout.
   centerEditor: false,
+  tableRounded: true,
   vibration: 'medium',
 };
 
@@ -169,6 +214,8 @@ export const applySettings = (s: Settings = loadSettings()): void => {
   });
   // Drives the optional centered editor layout (see editor.css).
   document.documentElement.classList.toggle('center-editor', s.centerEditor);
+  // Optional rounded corners on rendered tables (see editor.css).
+  document.documentElement.classList.toggle('table-rounded', s.tableRounded);
 };
 
 // Convenience accessors for the settings UI.
@@ -184,6 +231,9 @@ export const setTheme = (theme: ThemeName) => saveSettings({ theme });
 
 export const getCenterEditor = () => loadSettings().centerEditor;
 export const setCenterEditor = (value: boolean) => saveSettings({ centerEditor: value });
+
+export const getTableRounded = () => loadSettings().tableRounded;
+export const setTableRounded = (value: boolean) => saveSettings({ tableRounded: value });
 
 // Vibration length (ms) per intensity level; 'off' disables it.
 const VIBRATION_MS: Record<VibrationLevel, number> = { off: 0, low: 10, medium: 25, high: 50 };

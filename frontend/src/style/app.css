@@ -304,10 +304,6 @@ hr {
     padding-left: calc(var(--app-gutter) + 8px) !important;
     padding-right: calc(var(--app-gutter) + 8px) !important;
   }
-  .settings-main {
-    margin-left: var(--app-gutter) !important;
-    margin-right: var(--app-gutter) !important;
-  }
 
   /* Scoped under .l-header to outrank the base `.btn-header { width: 1.75em }`
      rule, which is later in the file and was overriding the mobile width (that's
@@ -424,7 +420,7 @@ hr {
 .file-tree-node {
   display: flex;
   align-items: center;
-  padding: 4px 10px 4px 6px;
+  padding: 4px 2px 4px 4px;
   border-radius: 6px;
   position: relative;
   transition: background-color 0.1s ease;
@@ -447,7 +443,7 @@ hr {
 }
 
 .btn-expand {
-  width: 15px;
+  width: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -465,7 +461,7 @@ hr {
 }
 
 .file-tree-spacer {
-  width: 15px;
+  width: 12px;
   cursor: default;
   text-align: center;
   flex-shrink: 0;
@@ -485,11 +481,16 @@ hr {
 }
 
 .btn-link {
-  padding-left: 5px;
+  padding-left: 2px;
   text-align: left;
   width: 100%;
   display: block;
   font-size: 14px;
+  /* Truncate long names with "…" once the sidebar is dragged narrow, rather than
+     overflowing the panel. Works because .file-tree-link is min-width: 0. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .file-tree-rename {
@@ -506,13 +507,24 @@ hr {
   outline: none;
 }
 
+/* Out of flow (absolute) so it doesn't reserve width and shrink the name's room
+   while invisible. It's only revealed on hover/active rows, whose background is
+   var(--bg) — the chip matches it, so it cleanly caps a long (ellipsed) name. */
 .btn-add {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
   opacity: 0;
-  padding-left: 5px;
+  /* Hidden by default; the hover/active rules below re-enable clicks when it's
+     revealed, so the invisible chip can't swallow taps meant for the note link. */
+  pointer-events: none;
+  padding: 2px 4px;
   font-size: 14px;
-  flex-shrink: 0;
   font-weight: bold;
   font-family: var(--app-font, 'Times New Roman', Times, serif);
+  background-color: var(--bg);
+  border-radius: 4px;
 }
 
 /* Hover-capable devices reveal the add button on row hover. */

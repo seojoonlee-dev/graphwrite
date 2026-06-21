@@ -1,227 +1,316 @@
-* {
-    margin: 0;
-    padding: 0;
-}
-
 h3 {
-    padding-bottom: 2px;
+  padding-bottom: 2px;
 }
 
 input {
-    margin-top: 10px;
-    padding: 6px;
-    background: var(--bg-secondary);
-    color: inherit;
-    border: none;
-    border-radius: 4px;
-    flex-grow: 1;
+  margin-top: 10px;
+  padding: 6px;
+  background: var(--bg-secondary);
+  color: inherit;
+  border: none;
+  border-radius: 4px;
+  flex-grow: 1;
 }
 
 .l-settings {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 0;
-    background-color: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+  background-color: var(--bg);
 }
 
-.settings-tabbar {
-    display: flex;
-    /* --content-top: header clearance (80px on desktop, device-aware on touch). */
-    padding: var(--content-top) 16px 12px 16px;
-    gap: 10px;
+/* Sidebar (nav) + content, side by side. Fills the height left by the header. */
+.settings-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
 }
 
-/* Full-width segmented tabs. */
-.settings-link {
-    flex: 1;
-    padding: 0;
-    border-radius: 22px;
-    background-color: var(--bg);
-    color: var(--text-muted);
-    text-align: center;
+/* Category nav, reusing the editor sidebar's surface (secondary bg + the
+   .file-tree-node row styling for the links). */
+.settings-sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  /* --content-top: header clearance (80px on desktop, device-aware on touch). */
+  padding: var(--content-top) 12px 20px 20px;
+  background-color: var(--bg-secondary);
+  border-right: var(--border) solid 1px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.settings-link.is-active {
-    background-color: var(--accent);
-    color: #1e1e1e;
+.settings-sidebar::-webkit-scrollbar {
+  display: none;
 }
 
-.btn-tabbar {
-    width: 100%;
-    padding: 12px 8px;
-    font-size: medium;
-    font-weight: bold;
-    white-space: nowrap;
+.settings-search {
+  flex: 0 0 auto;
+  margin-top: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
 }
 
-/* Content as one rounded card. The 30px radius sits roughly concentric with a
-   phone's rounded screen corners; on desktop it just reads as a rounded panel. */
-.settings-main {
-    background-color: var(--bg);
-    flex-grow: 1;
-    min-height: 0;
-    overflow-y: auto;
-    margin: 0 16px 16px 16px;
-    border-radius: 30px;
-    /* --safe-bottom: bottom nav/gesture clearance on touch; 16px on desktop. */
-    padding-bottom: var(--safe-bottom);
+.settings-nav {
+  gap: 4px;
+}
+
+/* Category rows reuse .file-tree-node styling but read as bigger nav entries. */
+.settings-nav .btn-link {
+  font-size: 15px;
+  padding: 2px 0 2px 5px;
+}
+
+.settings-no-results {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+/* Content panel: the single scrolling list of every section. Only the header's
+   top inset is reserved (not the full --content-top clearance) so the section
+   title lines up with "Settings"; the rest scrolls under the floating header. */
+.settings-content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: calc(20px + var(--safe-top)) 24px var(--safe-bottom) 24px;
 }
 
 .header-title {
-    padding-left: 10px;
+  padding-left: 10px;
 }
 
-.settings-title {
-    padding: 18px 18px 4px 18px;
+/* The header floats over the content, which now reaches up beside it (so the
+   title lines up with "Settings" rather than starting below the whole header).
+   Let clicks fall through the header's empty area; the back button re-enables. */
+.l-settings .l-header {
+  pointer-events: none;
+}
+
+.l-settings .l-header .btn-header {
+  pointer-events: auto;
+}
+
+/* The selected category's name (or "Search results"). Its top aligns with the
+   "Settings" header title — the content reserves only the header's top inset, not
+   the full header clearance, so the section starts beside the title, not below it. */
+.settings-content-title {
+  padding: 0 0 6px 0;
 }
 
 .settings-view {
-    display: flex;
-    flex-direction: column;
-    padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  max-width: 640px;
+  /* Land below the absolute header when scrolled to via the sidebar. */
+  scroll-margin-top: var(--content-top);
+}
+
+.settings-view h3 {
+  padding-bottom: 6px;
 }
 
 /* Startup-note field with a fixed, non-editable leading "/" */
 .startup-input {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-    background: var(--bg-secondary);
-    border-radius: 4px;
-    padding-left: 6px;
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  padding-left: 6px;
 }
 
 .startup-slash {
-    color: var(--text-muted);
-    user-select: none;
+  color: var(--text-muted);
+  user-select: none;
 }
 
 /* Boolean setting (e.g. "Align editor to the center"). */
 .settings-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 12px;
-    align-self: flex-start;
-    cursor: pointer;
-    user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  align-self: flex-start;
+  cursor: pointer;
+  user-select: none;
 }
 
 .settings-checkbox input[type="checkbox"] {
-    /* Reset the base input styling so it renders as a normal checkbox. */
-    margin: 0;
-    padding: 0;
-    flex-grow: 0;
-    width: 18px;
-    height: 18px;
-    background: none;
-    accent-color: var(--accent);
-    cursor: pointer;
+  /* Reset the base input styling so it renders as a normal checkbox. */
+  margin: 0;
+  padding: 0;
+  flex-grow: 0;
+  width: 18px;
+  height: 18px;
+  background: none;
+  accent-color: var(--accent);
+  cursor: pointer;
 }
 
 .font-select {
-    margin-top: 10px;
-    align-self: stretch;
-    width: 100%;
-    /* Opt out of native widget styling so background applies in WebKitGTK
-       (otherwise the closed control renders white). */
-    appearance: none;
-    -webkit-appearance: none;
-    padding: 12px 30px 12px 8px;
-    background-color: var(--bg-secondary);
-    /* Custom caret (native arrow is removed by appearance:none). Muted gray reads
-       on both light and dark themes. */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.5l4 4 4-4' fill='none' stroke='%239a928c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 9px center;
-    background-size: 12px;
-    color: var(--text);
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  margin-top: 10px;
+  align-self: stretch;
+  width: 100%;
+  /* Opt out of native widget styling so background applies in WebKitGTK
+     (otherwise the closed control renders white). */
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 12px 30px 12px 8px;
+  background-color: var(--bg-secondary);
+  /* Custom caret (native arrow is removed by appearance:none). Muted gray reads
+     on both light and dark themes. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 4.5l4 4 4-4' fill='none' stroke='%239a928c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 12px;
+  color: var(--text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 /* The native option popup defaults to white bg + inherited light text
    (unreadable on dark). Force matching dark colors. */
 .font-select option {
-    background-color: var(--bg-secondary);
-    color: var(--text);
+  background-color: var(--bg-secondary);
+  color: var(--text);
 }
 
 .startup-input input {
-    margin-top: 0;
-    background: transparent;
-    border-radius: 0;
-    padding-left: 2px;
+  margin-top: 0;
+  background: transparent;
+  border-radius: 0;
+  padding-left: 2px;
 }
 
 .color-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Sub-heading inside the custom-color editor (e.g. the "Table" color group). */
+.color-group-title {
+  margin-top: 18px;
+  padding-bottom: 2px;
 }
 
 .color-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
 }
 
 .color-row input[type="color"] {
-    width: 36px;
-    height: 24px;
-    margin: 0;
-    padding: 0;
-    flex-grow: 0;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: none;
-    cursor: pointer;
+  width: 36px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  flex-grow: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
 }
 
 .btn-secondary {
-    margin-top: 14px;
-    align-self: stretch;
-    padding: 12px 16px;
-    background-color: var(--bg-secondary);
-    color: inherit;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
+  margin-top: 14px;
+  align-self: stretch;
+  padding: 12px 16px;
+  background-color: var(--bg-secondary);
+  color: inherit;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .btn-secondary:hover {
-    filter: brightness(1.2);
+  filter: brightness(1.2);
 }
 
 /* Fixed-width variant (e.g. Clear note history) — opts out of the full-width
    stretch and stays a constant size so it doesn't reflow when its label changes
    ("Clear note history" → "Cleared"). */
 .btn-fixed {
-    align-self: flex-start;
-    width: 200px;
-    text-align: center;
+  align-self: flex-start;
+  width: 200px;
+  text-align: center;
 }
 
 .btn-reset {
-    margin-top: 14px;
-    align-self: stretch;
-    padding: 12px 16px;
-    background-color: var(--danger);
-    color: #ffd9d4;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
+  margin-top: 14px;
+  align-self: stretch;
+  padding: 12px 16px;
+  background-color: var(--danger);
+  color: #ffd9d4;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .btn-reset:hover:not(:disabled) {
-    filter: brightness(1.2);
+  filter: brightness(1.2);
 }
 
 .btn-reset:disabled {
-    opacity: 0.6;
-    cursor: default;
+  opacity: 0.6;
+  cursor: default;
 }
 
+/* Narrow screens: a side-by-side sidebar doesn't fit, so stack the nav on top
+   of the content and let the whole body scroll as one. */
+@media (max-width: 720px) {
+  /* The whole body scrolls under the floating header here, so its content would
+     show through behind the "Settings" title. Mask it with an opaque strip the
+     height of the header clearance — matching the sidebar surface that sits at
+     the top — layered above the content but below the header button/title. */
+  .l-settings::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--content-top);
+    background-color: var(--bg-secondary);
+    z-index: 97;
+    pointer-events: none;
+  }
+
+  .settings-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .settings-sidebar,
+  .settings-content {
+    flex: 0 0 auto;
+    width: auto;
+    overflow-y: visible;
+  }
+
+  .settings-sidebar {
+    border-right: none;
+    border-bottom: var(--border) solid 1px;
+    padding-bottom: 16px;
+  }
+
+  .settings-content {
+    padding-top: 18px;
+  }
+
+  .settings-view {
+    max-width: none;
+  }
+}

@@ -29,13 +29,36 @@ const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 // base in editor.css (calc(80px * var(--text-scale))).
 const TITLE_ZONE_PX = 80;
 
+// Sidebar resize bounds (px). Below the minimum, file names ellipsis-truncate
+// rather than the sidebar refusing to shrink.
+const MIN_SIDEBAR_WIDTH = 150;
+const MAX_SIDEBAR_WIDTH = 600;
+
 const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void, onNavigate?: () => void }) => {
   const { '*': parsedFilePath } = useParams();
 
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // Collapsed folders, persisted so the tree reopens the same way on reload. Only
+  // collapsed dirs are stored (expanding deletes the key) to keep the map compact.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('collapsedDirs');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, path: string } | null>(null);
   const [renaming, setRenaming] = useState<{ path: string, value: string } | null>(null);
-  
+
+  useEffect(() => {
+    localStorage.setItem('collapsedDirs', JSON.stringify(collapsed));
+  }, [collapsed]);
+
+  const toggleCollapsed = useCallback((dirPath: string) => {
+    setCollapsed(prev => {
+      const next = { ...prev };
+      if (next[dirPath]) delete next[dirPath];
+      else next[dirPath] = true;
+      return next;
+    });
+  }, []);
+
   const closeMenu = useCallback(() => setContextMenu(null), []);
   const longPress = useLongPress();
 
@@ -104,8 +127,8 @@ const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { fi
         >
           <div className={`file-tree-node ${parsedFilePath === dirPath ? 'is-active' : ''}`}>
             {hasChildren ? (
-              <button 
-                onClick={() => setCollapsed(prev => ({ ...prev, [dirPath]: !prev[dirPath] }))}
+              <button
+                onClick={() => toggleCollapsed(dirPath)}
                 className="btn-expand"
               >
                 <span className={`icon-arrow ${collapsed[dirPath] ? 'is-collapsed' : ''}`}>
@@ -232,32 +255,20 @@ function MainWorkspace() {
   // sidebar
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
-    return saved ? parseInt(saved, 10) : 200;
-  }); 
+    if (!saved) return MIN_SIDEBAR_WIDTH;
+    // Clamp legacy values saved before the 200px floor existed.
+    return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parseInt(saved, 10)));
+  });
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
-  // Lower bound for the drag, so the sidebar can't shrink below its content.
-  const minSidebarWidth = useRef(150);
-
-  // Measures the content's natural width by briefly sizing it to max-content.
-  // scrollWidth alone can't tell us this — it only exceeds the box once already
-  // overflowing, so it can't reveal headroom while the content still fits.
-  const measureMinWidth = () => {
-    const content = sidebarRef.current?.querySelector('.sidebar-content') as HTMLElement | null;
-    if (!content) return;
-    const prev = content.style.width;
-    content.style.width = 'max-content';
-    minSidebarWidth.current = Math.max(150, content.offsetWidth);
-    content.style.width = prev;
-  };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current || !sidebarRef.current) return;
 
     const sidebarLeft = sidebarRef.current.getBoundingClientRect().left;
     const rawWidth = e.clientX - sidebarLeft;
-    const newWidth = Math.max(minSidebarWidth.current, Math.min(rawWidth, 800));
+    const newWidth = Math.max(MIN_SIDEBAR_WIDTH, Math.min(rawWidth, MAX_SIDEBAR_WIDTH));
     setSidebarWidth(newWidth);
   };
 
@@ -468,7 +479,6 @@ function MainWorkspace() {
             className="drag-handle"
             onPointerDown={(e) => {
               isDragging.current = true;
-              measureMinWidth();
               e.currentTarget.setPointerCapture(e.pointerId);
 
               if (sidebarRef.current) {

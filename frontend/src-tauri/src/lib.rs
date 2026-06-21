@@ -30,9 +30,19 @@ pub fn run() {
           // WebKitGTK ships with smooth (animated) wheel scrolling disabled, so
           // scrolling feels stepped/jagged. Turn it on for the desktop app.
           let _ = window.with_webview(|webview| {
-            use webkit2gtk::{SettingsExt, WebViewExt};
-            if let Some(settings) = WebViewExt::settings(&webview.inner()) {
+            use webkit2gtk::{InputMethodContextExt, SettingsExt, WebViewExt};
+            let inner = webview.inner();
+            if let Some(settings) = WebViewExt::settings(&inner) {
               settings.set_enable_smooth_scrolling(true);
+            }
+
+            // wry disables IME preedit by default (set_enable_preedit(false)),
+            // which breaks inline CJK composition: with fcitx/ibus the in-progress
+            // syllable shows in a tiny floating box and only lands in the editor on
+            // space/enter instead of composing in place. Re-enable preedit so Korean
+            // (and Japanese/Chinese) compose on-the-spot inside the editor.
+            if let Some(im_context) = inner.input_method_context() {
+              im_context.set_enable_preedit(true);
             }
           });
         }
