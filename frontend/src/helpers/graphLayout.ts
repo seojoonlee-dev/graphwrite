@@ -93,15 +93,10 @@ export function getLayoutedElements(files: string[]) {
     });
   }
 
-  // Mark branch nodes so each can place its label on the correct side of the dot;
-  // leaves get a class so they render as a filled (accent) dot.
+  // Mark branch nodes so each can place its label on the correct side of the dot.
   const parents = new Set(edges.map((edge) => edge.source));
   nodes.forEach((node) => {
-    const hasChildren = parents.has(node.id);
-    node.data.hasChildren = hasChildren;
-    if (!hasChildren) {
-      node.className = `${node.className ?? ''} graph-node-leaf`.trim();
-    }
+    node.data.hasChildren = parents.has(node.id);
   });
 
   const dagreGraph = new dagre.graphlib.Graph();

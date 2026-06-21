@@ -28,12 +28,6 @@
   border-color: var(--text);
 }
 
-/* Leaf notes (no children) are filled with the accent. */
-.react-flow__node.graph-node-leaf {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
 /* Selection fills the dot with the accent so it's unmistakable. */
 .react-flow__node.graph-node.selected {
   border-color: var(--accent);
@@ -86,6 +80,39 @@
 .graph-node-rename.label-left {
   right: 16px;
   text-align: right;
+}
+
+/* Search field (top-right panel). */
+.graph-search {
+  width: 180px;
+  padding: 5px 9px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+}
+
+.graph-search::placeholder {
+  color: var(--text-muted);
+}
+
+.graph-search:focus {
+  border-color: var(--accent);
+}
+
+/* Search highlighting: nodes and edges on a matched path pop to the accent. */
+.react-flow__node.graph-node-search-hit {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.graph-edge.graph-edge-highlight .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-opacity: 1;
+  stroke-width: 1.6;
 }
 
 /* Handles are invisible (the dot itself is the visual) but keep a tall, narrow

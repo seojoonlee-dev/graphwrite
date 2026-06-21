@@ -3,7 +3,7 @@ import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, type 
 import { getLayoutedElements, GRAPH_ROOT_ID } from '../helpers/graphLayout';
 import { TintedImage } from './tintedImage';
 import { ContextMenu } from './contextMenu';
-import { loadSavedViewport, saveViewport } from '../helpers/graphStorage';
+import { loadSavedViewport, saveViewport, loadSavedSearch, saveSearch } from '../helpers/graphStorage';
 import { validateRename } from '../helpers/paths';
 import { useLongPress } from '../hooks/useLongPress';
 import '@xyflow/react/dist/style.css';
@@ -113,14 +113,66 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
     setRenaming(null);
   }, [renaming, onNodeRename]);
 
+  // Search: typing a query highlights the path(s) from the Notes root down to
+  // every node whose label matches. Node ids are full paths, so an ancestor
+  // chain is just the slash-separated prefixes of a matched id.
+  // Persisted so the last query is restored each time the graph view opens.
+  const [search, setSearch] = useState(loadSavedSearch);
+
+  const updateSearch = useCallback((value: string) => {
+    setSearch(value);
+    saveSearch(value);
+  }, []);
+
+  const { highlightedNodeIds, highlightedEdgeIds } = useMemo(() => {
+    const nodeIds = new Set<string>();
+    const edgeIds = new Set<string>();
+    const query = search.trim().toLowerCase();
+    if (!query) return { highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds };
+
+    nodes.forEach((node) => {
+      if (node.id === GRAPH_ROOT_ID) return;
+      const label = String(node.data?.label ?? '').toLowerCase();
+      if (!label.includes(query)) return;
+
+      // Walk down the prefix chain, lighting up each node and the edge into it
+      // (the synthetic root feeds the first-level node via edge-<root>-<part>).
+      let prefix = '';
+      let prevId = GRAPH_ROOT_ID;
+      nodeIds.add(GRAPH_ROOT_ID);
+      node.id.split('/').forEach((part) => {
+        prefix = prefix ? `${prefix}/${part}` : part;
+        nodeIds.add(prefix);
+        edgeIds.add(`edge-${prevId}-${prefix}`);
+        prevId = prefix;
+      });
+    });
+
+    return { highlightedNodeIds: nodeIds, highlightedEdgeIds: edgeIds };
+  }, [search, nodes]);
+
   const displayNodes = useMemo(() => {
-    if (!renaming) return nodes;
-    return nodes.map((node) =>
-      node.id === renaming
-        ? { ...node, data: { ...node.data, renaming: true, onRenameCommit: commitRename, onRenameCancel: () => setRenaming(null) } }
-        : node
+    return nodes.map((node) => {
+      const data = node.id === renaming
+        ? { ...node.data, renaming: true, onRenameCommit: commitRename, onRenameCancel: () => setRenaming(null) }
+        : node.data;
+      const className = highlightedNodeIds.has(node.id)
+        ? `${node.className ?? ''} graph-node-search-hit`.trim()
+        : node.className;
+      // Preserve referential equality where nothing changed, so ReactFlow can
+      // keep memoizing the untouched nodes.
+      return data === node.data && className === node.className ? node : { ...node, data, className };
+    });
+  }, [nodes, renaming, commitRename, highlightedNodeIds]);
+
+  const displayEdges = useMemo(() => {
+    if (highlightedEdgeIds.size === 0) return edges;
+    return edges.map((edge) =>
+      highlightedEdgeIds.has(edge.id)
+        ? { ...edge, className: `${edge.className ?? ''} graph-edge-highlight`.trim() }
+        : edge
     );
-  }, [nodes, renaming, commitRename]);
+  }, [edges, highlightedEdgeIds]);
 
   const savedViewport = useMemo(() => loadSavedViewport(), []);
 
@@ -216,7 +268,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
       <ReactFlow
         onInit={(instance) => { instanceRef.current = instance; }}
         nodes={displayNodes}
-        edges={edges}
+        edges={displayEdges}
         nodeTypes={nodeTypes}
         onlyRenderVisibleElements
         onNodesChange={onNodesChange}
@@ -241,6 +293,15 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
         zoomOnDoubleClick={false}
         proOptions={{hideAttribution: true}}
       >
+        <Panel position="top-right">
+          <input
+            className="graph-search nodrag"
+            type="text"
+            placeholder="Search notes…"
+            value={search}
+            onChange={(e) => updateSearch(e.target.value)}
+          />
+        </Panel>
         <Panel position="bottom-right">
           <button className= "btn-header" id="btn-reset" onClick={handleFitView}>
             <TintedImage src='/reset.svg' alt='reset'></TintedImage>

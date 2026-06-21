@@ -2,6 +2,19 @@ import { type Viewport } from '@xyflow/react';
 
 const POSITIONS_KEY = 'graphNodePositions';
 const VIEWPORT_KEY = 'graphViewport';
+const SEARCH_KEY = 'graphSearch';
+
+export function loadSavedSearch(): string {
+  try {
+    return localStorage.getItem(SEARCH_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveSearch(search: string) {
+  localStorage.setItem(SEARCH_KEY, search);
+}
 
 export type NodePositions = Record<string, { x: number; y: number }>;
 
