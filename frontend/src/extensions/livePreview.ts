@@ -554,6 +554,47 @@ const livePreviewPlugin = ViewPlugin.fromClass(
   { decorations: (plugin) => plugin.decorations },
 );
 
+// Blockquote lines get an accent bar down the side (styled by .cm-quote). It's a
+// line decoration that shows whether or not the cursor is on the line, so it
+// lives in its own plugin to keep clear of the inline builder's ordering.
+function buildQuoteDecorations(view: EditorView): DecorationSet {
+  const { doc } = view.state;
+  const quoteLines = new Set<number>();
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(view.state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        if (node.name !== 'Blockquote') return;
+        const start = doc.lineAt(node.from).number;
+        const end = doc.lineAt(Math.max(node.from, node.to - 1)).number;
+        for (let ln = start; ln <= end; ln++) quoteLines.add(ln);
+      },
+    });
+  }
+  const builder = new RangeSetBuilder<Decoration>();
+  for (const ln of [...quoteLines].sort((a, b) => a - b)) {
+    const line = doc.line(ln);
+    builder.add(line.from, line.from, Decoration.line({ class: 'cm-quote' }));
+  }
+  return builder.finish();
+}
+
+const quoteLinePlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet;
+    constructor(view: EditorView) {
+      this.decorations = buildQuoteDecorations(view);
+    }
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged) {
+        this.decorations = buildQuoteDecorations(update.view);
+      }
+    }
+  },
+  { decorations: (plugin) => plugin.decorations },
+);
+
 // `focusedField` is listed before `tableField` so that, within a transaction,
 // `tableField.update` reads the already-updated focus value.
-export const livePreview: Extension = [focusedField, tableField, focusWatcher, livePreviewPlugin];
+export const livePreview: Extension = [focusedField, tableField, focusWatcher, livePreviewPlugin, quoteLinePlugin];

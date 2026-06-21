@@ -186,6 +186,8 @@ function MainWorkspace() {
     fileName,
     content,
     notFound,
+    saveState,
+    lastSavedAt,
     updateContent,
     saveCurrentFile,
     renameFile,
@@ -551,6 +553,8 @@ function MainWorkspace() {
             title={fileName ? fileName : "Select or create a file"}
             onTitleChange={(newTitle) => renameFile(parsedFilePath, newTitle)}
             createFile={(filename) => createFile(parsedFilePath ?? '', filename)}
+            saveState={saveState}
+            lastSavedAt={lastSavedAt}
           />
         )}
         </Suspense>

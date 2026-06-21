@@ -22,6 +22,19 @@ interface EditorProps {
   // Invoked when a [[wikilink]] is clicked: creates the note (or navigates to it
   // if it already exists), matching the previous behavior.
   createFile: (value?: string) => void;
+  saveState: 'idle' | 'saving' | 'saved' | 'error';
+  lastSavedAt: number | null;
+}
+
+// Relative "when" for the save indicator, e.g. "saved just now", "saved 3m ago".
+function savedLabel(ts: number): string {
+  const secs = Math.floor((Date.now() - ts) / 1000);
+  if (secs < 10) return 'saved just now';
+  if (secs < 60) return `saved ${secs}s ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `saved ${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  return `saved ${hrs}h ago`;
 }
 
 // Markdown chrome styling — theme-independent. The CodeMirror document IS the
@@ -104,8 +117,21 @@ const editorTheme = EditorView.theme({
   '.cm-placeholder': { color: 'var(--text-muted)' },
 });
 
-function Editor({ rawContent, onChange, placeholder = 'Start typing your note here...', title, onTitleChange, createFile }: EditorProps) {
+function Editor({ rawContent, onChange, placeholder = 'Start typing your note here...', title, onTitleChange, createFile, saveState, lastSavedAt }: EditorProps) {
   const { '*': parsedFilePath } = useParams();
+
+  // Re-render on a timer so the relative "saved … ago" label keeps current.
+  const [, setNow] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setNow((n) => n + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const saveText =
+    saveState === 'saving' ? 'saving…'
+    : saveState === 'error' ? 'save failed'
+    : saveState === 'saved' ? (lastSavedAt ? savedLabel(lastSavedAt) : 'saved')
+    : '';
 
   const prevFilePath = useRef(parsedFilePath);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -266,7 +292,10 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
             onBlur={titleChangeSave}
             className="editor-title-input"
           />
-          <p className="editor-path">{parsedFilePath && '/' + parsedFilePath}</p>
+          <div className="editor-meta">
+            <span className="editor-path">{parsedFilePath ? `/notes/${parsedFilePath}` : '/notes'}</span>
+            {saveText && <span className={`editor-save editor-save--${saveState}`}>{saveText}</span>}
+          </div>
         </div>
         <hr />
         <div className="cm-host" ref={containerRef} />

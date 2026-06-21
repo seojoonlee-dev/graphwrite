@@ -52,6 +52,8 @@
   --danger: #6e2626;
   --icon: #FFF0E3;
   --code-bg: #1e1e1e;
+  /* Monospace stack, shared with the editor path + sidebar (matches the website). */
+  --mono: 'Fira Code', 'Courier New', Courier, monospace;
   /* Status-bar/notch inset, divided by the phone/tablet zoom transform so the
      gap stays a physically-constant size; 0 on desktop/web (no inset). */
   --safe-top: calc(env(safe-area-inset-top, 0px) / var(--zoom, 1));

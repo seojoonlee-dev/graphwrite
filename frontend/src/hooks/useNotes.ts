@@ -17,6 +17,10 @@ export function useNotes() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Save indicator shown under the editor title: 'saving' during a write,
+  // 'saved' once it lands (lastSavedAt drives the relative "when").
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
 
   const cacheRef = useRef<Record<string, string>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -51,8 +55,19 @@ export function useNotes() {
     const pending = pendingSaveRef.current;
     pendingSaveRef.current = null;
     if (pending) {
+      setSaveState('saving');
       inFlightSaveRef.current = saveFile(pending.filePath, pending.content)
-        .then(() => { cacheRef.current[pending.filePath] = pending.content; })
+        .then(
+          () => {
+            cacheRef.current[pending.filePath] = pending.content;
+            setSaveState('saved');
+            setLastSavedAt(Date.now());
+          },
+          (err) => {
+            setSaveState('error');
+            throw err;
+          },
+        )
         .finally(() => { inFlightSaveRef.current = null; });
     }
     if (inFlightSaveRef.current) await inFlightSaveRef.current;
@@ -84,9 +99,14 @@ export function useNotes() {
       if (!filePath) {
         setContent('');
         setFileName('');
+        setSaveState('idle');
+        setLastSavedAt(null);
         return;
       }
       setFileName(parsedFilePath ? nameOf(parsedFilePath) : '');
+      // A freshly loaded note is clean; show "saved" without a stale timestamp.
+      setSaveState('saved');
+      setLastSavedAt(null);
 
       if (cacheRef.current[filePath] !== undefined) {
         setContent(cacheRef.current[filePath]);
@@ -130,6 +150,7 @@ export function useNotes() {
     if (!filePath) return;
     pendingSaveRef.current = { filePath, content: newContent };
     cacheRef.current[filePath] = newContent;
+    setSaveState('saving');
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       flushPendingSave().catch(err => console.error('Autosave failed:', err));
@@ -148,10 +169,14 @@ export function useNotes() {
     try {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       pendingSaveRef.current = null;
+      setSaveState('saving');
       await saveFile(filePath, content);
       cacheRef.current[filePath] = content;
+      setSaveState('saved');
+      setLastSavedAt(Date.now());
       return true;
     } catch (error) {
+      setSaveState('error');
       alert("Couldn't save: " + error);
       return false;
     }
@@ -266,6 +291,8 @@ export function useNotes() {
     fileName,
     content,
     notFound,
+    saveState,
+    lastSavedAt,
     updateContent,
     saveCurrentFile,
     renameFile: handleRenameFile,
