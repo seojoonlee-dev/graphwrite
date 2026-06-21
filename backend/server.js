@@ -217,6 +217,59 @@ app.delete('/api/delete', async (req, res) => {
   }
 });
 
+// Re-parent a note: move its folder under a new parent without renaming it.
+// `newParentPath` is the destination parent's dir path; '' means the top level.
+app.post('/api/move', async (req, res) => {
+  const { filePath, newParentPath } = req.body;
+  if (!filePath) {
+    return res.status(400).json({ success: false, message: 'Missing parameters' });
+  }
+
+  try {
+    const oldFullPath = getSafePath(filePath);
+    const oldDir = path.dirname(oldFullPath);
+    const folderName = path.basename(oldDir);
+
+    const safeBaseDir = path.resolve(NOTES_DIR);
+    const newParentDir = newParentPath ? getSafePath(newParentPath) : safeBaseDir;
+    const newDir = path.join(newParentDir, folderName);
+
+    if (newDir !== safeBaseDir && !newDir.startsWith(safeBaseDir + path.sep)) {
+      throw new Error('Invalid path');
+    }
+
+    // Already in this parent — nothing to do.
+    if (newDir === oldDir) {
+      const rel = path.relative(NOTES_DIR, oldDir).split(path.sep).join('/');
+      return res.json({ success: true, filePath: rel });
+    }
+
+    // A note can't become its own ancestor's child, i.e. move into itself or a descendant.
+    if (newParentDir === oldDir || newParentDir.startsWith(oldDir + path.sep)) {
+      return res.status(400).json({ success: false, message: "Can't move a note into itself." });
+    }
+
+    // Name collision in the destination.
+    try {
+      await fs.access(newDir);
+      return res.status(409).json({
+        success: false,
+        message: `A file named "${folderName}" already exists in this location.`,
+      });
+    } catch {
+    }
+
+    await fs.mkdir(newParentDir, { recursive: true });
+    await fs.rename(oldDir, newDir);
+
+    const newRelativePath = path.relative(NOTES_DIR, newDir).split(path.sep).join('/');
+    res.json({ success: true, filePath: newRelativePath });
+  } catch (error) {
+    console.error('Error moving file:', error);
+    res.status(500).json({ success: false, message: 'Failed to move file' });
+  }
+});
+
 const server = app.listen(3001, '0.0.0.0', () => {
   console.log('Server running on port 3001');
 });

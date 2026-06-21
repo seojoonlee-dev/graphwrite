@@ -43,6 +43,19 @@ export const renameFile = async (filePath: string, newTitle: string) => {
   return data;
 };
 
+export const moveFile = async (filePath: string, newParentPath: string) => {
+  const response = await fetch(`${getServerIp()}/api/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ filePath, newParentPath }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to move file");
+  }
+  return data;
+};
+
 export const createFile = async (currentPath: string, fileName?: string) => {
   const response = await fetch(`${getServerIp()}/api/create`, {
     method: 'POST',

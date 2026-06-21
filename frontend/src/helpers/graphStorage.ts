@@ -34,6 +34,14 @@ export function clearPositions() {
   localStorage.removeItem(POSITIONS_KEY);
 }
 
+// Pin a single node's position (e.g. a note created at a drop point in the graph)
+// without disturbing the others.
+export function setSavedPosition(id: string, position: { x: number; y: number }) {
+  const saved = loadSavedPositions();
+  saved[id] = position;
+  savePositions(saved);
+}
+
 export function migrateSavedPositions(oldDirPath: string, newDirPath: string) {
   const saved = loadSavedPositions();
   const migrated: NodePositions = {};

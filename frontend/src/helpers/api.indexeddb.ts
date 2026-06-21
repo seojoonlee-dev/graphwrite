@@ -89,6 +89,36 @@ export const renameFile = async (filePath: string, newTitle: string) => {
   return { success: true, filePath: newDir };
 };
 
+export const moveFile = async (filePath: string, newParentPath: string) => {
+  const oldDir = dirname(filePath);
+  const folderName = basename(oldDir);
+  const newDir = join(newParentPath, folderName);
+
+  // No-op when it's already in this parent.
+  if (newDir === oldDir) return { success: true, filePath: oldDir };
+
+  // Can't move a note into itself or one of its descendants.
+  if (newParentPath === oldDir || newParentPath.startsWith(oldDir + '/')) {
+    throw new Error("Can't move a note into itself.");
+  }
+
+  const ks = await allKeys();
+  if (ks.some((k) => k.startsWith(newDir + '/'))) {
+    throw new Error(`A file named "${folderName}" already exists in this location.`);
+  }
+
+  // Re-prefix every descendant key under the note's folder; the folder name
+  // (its title) is unchanged, so the inner ".md" keeps its name.
+  for (const k of ks) {
+    if (!k.startsWith(oldDir + '/')) continue;
+    const newKey = newDir + k.slice(oldDir.length);
+    const content = await get<string>(k);
+    await del(k);
+    await set(newKey, content ?? '');
+  }
+  return { success: true, filePath: newDir };
+};
+
 export const deleteFile = async (filePath: string) => {
   const folder = dirname(filePath);
   const ks = await allKeys();

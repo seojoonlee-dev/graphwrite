@@ -191,6 +191,7 @@ function MainWorkspace() {
     updateContent,
     saveCurrentFile,
     renameFile,
+    moveFile,
     createFile,
     deleteFile,
   } = useNotes();
@@ -294,7 +295,11 @@ function MainWorkspace() {
   useEffect(() => {
     if (prevLocationRef.current !== location) {
       prevLocationRef.current = location;
-      updateShowGraph(false);
+      // Navigations normally drop out of the graph back to the note view, but a
+      // delete made from the graph asks (via router state) to stay in the graph.
+      if (!(location.state as { keepGraph?: boolean } | null)?.keepGraph) {
+        updateShowGraph(false);
+      }
       // Reveal the title again when switching views.
       overlayShownRef.current = true;
       lastScrollTop.current = 0;
@@ -530,7 +535,9 @@ function MainWorkspace() {
               });
             }}
             onNodeRename={renameFile}
-            onNodeDelete={deleteFile}
+            onNodeMove={moveFile}
+            onNodeCreate={(path, position) => createFile(path, undefined, { keepView: true, position })}
+            onNodeDelete={(path) => deleteFile(path, { keepView: true })}
           />
         ) : notFound ? (
           <div className="not-found">

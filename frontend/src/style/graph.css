@@ -1,53 +1,130 @@
 .graph-view {
   width: 100%;
   height: 100%;
-  background: none;
+  background: var(--bg);
 }
 
+/* Nodes are small hollow dots; the label lives outside the dot (see below).
+   No shadows/transitions — flat and responsive on WebKitGTK. */
 .react-flow__node.graph-node {
-  background: var(--bg-secondary);
-  color: var(--text);
-  border: 1px solid var(--text);
-  border-radius: 6px;
-  padding: 8px;
-  width: 150px;
-  font-size: 12px;
-  text-align: center;
-  /* suppress the iOS long-press callout/selection so it doesn't fight the context menu */
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid var(--text-muted);
+  overflow: visible;
+  cursor: pointer;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
+.react-flow__node.graph-node:hover {
+  border-color: var(--accent);
+}
+
+/* Tree roots read a touch stronger than their children. */
+.react-flow__node.graph-node-root {
+  border-color: var(--text);
+}
+
+/* Leaf notes (no children) are filled with the accent. */
+.react-flow__node.graph-node-leaf {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Selection fills the dot with the accent so it's unmistakable. */
+.react-flow__node.graph-node.selected {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* External label, vertically centred on the dot. Branch nodes put it on the
+   left (tucked toward the parent); leaves put it on the right. */
 .graph-node-label {
-  display: block;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.graph-node-label.label-right {
+  left: 16px;
+  text-align: left;
+}
+
+.graph-node-label.label-left {
+  right: 16px;
+  text-align: right;
 }
 
 .graph-node-rename {
-  display: block;
-  width: calc(100% + 2px);
-  margin: -1px;
-  padding: 0;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  color: inherit;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 130px;
+  padding: 1px 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--text);
   font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  text-align: center;
+  font-size: 12px;
+  line-height: 1.1;
   outline: none;
 }
 
+.graph-node-rename.label-right {
+  left: 16px;
+  text-align: left;
+}
+
+.graph-node-rename.label-left {
+  right: 16px;
+  text-align: right;
+}
+
+/* Handles are invisible (the dot itself is the visual) but keep a tall, narrow
+   grab zone so dragging a connection out of a node stays easy. */
+.react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+  border: none;
+  opacity: 0;
+}
+
+.react-flow__handle::before {
+  content: '';
+  position: absolute;
+  inset: -8px 0;
+}
+
+/* Edges keep the (intentional) bezier shape; thin and subtle, accent on hover. */
 .graph-edge .react-flow__edge-path {
-  stroke: var(--border);
+  stroke: var(--text-muted);
+  stroke-opacity: 0.35;
+  stroke-width: 1.2;
+}
+
+.react-flow__edge.graph-edge:hover .react-flow__edge-path,
+.react-flow__edge.graph-edge.selected .react-flow__edge-path {
+  stroke: var(--accent);
+  stroke-opacity: 1;
+}
+
+/* Edges are interactive (right-click to cut), so signal it with a pointer. */
+.react-flow__edge.graph-edge,
+.react-flow__edge.graph-edge .react-flow__edge-path,
+.react-flow__edge.graph-edge .react-flow__edge-interaction {
+  cursor: pointer;
 }
 
 .react-flow__selection {
-  background: rgba(255, 240, 227, 0.06);
-  border: 1px dashed var(--text);
-}
-
-.react-flow__node.graph-node.selected {
-  border-style: dashed;
+  background: rgba(224, 169, 109, 0.08);
+  border: 1px solid var(--accent);
 }

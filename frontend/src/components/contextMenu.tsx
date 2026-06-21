@@ -11,9 +11,12 @@ interface ContextMenuProps {
   onClose: () => void;
   onRename: (path: string) => void;
   onDelete: (path: string) => void;
+  // Optional: when provided, a "New note here" action creates a child under this
+  // node. Used by the graph view; the sidebar omits it (it has its own + button).
+  onCreate?: (path: string) => void;
 }
 
-export function ContextMenu({ x, y, path, onClose, onRename, onDelete }: ContextMenuProps) {
+export function ContextMenu({ x, y, path, onClose, onRename, onDelete, onCreate }: ContextMenuProps) {
   // On phones the menu is a bottom sheet over a dark scrim (positioned by CSS);
   // elsewhere it's a popup at the cursor.
   const isMobile = typeof window !== 'undefined'
@@ -67,6 +70,18 @@ export function ContextMenu({ x, y, path, onClose, onRename, onDelete }: Context
           <span className="context-menu-name">{nameOf(path)}</span>
           <span className="context-menu-path">/{path}</span>
         </div>
+        {onCreate && (
+          <button
+            className="context-menu-item"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreate(path);
+              close();
+            }}
+          >
+            Create New Note
+          </button>
+        )}
         <button
           className="context-menu-item"
           onClick={(e) => {

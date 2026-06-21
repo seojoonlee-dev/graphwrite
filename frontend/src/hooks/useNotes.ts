@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, createFile, deleteFile } from '@notesApi';
+import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, moveFile, createFile, deleteFile } from '@notesApi';
 import { toFilePath, nameOf } from '../helpers/paths';
-import { migrateSavedPositions } from '../helpers/graphStorage';
+import { migrateSavedPositions, setSavedPosition } from '../helpers/graphStorage';
 
 const PENDING_SAVE_KEY = 'pendingSave';
 
@@ -216,25 +216,78 @@ export function useNotes() {
     }
   }, [filePath, content, parsedFilePath, navigate, fetchFiles, flushPendingSave]);
 
+  // move (re-parent): keeps the note's title, changes its parent folder.
+  const handleMoveFile = useCallback(async (dirPath: string, newParentPath: string): Promise<boolean> => {
+    if (!dirPath) return false;
+    // Ignore self/descendant targets and no-op moves to the current parent.
+    if (newParentPath === dirPath || newParentPath.startsWith(dirPath + '/')) return false;
+    const currentParent = dirPath.includes('/') ? dirPath.slice(0, dirPath.lastIndexOf('/')) : '';
+    if (currentParent === newParentPath) return false;
+
+    const targetFilePath = toFilePath(dirPath);
+
+    try {
+      await flushPendingSave();
+      const data = await moveFile(targetFilePath, newParentPath);
+
+      if (data.success) {
+        Object.keys(cacheRef.current).forEach((key) => {
+          if (key === targetFilePath || key.startsWith(dirPath + '/')) {
+            delete cacheRef.current[key];
+          }
+        });
+        if (targetFilePath === filePath) {
+          cacheRef.current[toFilePath(data.filePath)] = content;
+        }
+        migrateSavedPositions(dirPath, data.filePath);
+        await fetchFiles();
+        if (parsedFilePath === dirPath) {
+          navigate(`/${data.filePath}`);
+        } else if (parsedFilePath && parsedFilePath.startsWith(dirPath + '/')) {
+          navigate(`/${data.filePath}${parsedFilePath.slice(dirPath.length)}`);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      alert("Couldn't move: " + (error instanceof Error ? error.message : error));
+      return false;
+    }
+  }, [filePath, content, parsedFilePath, navigate, fetchFiles, flushPendingSave]);
+
   // create
-  const handleCreateFile = useCallback(async (path:string, filename?:string) => {
+  // opts.keepView leaves the current view in place (the graph creates notes
+  // without jumping to the editor); opts.position pins the new node where it was
+  // dropped, set before the refresh so the graph lays it out there.
+  const handleCreateFile = useCallback(async (
+    path: string,
+    filename?: string,
+    opts?: { keepView?: boolean; position?: { x: number; y: number } },
+  ): Promise<string | null> => {
     try {
       const data = await createFile(path, filename);
 
       if (data.success) {
         cacheRef.current[data.filePath] = '';
+        if (opts?.position) setSavedPosition(data.filePath, opts.position);
         await fetchFiles();
-        navigate(`/${data.filePath}`);
+        if (!opts?.keepView) navigate(`/${data.filePath}`);
+        return data.filePath;
       } else if (data.filePath) {
-        navigate(`/${data.filePath}`);
+        if (!opts?.keepView) navigate(`/${data.filePath}`);
+        return data.filePath;
       }
     } catch (error) {
       console.error('Create failed:', error);
     }
+    return null;
   }, [navigate, fetchFiles]);
 
   // delete
-  const handleDeleteFile = useCallback(async (pathToDelete: string) => {
+  // opts.keepView: when the deleted note is the active one we navigate home, but
+  // pass a router flag so the caller's view (e.g. the graph) can stay put instead
+  // of being kicked back to the editor/start screen.
+  const handleDeleteFile = useCallback(async (pathToDelete: string, opts?: { keepView?: boolean }) => {
     if (!pathToDelete) return;
 
     const targetFilePath = toFilePath(pathToDelete);
@@ -251,7 +304,7 @@ export function useNotes() {
 
       if (targetFilePath === filePath) {
         setContent('');
-        navigate('/');
+        navigate('/', opts?.keepView ? { state: { keepGraph: true } } : undefined);
       }
     } catch (error) {
       console.error('Delete failed:', error);
@@ -296,6 +349,7 @@ export function useNotes() {
     updateContent,
     saveCurrentFile,
     renameFile: handleRenameFile,
+    moveFile: handleMoveFile,
     createFile: handleCreateFile,
     deleteFile: handleDeleteFile,
   };
