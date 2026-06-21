@@ -19,6 +19,8 @@
 
 <hr></hr>
 
+<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/056be0e3-8694-4d21-9c02-db2311ef29a1" />
+
 ## Table of Contents
 
 - [Why GraphWrite](#why-graphwrite)
@@ -37,8 +39,6 @@
   - [Update to latest (git)](#update-to-latest-git)
   - [Desktop and mobile apps](#desktop-and-mobile-apps-1)
 - [AI Disclosure](#ai-disclosure)
-
-<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/056be0e3-8694-4d21-9c02-db2311ef29a1" />
 
 
 
