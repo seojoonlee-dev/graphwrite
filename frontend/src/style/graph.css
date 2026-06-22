@@ -23,9 +23,10 @@
   border-color: var(--accent);
 }
 
-/* Tree roots read a touch stronger than their children. */
+/* The synthetic root is a solid accent dot so it reads as the tree's anchor. */
 .react-flow__node.graph-node-root {
-  border-color: var(--text);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 /* Selection fills the dot with the accent so it's unmistakable. */
@@ -113,6 +114,18 @@
   stroke: var(--accent);
   stroke-opacity: 1;
   stroke-width: 1.6;
+}
+
+/* Bloom on the edges one hop off a lit path: the gradient starts accent at the
+   end touching the path and fades to the normal edge colour, kept subtle. */
+.graph-edge-glow-hot {
+  stop-color: var(--accent);
+  stop-opacity: 0.2;
+}
+
+.graph-edge-glow-cold {
+  stop-color: var(--text-muted);
+  stop-opacity: 0.35;
 }
 
 /* Handles are invisible (the dot itself is the visual) but keep a tall, narrow

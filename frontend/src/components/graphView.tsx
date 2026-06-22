@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, type Node, type NodeProps, type Viewport, type ReactFlowInstance, type Connection, type Edge, type OnConnectStartParams, type FinalConnectionState } from '@xyflow/react';
+import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, BaseEdge, getBezierPath, type Node, type NodeProps, type EdgeProps, type Viewport, type ReactFlowInstance, type Connection, type Edge, type OnConnectStartParams, type FinalConnectionState } from '@xyflow/react';
 import { getLayoutedElements, GRAPH_ROOT_ID } from '../helpers/graphLayout';
 import { TintedImage } from './tintedImage';
 import { ContextMenu } from './contextMenu';
@@ -22,6 +22,7 @@ interface FileNodeData {
   label: string;
   filePath?: string;
   isRoot?: boolean;
+  isSynthetic?: boolean;
   hasChildren?: boolean;
   renaming?: boolean;
   onRenameCommit?: (value: string) => void;
@@ -33,7 +34,7 @@ interface FileNodeData {
 const NodeContextMenuContext = createContext<((x: number, y: number, path: string) => void) | null>(null);
 
 const FileNode = ({ id, data }: NodeProps) => {
-  const { label, filePath, hasChildren, renaming, onRenameCommit, onRenameCancel } = data as unknown as FileNodeData;
+  const { label, filePath, hasChildren, isSynthetic, renaming, onRenameCommit, onRenameCancel } = data as unknown as FileNodeData;
   const openMenu = useContext(NodeContextMenuContext);
   const longPress = useLongPress();
 
@@ -44,7 +45,8 @@ const FileNode = ({ id, data }: NodeProps) => {
   return (
     <>
       <Handle type="target" position={Position.Left} />
-      {renaming ? (
+      {/* The synthetic "Notes" root is a bare accent dot with no label. */}
+      {isSynthetic ? null : renaming ? (
         <input
           className={`graph-node-rename ${side} nodrag`}
           defaultValue={label}
@@ -72,8 +74,38 @@ const FileNode = ({ id, data }: NodeProps) => {
 
 const nodeTypes = { fileNode: FileNode };
 
+// A search hit lights its whole path to the accent; the edges hanging off that
+// path get a minimal bloom — this edge strokes a gradient that fades from the
+// accent (at the end touching the lit path) to the normal edge colour, so the
+// glow bleeds outward by one hop and falls off.
+const GlowEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: EdgeProps) => {
+  const [path] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
+  // useId gives a document-unique, syntactically-safe id; deriving it from the
+  // edge id breaks when a note path contains spaces or slashes (invalid in an
+  // SVG id, so url(#…) fails to resolve and the stroke never paints).
+  const gradId = `glow-grad-${useId().replace(/:/g, '')}`;
+  // `hot` marks which endpoint sits on the lit path; the gradient starts there.
+  const hot = (data as { hot?: 'source' | 'target' } | undefined)?.hot ?? 'source';
+  const [x1, y1, x2, y2] = hot === 'source'
+    ? [sourceX, sourceY, targetX, targetY]
+    : [targetX, targetY, sourceX, sourceY];
+  return (
+    <>
+      <defs>
+        <linearGradient id={gradId} gradientUnits="userSpaceOnUse" x1={x1} y1={y1} x2={x2} y2={y2}>
+          <stop className="graph-edge-glow-hot" offset="0%" />
+          <stop className="graph-edge-glow-cold" offset="100%" />
+        </linearGradient>
+      </defs>
+      <BaseEdge id={id} path={path} interactionWidth={40} style={{ stroke: `url(#${gradId})`, strokeOpacity: 1, strokeWidth: 1.4 }} />
+    </>
+  );
+};
+
+const edgeTypes = { glow: GlowEdge };
+
 export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNodeRename, onNodeMove, onNodeCreate, onNodeDelete }) => {
-  // Nodes are locked (not draggable), so the layout is always the fresh dagre
+  // Nodes are locked (not draggable), so the layout is always the fresh tidy
   // tree — no saved per-node positions to merge.
   const { nodes: layoutedNodes, edges } = useMemo(() => getLayoutedElements(files), [files]);
 
@@ -167,12 +199,24 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
 
   const displayEdges = useMemo(() => {
     if (highlightedEdgeIds.size === 0) return edges;
-    return edges.map((edge) =>
-      highlightedEdgeIds.has(edge.id)
-        ? { ...edge, className: `${edge.className ?? ''} graph-edge-highlight`.trim() }
-        : edge
-    );
-  }, [edges, highlightedEdgeIds]);
+    return edges.map((edge) => {
+      if (highlightedEdgeIds.has(edge.id)) {
+        return { ...edge, className: `${edge.className ?? ''} graph-edge-highlight`.trim() };
+      }
+      // One hop off the lit path: an edge touching a highlighted node (but not on
+      // the path itself) gets the gradient bloom, fading away from that node.
+      const hotSource = highlightedNodeIds.has(edge.source);
+      const hotTarget = highlightedNodeIds.has(edge.target);
+      if (hotSource || hotTarget) {
+        return {
+          ...edge,
+          type: 'glow',
+          data: { ...edge.data, hot: hotSource ? 'source' : 'target' },
+        };
+      }
+      return edge;
+    });
+  }, [edges, highlightedEdgeIds, highlightedNodeIds]);
 
   const savedViewport = useMemo(() => loadSavedViewport(), []);
 
@@ -270,6 +314,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
         nodes={displayNodes}
         edges={displayEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onlyRenderVisibleElements
         onNodesChange={onNodesChange}
         onNodeDoubleClick={handleNodeDoubleClick}
