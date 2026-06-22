@@ -555,29 +555,6 @@ hr {
   text-align: center;
 }
 
-.popup {
-  position: fixed;
-  bottom: 15px;
-  right: 20px;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  z-index: 1000;
-  padding: 8px 16px;
-  transform: translateX(150%);
-  transition: transform 0.4s cubic-bezier(0.3, 1, 0.5, 1);
-}
-
-.popup.is-open {
-  transform: translateX(0);
-}
-
-.popup-content {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .context-menu {
   position: fixed;
   background: var(--bg);

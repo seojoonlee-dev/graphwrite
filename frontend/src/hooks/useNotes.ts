@@ -150,7 +150,8 @@ export function useNotes() {
     if (!filePath) return;
     pendingSaveRef.current = { filePath, content: newContent };
     cacheRef.current[filePath] = newContent;
-    setSaveState('saving');
+    // Don't flip to 'saving' on every keystroke — flushPendingSave sets it once
+    // the debounce timer fires and the write actually starts.
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       flushPendingSave().catch(err => console.error('Autosave failed:', err));

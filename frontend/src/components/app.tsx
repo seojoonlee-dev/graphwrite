@@ -196,7 +196,6 @@ function MainWorkspace() {
     deleteFile,
   } = useNotes();
 
-  const [popupOpen, setPopupOpen] = useState(false);
   // Editor title on phones. Within the reserved top region (the .cm-content
   // padding, TITLE_ZONE_PX tall) the title is glued to the content and scrolls
   // away with it; once that region has scrolled past, the title becomes a pure
@@ -405,19 +404,9 @@ function MainWorkspace() {
     if (parsedFilePath && !notFound) pushRecent(parsedFilePath);
   }, [parsedFilePath, notFound]);
 
-  // popup
-  useEffect(() => {
-    if (popupOpen) {
-      const timer = setTimeout(() => setPopupOpen(false), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [popupOpen]);
-
   // save shortcut
   const handleSave = useCallback(async () => {
-    if (await saveCurrentFile()) {
-      setPopupOpen(true);
-    }
+    await saveCurrentFile();
   }, [saveCurrentFile]);
 
   useEffect(() => {
@@ -566,11 +555,6 @@ function MainWorkspace() {
         )}
         </Suspense>
       </div>
-      </div>
-      <div className={`popup ${popupOpen ? 'is-open' : ''}`}>
-        <div className="popup-content">
-          <p>Saved!</p>
-        </div>
       </div>
     </>
   );
