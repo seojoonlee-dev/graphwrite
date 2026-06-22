@@ -120,7 +120,7 @@
    end touching the path and fades to the normal edge colour, kept subtle. */
 .graph-edge-glow-hot {
   stop-color: var(--accent);
-  stop-opacity: 0.2;
+  stop-opacity: 0.3;
 }
 
 .graph-edge-glow-cold {
