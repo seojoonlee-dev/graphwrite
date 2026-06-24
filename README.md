@@ -6,7 +6,6 @@
   <ul align="center" style="list-style: none;">
     <summary align="center">
       <h1>GraphWrite</h1>
-      <p>Note taking, stripped to the essentials.</p>
     </summary>
   </ul>
 </div>
@@ -47,29 +46,13 @@ GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app wi
 > [!TIP]
 > Try GraphWrite right now in your browser — no account, nothing to install: **[demo.graphwrite.app](https://demo.graphwrite.app)**
 
-The whole point of GraphWrite is to stay small. The backend is an Express server with exactly two dependencies. The desktop and mobile apps are built on Tauri, which uses the operating system's own webview instead of shipping a full copy of Chromium, so a Windows installer is around 2 MB rather than the hundreds of megabytes a typical Electron note app weighs. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
+Notes in GraphWrite branch into child notes, so your whole collection forms a tree, and the graph view shows you that tree so you can see how everything connects rather than scrolling a flat list. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 
 ## Why GraphWrite
 
-Being lightweight is a prerequisite. Most note apps bundle an entire browser engine into every install and keep it resident in memory the whole time. GraphWrite reuses the webview already on your system, ships a tiny native binary, and keeps the backend down to Express plus a couple hundred lines of code.
+GraphWrite is built around one idea: your notes are connected, so you should be able to see how. Any note can branch into child notes, so a collection grows into a tree instead of a flat, scrolling list — and the graph view draws that tree so you can navigate it visually instead of hunting through folders.
 
-| | Installer / download | Startup time | Storage model |
-| --- | --- | --- | --- |
-| **GraphWrite** | ~2 MB (Windows `.msi`/`.exe`, Linux `.deb`) | ~216-272ms | Plain `.md` files, wherever you want |
-| Obsidian | ~150 MB+, **~75x larger** | ~915-1010ms, **~4.2x slower** | Plain `.md` files, Electron app |
-| Notion | ~200 MB, **~100x larger** | ~960-1035ms, **~4.4x slower** | Cloud-hosted, Electron app |
-
-(All numbers are measured on my arch linux desktop running hyprland with a similar amount of notes loaded with minimum amout of plugins and extentions installed on both. These are "window on screen" times and not "fully painted/interactive" times. For all three, content finishes rendering shortly after.)
-
-For reference, GraphWrite's own footprint:
-
-- Compiled frontend bundle: ~2.7 MB
-- Windows installer: ~2.1 MB (`.exe`) / ~2.5 MB (`.msi`)
-- Linux `.deb`: ~2.8 MB
-- Native desktop binary: ~5.2 MB
-- Backend runtime: Express 5 plus `cors`, and nothing else
-
-(The Linux AppImage is larger, around 95 MB, because an AppImage bundles its own webview runtime so it can run anywhere. This is one of the main limitations of the current version and I am actively working on migrating away from WebKit to using native elements. This applies to the android version. The `.deb`, which uses the system `webkit2gtk`, is the lightweight option on Linux.)
+Everything else stays out of the way. Your notes are plain markdown files you own, there is no account and nothing leaves your machine, and the app is small by design: it reuses the webview already on your system instead of bundling a browser engine, ships a tiny native binary, and keeps the backend down to Express plus a couple hundred lines of code.
 
 ## Graph View
 
@@ -104,17 +87,17 @@ The graph is rendered with React Flow.
 | Platform | Status |
 | --- | --- |
 | Browser | ✅ Supported |
-| Linux (desktop) | ✅ Supported |
-| Windows (desktop) | ✅ Supported |
+| Linux | ✅ Supported |
+| Windows | ✅ Supported |
 | Android | ✅ Supported |
-| macOS (desktop) | ✅ Supported |
+| macOS | 🚧 In progress |
 | iOS | 🚧 In progress |
 
 > [!NOTE]
 > Android app is not on Google Play Store just yet. You can download and install the apk in the Release tab.
 
 > [!NOTE]
-> I am planning on releasing it on the aur and even flatpak for linux.
+> I am planning on releasing it on the AUR and even Flatpak for linux.
 
 All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also run more than one backend and switch between them — changing the server address takes a moment in Settings.
 
