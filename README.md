@@ -17,8 +17,9 @@
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F.svg?style=for-the-badge&logo=node.js&logoColor=white)
 
 <hr></hr>
+<img width="1190" height="833" alt="image" src="https://github.com/user-attachments/assets/58516047-1fa8-43de-823f-aa28ccf259c2" />
 
-<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/056be0e3-8694-4d21-9c02-db2311ef29a1" />
+
 
 ## Table of Contents
 
@@ -56,7 +57,7 @@ Everything else stays out of the way. Your notes are plain markdown files you ow
 
 ## Graph View
 
-<img width="1330" height="718" alt="image" src="https://github.com/user-attachments/assets/502ac829-97bf-4a5e-b02e-b1a9e3e5e920" />
+<img width="1190" height="833" alt="image" src="https://github.com/user-attachments/assets/9cc89167-46c8-4506-8b35-1b43b7b7165f" />
 
 
 Because notes in GraphWrite branch into child notes, your whole collection naturally forms a tree, and the graph view shows you that tree at a glance. Each note is a node, and every branch from a parent note to its children is drawn as an edge, so you can see how your notes connect rather than scrolling a flat list.
