@@ -461,7 +461,12 @@ function MainWorkspace() {
         >
           <div className="sidebar-content">
             {loading && <p>Loading files...</p>}
-            {error && <p className="sidebar-error">{error}</p>}
+            {error && (
+              <div className="sidebar-notice" role="status">
+                <span className="sidebar-notice-title">Backend connection error</span>
+                <span className="sidebar-notice-text">{error}</span>
+              </div>
+            )}
             
             {!loading && !error && files.length === 0 && (
                 <p>No notes found. Create a new note!</p>

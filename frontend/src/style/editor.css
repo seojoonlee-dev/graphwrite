@@ -340,14 +340,19 @@ a:hover {
   opacity: 0.8;
 }
 
+/* Invalid-filename hint. Sits in the metadata row in place of the save
+   indicator, matching its type and dot separator — just tinted clay so it
+   reads as a gentle warning rather than the prototype's bare red text. */
 .editor-error {
-  display: none;
-  position: absolute;
-  top: 20px;
-  right: 60px;
-  color: red;
+  flex-shrink: 0;
+  color: var(--warning);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  white-space: nowrap;
 }
 
-.editor-error.is-visible {
-  display: flex;
+.editor-error::before {
+  content: '·';
+  margin: 0 7px;
+  color: var(--text-muted);
 }

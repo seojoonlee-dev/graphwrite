@@ -50,6 +50,8 @@
   --scrollbar: #696969;
   --accent: #e0a96d;
   --danger: #6e2626;
+  /* Inline warning/error state color. */
+  --warning: red;
   --icon: #FFF0E3;
   --code-bg: #1e1e1e;
   /* Monospace stack, shared with the editor path + sidebar (matches the website). */
@@ -450,6 +452,8 @@ hr {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-left: 4px;
+  margin-right: 2px;
 }
 
 .icon-arrow {
@@ -469,6 +473,8 @@ hr {
   flex-shrink: 0;
   font-size: 13px;
   font-weight: bold;
+  margin-left: 4px;
+  margin-right: 2px;
 }
 
 .file-tree-link {
@@ -689,8 +695,27 @@ hr {
   to { transform: translateY(100%); }
 }
 
-.sidebar-error {
-  color: red;
+/* Connection/load failure notice. Plain wrapping text to match the sidebar's
+   minimal file list — a clay heading signals the problem, muted detail below.
+   white-space:normal is required because .l-sidebar forces nowrap. */
+.sidebar-notice {
+  margin: 0 4px 8px 0;
+  white-space: normal;
+}
+
+.sidebar-notice-title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--warning);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.sidebar-notice-text {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 .tinted-image {

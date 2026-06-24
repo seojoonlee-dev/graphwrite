@@ -294,15 +294,14 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
           />
           <div className="editor-meta">
             <span className="editor-path">{parsedFilePath ? `/notes/${parsedFilePath}` : '/notes'}</span>
-            {saveText && <span className={`editor-save editor-save--${saveState}`}>{saveText}</span>}
+            {showTitleError ?
+              <span className="editor-error">A name can't include \ / : * ? " &lt; &gt; |</span>
+              : saveText && <span className={`editor-save editor-save--${saveState}`}>{saveText}</span>}
           </div>
         </div>
         <hr />
         <div className="cm-host" ref={containerRef} />
       </div>
-      <p className={`editor-error ${showTitleError ? 'is-visible' : ''}`}>
-        File names can't contain \, /, :, *, ?, ", &lt;, &gt;, and |.
-      </p>
     </div>
   );
 }

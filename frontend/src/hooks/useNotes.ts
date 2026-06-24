@@ -34,11 +34,11 @@ export function useNotes() {
       if (data.success) {
         setFiles(data.files);
       } else {
-         setError('Failed to load files from server.');
+         setError('The server is reachable but your notes couldn\'t be loaded. Try again in a moment.');
       }
     } catch (err) {
       console.error(err);
-      setError('Could not connect to the backend server.');
+      setError('Can\'t reach the backend. Check your backend settings and make sure it is correct.');
     } finally {
       setLoading(false);
     }
