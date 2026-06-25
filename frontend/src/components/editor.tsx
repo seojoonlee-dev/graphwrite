@@ -299,7 +299,6 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
               : saveText && <span className={`editor-save editor-save--${saveState}`}>{saveText}</span>}
           </div>
         </div>
-        <hr />
         <div className="cm-host" ref={containerRef} />
       </div>
     </div>

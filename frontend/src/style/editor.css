@@ -32,8 +32,6 @@ a:hover {
 .editor-title {
   display: flex;
   flex-direction: column;
-  flex: 0 0 70px;
-  margin-bottom: 8px;
 }
 
 /* Path followed by the save indicator, joined by a dot (like the website). The
@@ -41,6 +39,11 @@ a:hover {
 .editor-meta {
   display: flex;
   align-items: baseline;
+  /* The divider lives on the title's last row (path/save), so it sits snug under
+     the title text on both desktop and the mobile overlay — replacing the old
+     in-flow <hr>. Tight above the line. */
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
 }
 
 .editor-path {
@@ -75,59 +78,58 @@ a:hover {
   color: #cb6b4d;
 }
 
-/* Phones: the note title sits over the editor as an absolute layer whose vertical
-   position is driven by app.tsx through --title-shift. Near the top it's glued to
-   the content (scrolls away with the reserved padding); once that's scrolled past
-   it acts as an overlay that peeks in on scroll-up and hides on scroll-down. While
-   glued (.title-gluing) the transition is dropped so it tracks the scroll 1:1. */
-@media (max-width: 600px) and (pointer: coarse) {
-  .editor {
-    position: relative;
-  }
+/* Auto-hiding title: the note title sits over the editor as an absolute layer
+   whose vertical position is driven by useAutoHideTitle through --title-shift. Near
+   the top it's glued to the content (scrolls away with the reserved padding); once
+   that's scrolled past it acts as an overlay that peeks in on scroll-up and hides
+   on scroll-down. While glued near the top the transition is dropped (via the
+   inline --title-transition var) so it tracks the scroll 1:1.
 
-  .editor-title {
-    position: absolute;
-    top: 0;
-    left: 0;
-    /* Stop short of the right edge so the opaque overlay doesn't sit on top of
-       the editor's scrollbar. 10px matches the editor content's own right padding,
-       so no scrolling text is exposed in the gap. */
-    right: 10px;
-    z-index: 2;
-    flex: none;
-    margin-bottom: 0;
-    padding-bottom: 8px;
-    /* Match the editor content's reserved top padding exactly, so the opaque
-       overlay reaches all the way down to where the first line begins. Without
-       this the title renders a few px shorter than the padding (and the gap grows
-       with text inflation), leaving a thin strip where scrolling text peeks
-       through below the divider. */
-    box-sizing: border-box;
-    min-height: calc(80px * var(--text-scale, 1));
-    /* Opaque so the text scrolling beneath is covered by the overlay. */
-    background-color: var(--bg);
-    border-bottom: 1px solid var(--border);
-    transform: translateY(var(--title-shift, 0px));
-    transition: transform 0.25s ease;
-  }
+   Gated by the .title-autohide class (rendered onto .l-app from React state while
+   the feature is enabled), NOT a media query — so a future setting can switch it
+   on for desktop/web without touching this CSS. Today it's enabled on phones only,
+   so the effective scope is unchanged. The class is React-owned (not toggled
+   imperatively) so a re-render of .l-app can't strip it; the per-scroll position
+   rides on inline --title-* vars, which survive re-renders. */
+.title-autohide .editor {
+  position: relative;
+}
 
-  .title-gluing .editor-title {
-    transition: none;
-  }
+.title-autohide .editor-title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Stop short of the right edge so the opaque overlay doesn't sit on top of
+     the editor's scrollbar. 10px matches the editor content's own right padding,
+     so no scrolling text is exposed in the gap. */
+  right: 10px;
+  z-index: 2;
+  flex: none;
+  margin-bottom: 0;
+  /* Match the editor content's reserved top padding exactly, so the opaque
+     overlay reaches all the way down to where the first line begins. Without
+     this the title renders a few px shorter than the padding (and the gap grows
+     with text inflation), leaving a thin strip where scrolling text peeks
+     through. The divider sits higher up (on .editor-meta); the overlay area
+     below it is the space between the line and the first body line. */
+  box-sizing: border-box;
+  min-height: calc(80px * var(--text-scale, 1));
+  /* Opaque so the text scrolling beneath is covered by the overlay. */
+  background-color: var(--bg);
+  transform: translateY(var(--title-shift, 0px));
+  /* Overlay animates by default; while glued near the top the hook sets this to
+     `none` so the title tracks the scroll 1:1. Driven by an inline var (not a
+     class) so it can't be clobbered by a React re-render mid-scroll. */
+  transition: var(--title-transition, transform 0.25s ease);
+}
 
-  /* The overlay carries its own divider; drop the in-flow one. */
-  .editor > hr {
-    display: none;
-  }
-
-  /* Pad the top of the scrollable content so the first line clears the title and,
-     crucially, so it can scroll away. It lives on .cm-content (inside CodeMirror's
-     scroller); the glued title above is sized to match this exact height. Scales
-     with the webview's text inflation. Higher specificity than CodeMirror's own
-     injected `.cm-content { padding: 4px 0 }`, which would otherwise win. */
-  .editor .cm-content {
-    padding-top: calc(80px * var(--text-scale, 1));
-  }
+/* Pad the top of the scrollable content so the first line clears the title and,
+   crucially, so it can scroll away. It lives on .cm-content (inside CodeMirror's
+   scroller); the glued title above is sized to match this exact height. Scales
+   with the webview's text inflation. Higher specificity than CodeMirror's own
+   injected `.cm-content { padding: 4px 0 }`, which would otherwise win. */
+.title-autohide .editor .cm-content {
+  padding-top: calc(80px * var(--text-scale, 1));
 }
 
 .editor {

@@ -147,10 +147,18 @@ export interface Settings {
   colors: Partial<ThemeTokens>;
   centerEditor: boolean;
   tableRounded: boolean;
+  autoHideTitle: boolean;
   vibration: VibrationLevel;
 }
 
 const KEY = 'graphwrite-settings';
+
+// Phones default to the auto-hiding title (screen height is scarce); desktop/web
+// default it off. Only the default differs by device — once the user toggles it,
+// the stored value wins everywhere.
+const isPhone =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
 
 const DEFAULTS: Settings = {
   font: 'Domine',
@@ -161,6 +169,9 @@ const DEFAULTS: Settings = {
   // Default to the original full-width editor layout.
   centerEditor: false,
   tableRounded: true,
+  // Title bar slides away on scroll-down, peeks back on scroll-up. On by default
+  // on phones, off on desktop/web (see isPhone above).
+  autoHideTitle: isPhone,
   vibration: 'medium',
 };
 
@@ -234,6 +245,9 @@ export const setCenterEditor = (value: boolean) => saveSettings({ centerEditor: 
 
 export const getTableRounded = () => loadSettings().tableRounded;
 export const setTableRounded = (value: boolean) => saveSettings({ tableRounded: value });
+
+export const getAutoHideTitle = () => loadSettings().autoHideTitle;
+export const setAutoHideTitle = (value: boolean) => saveSettings({ autoHideTitle: value });
 
 // Vibration length (ms) per intensity level; 'off' disables it.
 const VIBRATION_MS: Record<VibrationLevel, number> = { off: 0, low: 10, medium: 25, high: 50 };

@@ -16,6 +16,7 @@ import {
   type ThemeTokens,
   type VibrationLevel,
   effectiveColors,
+  getAutoHideTitle,
   getCenterEditor,
   getFont,
   getStartupNote,
@@ -25,6 +26,7 @@ import {
   getVibrationMs,
   resetColors,
   saveSettings,
+  setAutoHideTitle,
   setCenterEditor,
   setColor,
   setFont,
@@ -77,6 +79,7 @@ const SECTIONS: SectionMeta[] = [
   { id: 'font', group: 'Appearance', title: 'Font', keywords: 'typeface family serif sans text', show: true },
   { id: 'center-editor', group: 'Appearance', title: 'Align editor to the center', keywords: 'center column width layout', show: !isPhone },
   { id: 'table-corners', group: 'Appearance', title: 'Rounded table corners', keywords: 'table round corners border radius', show: true },
+  { id: 'auto-hide-title', group: 'Appearance', title: 'Auto-hide title', keywords: 'title bar hide scroll header auto sticky', show: true },
   { id: 'vibration', group: 'Misc', title: 'Vibration', keywords: 'haptic feedback touch buzz', show: isTouch },
   { id: 'reset-demo', group: 'Demo', title: 'Reset demo', keywords: 'reset delete clear notes demo restore', show: isDemo },
 ];
@@ -176,6 +179,7 @@ function Appearance() {
   const [zoom, setZoomState] = useState(getZoom());
   const [centerEditor, setCenterEditorState] = useState(getCenterEditor());
   const [tableRounded, setTableRoundedState] = useState(getTableRounded());
+  const [autoHideTitle, setAutoHideTitleState] = useState(getAutoHideTitle());
 
   const changeFont = (event: ChangeEvent<HTMLSelectElement>) => {
     const next = event.target.value;
@@ -220,6 +224,12 @@ function Appearance() {
     const next = event.target.checked;
     setTableRoundedState(next);
     setTableRounded(next);
+  };
+
+  const changeAutoHideTitle = (event: ChangeEvent<HTMLInputElement>) => {
+    const next = event.target.checked;
+    setAutoHideTitleState(next);
+    setAutoHideTitle(next);
   };
 
   // Always include the current level so a value set via keyboard still shows.
@@ -303,6 +313,14 @@ function Appearance() {
         <p>Round the corners of rendered tables in the editor.</p>
         <label className='settings-checkbox'>
           <input type='checkbox' checked={tableRounded} onChange={changeTableRounded} />
+          <span>Enabled</span>
+        </label>
+      </Section>
+
+      <Section id='auto-hide-title'>
+        <p>Slide the note title out of view as you scroll down, and reveal it again when you scroll up.</p>
+        <label className='settings-checkbox'>
+          <input type='checkbox' checked={autoHideTitle} onChange={changeAutoHideTitle} />
           <span>Enabled</span>
         </label>
       </Section>

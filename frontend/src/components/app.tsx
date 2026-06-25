@@ -11,6 +11,7 @@ import { useZoom } from '../hooks/useZoom';
 import { StartScreen } from './startScreen';
 import { pushRecent } from '../helpers/recents';
 import { applyTextScale } from '../helpers/textScale';
+import { useAutoHideTitle } from '../hooks/useAutoHideTitle';
 // Editor + Settings stay lazy (heavy CodeMirror deps; rarely-first views) so the
 // initial bundle stays light. Each is wrapped in <Suspense> at its render site.
 const Editor = lazy(() => import('./editor'));
@@ -18,16 +19,11 @@ const Settings = lazy(() => import('./settings').then((m) => ({ default: m.Setti
 // GraphView is imported eagerly: lazy-loading it added a measurable delay when
 // switching to the graph, even with prefetching.
 import { GraphView } from './graphView';
-import { getStartupNote } from '../helpers/settings';
+import { getStartupNote, getAutoHideTitle, subscribe } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 // True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
-
-// Base height (px, before text-inflation) of the editor title / the reserved top
-// region the editor content pads for it. MUST match the `.cm-content` padding-top
-// base in editor.css (calc(80px * var(--text-scale))).
-const TITLE_ZONE_PX = 80;
 
 // Sidebar resize bounds (px). Below the minimum, file names ellipsis-truncate
 // rather than the sidebar refusing to shrink.
@@ -196,22 +192,15 @@ function MainWorkspace() {
     deleteFile,
   } = useNotes();
 
-  // Editor title on phones. Within the reserved top region (the .cm-content
-  // padding, TITLE_ZONE_PX tall) the title is glued to the content and scrolls
-  // away with it; once that region has scrolled past, the title becomes a pure
-  // overlay — peeking in on scroll-up, hiding on scroll-down. Positioned
-  // imperatively via a CSS var + class on .l-app so per-scroll updates don't
-  // re-render React.
+  // Auto-hiding editor title (see useAutoHideTitle for the model). The controller
+  // is input-agnostic; `autoHideTitle` (the user setting) is the single switch
+  // that turns it on, across phone/desktop/web alike. We mirror it into state and
+  // re-read on any settings change so the toggle takes effect live.
   const lAppRef = useRef<HTMLDivElement>(null);
-  const overlayShownRef = useRef(true); // is the title currently revealed?
   const mainScrollRef = useRef<HTMLDivElement>(null);
-  const lastScrollTop = useRef(0);
-  // Only a real gesture (a drag + its momentum window) flips reveal/hide intent;
-  // programmatic scrolls (keyboard resize, cursor moves) don't — though the glued
-  // position still tracks them so the title stays attached to the content.
-  const draggingRef = useRef(false);
-  const touchStartY = useRef(0);
-  const momentumUntil = useRef(0);
+  const [autoHideTitle, setAutoHideTitleState] = useState(getAutoHideTitle);
+  useEffect(() => subscribe(() => setAutoHideTitleState(getAutoHideTitle())), []);
+
   const [sideBarOpen, toggleSideBar] = useState(() => {
     // Phones get a full-screen sidebar overlay, so always start closed there
     // regardless of the saved preference.
@@ -299,105 +288,12 @@ function MainWorkspace() {
       if (!(location.state as { keepGraph?: boolean } | null)?.keepGraph) {
         updateShowGraph(false);
       }
-      // Reveal the title again when switching views.
-      overlayShownRef.current = true;
-      lastScrollTop.current = 0;
-      const app = lAppRef.current;
-      if (app) {
-        app.style.setProperty('--title-shift', '0px');
-        app.classList.remove('title-gluing');
-      }
     }
   }, [location, updateShowGraph]);
 
-  // Position the editor title on scroll (see the state block above for the model).
-  // Listens in the capture phase to catch the (descendant) editor scroller, which
-  // doesn't bubble scroll events. CSS gates the visual effect to phones.
-  useEffect(() => {
-    const el = mainScrollRef.current;
-    const app = lAppRef.current;
-    if (!el || !app) return;
-
-    // Height of the reserved top region — equals the `.cm-content` padding-top
-    // (calc(80px * --text-scale)). The title is exactly this tall, so when glued
-    // it finishes leaving just as the padding scrolls out of view.
-    let zone = TITLE_ZONE_PX;
-    const measureZone = () => {
-      const scale =
-        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--text-scale')) || 1;
-      zone = TITLE_ZONE_PX * scale;
-    };
-    measureZone();
-
-    // shift = title translateY (px, negative = up); glue = track scroll 1:1 (no
-    // transition) vs. animate as an overlay.
-    const render = (shift: number, glue: boolean) => {
-      app.style.setProperty('--title-shift', `${shift}px`);
-      app.classList.toggle('title-gluing', glue);
-    };
-
-    const onScroll = (e: Event) => {
-      const target = e.target as HTMLElement | null;
-      if (!target || typeof target.scrollTop !== 'number') return;
-      const max = target.scrollHeight - target.clientHeight;
-      // Clamp out overscroll/bounce so it can't flip the direction at the edges.
-      const top = Math.max(0, Math.min(target.scrollTop, max));
-
-      // Reveal/hide intent flips only on a real gesture; the glued position below
-      // still tracks every scroll so the title stays attached to the content.
-      const userScrolling = draggingRef.current || performance.now() < momentumUntil.current;
-      const last = lastScrollTop.current;
-      if (userScrolling) {
-        if (top > last + 6) overlayShownRef.current = false;      // scrolling down
-        else if (top < last - 6) overlayShownRef.current = true;  // scrolling up
-      }
-      if (top <= 0) overlayShownRef.current = true;               // at rest at the top
-      lastScrollTop.current = top;
-
-      if (top <= zone && !overlayShownRef.current) {
-        // Top zone, heading down: glue to the content so the title scrolls away
-        // together with the reserved padding (1:1, no transition).
-        render(-top, true);
-      } else if (top <= zone) {
-        // Top zone, revealed / at rest: pin the title at the very top.
-        render(0, false);
-      } else {
-        // Past the zone: pure overlay — peek in on scroll-up, hide on scroll-down.
-        render(overlayShownRef.current ? 0 : -zone, false);
-      }
-    };
-
-    const onTouchStart = (e: TouchEvent) => {
-      touchStartY.current = e.touches[0]?.clientY ?? 0;
-      draggingRef.current = false; // not a drag until the finger actually moves
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? 0;
-      if (Math.abs(y - touchStartY.current) > 10) draggingRef.current = true;
-    };
-    const onTouchEnd = () => {
-      // Keep honoring scroll events through the post-release momentum (flicks do
-      // most of their scrolling there).
-      if (draggingRef.current) momentumUntil.current = performance.now() + 600;
-      draggingRef.current = false;
-    };
-
-    const opts = { capture: true, passive: true } as const;
-    el.addEventListener('scroll', onScroll, opts);
-    window.addEventListener('touchstart', onTouchStart, opts);
-    window.addEventListener('touchmove', onTouchMove, opts);
-    window.addEventListener('touchend', onTouchEnd, opts);
-    window.addEventListener('touchcancel', onTouchEnd, opts);
-    window.addEventListener('resize', measureZone);
-    return () => {
-      el.removeEventListener('scroll', onScroll, { capture: true });
-      window.removeEventListener('touchstart', onTouchStart, { capture: true });
-      window.removeEventListener('touchmove', onTouchMove, { capture: true });
-      window.removeEventListener('touchend', onTouchEnd, { capture: true });
-      window.removeEventListener('touchcancel', onTouchEnd, { capture: true });
-      window.removeEventListener('resize', measureZone);
-    };
-  }, []);
+  // Auto-hide the editor title on scroll. The hook re-pins the title whenever the
+  // route changes (resetKey), so switching views always starts revealed.
+  useAutoHideTitle(mainScrollRef, lAppRef, { enabled: autoHideTitle, resetKey: location.key });
 
   // Remember opened notes so the Start screen can list recents.
   useEffect(() => {
@@ -432,7 +328,10 @@ function MainWorkspace() {
 
   return (
     <>
-      <div ref={lAppRef} className={`l-app ${!showGraph && !notFound && parsedFilePath ? 'editor-active' : ''}`}>
+      <div
+        ref={lAppRef}
+        className={`l-app ${!showGraph && !notFound && parsedFilePath ? 'editor-active' : ''} ${autoHideTitle ? 'title-autohide' : ''}`}
+      >
         <div className="l-header">
           <button className="btn-header" onClick={() => {toggleSideBar(!sideBarOpen); localStorage.setItem("sideBarOpen", JSON.stringify(!sideBarOpen))}}>
             <TintedImage src='/menu.svg' alt="Toggle Sidebar" />
