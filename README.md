@@ -42,7 +42,7 @@
 
 
 
-GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no drawing, no telemetry, no bloat. Just good old note taking.
+GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no telemetry, no bloat. Just good old note taking.
 
 > [!TIP]
 > Try GraphWrite right now in your browser — no account, nothing to install: **[demo.graphwrite.app](https://demo.graphwrite.app)**
