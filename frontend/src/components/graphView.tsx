@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ReactFlow, useNodesState, SelectionMode, Panel, Handle, Position, BaseEdge, getBezierPath, type Node, type NodeProps, type EdgeProps, type Viewport, type ReactFlowInstance, type Connection, type Edge, type OnConnectStartParams, type FinalConnectionState } from '@xyflow/react';
 import { getLayoutedElements, GRAPH_ROOT_ID } from '../helpers/graphLayout';
 import { TintedImage } from './tintedImage';
@@ -28,6 +29,12 @@ interface FileNodeData {
   onRenameCommit?: (value: string) => void;
   onRenameCancel?: () => void;
 }
+
+// Phones render menus as a bottom sheet (positioned by CSS) instead of a popup
+// at the touch point; matches contextMenu.tsx.
+const isMobile =
+  typeof window !== 'undefined' &&
+  window.matchMedia('(max-width: 600px) and (pointer: coarse)').matches;
 
 // Lets FileNode open the context menu (touch long-press) without remapping
 // every node's data, which would break ReactFlow's node memoization.
@@ -365,19 +372,27 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
           onDelete={onNodeDelete}
         />
       )}
-      {connectMenu && (
+      {connectMenu && createPortal(
+        // Portaled to <body> so the fixed-position sheet escapes the .l-app zoom
+        // transform on mobile (a fixed child of a transformed ancestor is no
+        // longer viewport-relative). On phones, CSS positions it as a bottom
+        // sheet; drop the inline point so it doesn't override that.
         <>
           <div
             className="context-menu-backdrop"
             style={{ pointerEvents: 'auto' }}
             onClick={() => setConnectMenu(null)}
           />
-          <div className="context-menu" style={{ top: connectMenu.y, left: connectMenu.x }}>
+          <div
+            className="context-menu"
+            style={isMobile ? undefined : { top: connectMenu.y, left: connectMenu.x }}
+          >
             <button className="context-menu-item" onClick={handleCreateFromConnect}>
               Create New Note
             </button>
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </div>
   );
