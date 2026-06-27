@@ -35,7 +35,7 @@ import {
   setTheme,
   setVibration,
 } from '../helpers/settings';
-import { getZoom, isTauri, setZoom } from '../helpers/zoom';
+import { getZoom, isTauri, setZoom, ZOOM_MIN, ZOOM_MAX, ZOOM_STEP } from '../helpers/zoom';
 import { clearRecents } from '../helpers/recents';
 import { vibrate } from '../helpers/haptics';
 import '../style/settings.css';
@@ -95,8 +95,12 @@ const TOKEN_KEYS = Object.keys(TOKEN_LABELS) as (keyof ThemeTokens)[];
 // General color tokens listed separately from the dedicated "Table" group.
 const GENERAL_TOKEN_KEYS = TOKEN_KEYS.filter((k) => !TABLE_TOKEN_KEYS.includes(k));
 
-// Zoom presets offered in the dropdown: 50% → 300% in 10% increments.
-const ZOOM_LEVELS = Array.from({ length: 26 }, (_, i) => (50 + i * 10) / 100);
+// Zoom presets offered in the dropdown, derived from the zoom bounds so they
+// stay in sync with ZOOM_MIN/ZOOM_MAX (currently 50% → 500% in 10% steps).
+const ZOOM_LEVELS = Array.from(
+  { length: Math.round((ZOOM_MAX - ZOOM_MIN) / ZOOM_STEP) + 1 },
+  (_, i) => Math.round((ZOOM_MIN + i * ZOOM_STEP) * 100) / 100,
+);
 
 // Provided by the page: returns whether a section should currently render (it's
 // available on this device AND matches the active search query).

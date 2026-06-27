@@ -233,9 +233,11 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
 
   const instanceRef = useRef<ReactFlowInstance | null>(null);
 
-  // Re-fit the whole tree into view (the layout itself is automatic).
+  // Re-fit the whole tree into view (the layout itself is automatic), animating
+  // smoothly to that framing rather than snapping. Matches the website demo's
+  // reset exactly.
   const handleFitView = () => {
-    instanceRef.current?.fitView();
+    instanceRef.current?.fitView({ padding: 0.15, duration: 400 });
   };
 
   // Re-parenting via the graph: an edge runs parent (source) -> child (target),

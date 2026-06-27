@@ -7,7 +7,7 @@ import type { Webview } from '@tauri-apps/api/webview';
 
 const KEY = 'zoom';
 export const ZOOM_MIN = 0.5;
-export const ZOOM_MAX = 3;
+export const ZOOM_MAX = 5;
 export const ZOOM_STEP = 0.1;
 
 export const isTauri = () => '__TAURI_INTERNALS__' in window;
