@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, memo, useRef, lazy, Suspense } from 'react';
 import { flushSync } from 'react-dom';
-import { BrowserRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, HashRouter, Routes, Route, Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import '../style/app.css';
 import { TintedImage } from './tintedImage';
 import { ContextMenu } from './contextMenu';

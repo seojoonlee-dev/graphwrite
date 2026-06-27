@@ -153,11 +153,25 @@ a:hover {
    toggled by the .center-editor class on <html>. The editor and its scroller
    stay full width so the scrollbar stays at the far right edge of the screen;
    only the title and the body text are constrained to a centered column. */
-.center-editor .editor-title,
-.center-editor .cm-content {
+.center-editor .editor-title {
+  /* width:100% so this flex item fills to max-width (720) and the auto margins
+     then center it; without an explicit width a flex item with auto side margins
+     shrinks to its content instead, leaving the title/hr narrower than the text. */
+  width: 100%;
   max-width: 720px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Center the body text by padding the scroller down to a 720px column rather than
+   capping .cm-content's width: CodeMirror lays .cm-content out as a flex item
+   (flex-grow), so max-width on it is ignored. Padding the scroller keeps the
+   scrollbar at the full-width right edge while the text lines up with the title
+   above. max(0px, …) collapses the padding once the viewport is narrower than the
+   column, so the text just fills the width. */
+.center-editor .cm-scroller {
+  padding-left: max(0px, calc((100% - 720px) / 2));
+  padding-right: max(0px, calc((100% - 720px) / 2));
 }
 
 .editor > div:not(.editor-title) {
