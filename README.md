@@ -268,7 +268,6 @@ The repo is a few separate pieces:
 | --- | --- |
 | `frontend/` | The client (browser, desktop, mobile). React + [Vite](https://vite.dev), packaged for desktop/mobile with [Tauri](https://tauri.app). |
 | `backend/` | The self-hosted note store. A small [Express](https://expressjs.com) server that reads and writes plain `.md` files. |
-| `website/` | The marketing site at [graphwrite.app](https://graphwrite.app) (and the hosted demo under `/demo`). |
 
 ### Local development
 
