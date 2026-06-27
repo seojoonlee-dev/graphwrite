@@ -1,4 +1,4 @@
-// IndexedDB storage adapter for the standalone web demo (demo.graphwrite.app).
+// IndexedDB storage adapter for the standalone web demo (graphwrite.app/demo).
 // Mirrors the HTTP backend's contract in api.http.ts: each note is a folder
 // containing a same-named ".md" file, so keys are full ".md" paths
 // (e.g. "Projects/Ideas/Ideas.md") and rename/delete operate on the folder.

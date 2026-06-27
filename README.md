@@ -45,7 +45,7 @@
 GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no telemetry, no bloat. Just good old note taking.
 
 > [!TIP]
-> Try GraphWrite right now in your browser — no account, nothing to install: **[demo.graphwrite.app](https://demo.graphwrite.app)**
+> Try GraphWrite right now in your browser — no account, nothing to install: **[graphwrite.app/demo](https://graphwrite.app/demo)**
 
 Notes in GraphWrite branch into child notes, so your whole collection forms a tree, and the graph view shows you that tree so you can see how everything connects rather than scrolling a flat list. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 

@@ -477,7 +477,7 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Suspense fallback={null}>
         <Routes>
           <Route path="/settings/*" element={<Settings to={'/'} />} />

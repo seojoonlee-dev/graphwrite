@@ -13,10 +13,17 @@ export function TintedImage({
   tintColor = 'var(--icon, #FFF0E3)',
   className,
 }: TintedImageProps) {
+  // Resolve public-dir assets against the build's base path so root-absolute
+  // refs like "/graph.svg" work both at the site root (desktop/mobile/web) and
+  // under a sub-path like /demo/. BASE_URL is "/" for normal builds (no-op).
+  const resolved = src.startsWith('/')
+    ? import.meta.env.BASE_URL + src.slice(1)
+    : src;
+
   const overlayStyle: CSSProperties = {
     backgroundColor: tintColor,
-    WebkitMaskImage: `url(${src})`,
-    maskImage: `url(${src})`,
+    WebkitMaskImage: `url(${resolved})`,
+    maskImage: `url(${resolved})`,
     
     WebkitMaskSize: 'contain',
     maskSize: 'contain',
@@ -29,7 +36,7 @@ export function TintedImage({
 
   return (
     <div className={className ? `tinted-image ${className}` : 'tinted-image'}>
-      <img src={src} alt={alt} />
+      <img src={resolved} alt={alt} />
       <div className="tinted-image-overlay" style={overlayStyle} />
     </div>
   );

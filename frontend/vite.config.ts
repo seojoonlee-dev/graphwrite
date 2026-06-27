@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 //   http (default) → talks to the self-hosted Express backend (api.http.ts)
 //   indexeddb      → standalone browser storage for the web demo (api.indexeddb.ts)
 const storage = process.env.VITE_STORAGE ?? 'http'
+const isDemo = storage === 'indexeddb'
 
 // Set by `tauri android/ios dev --host`: the LAN IP the device uses to reach
 // this dev server. We point the HMR websocket at it so hot reload works on a
@@ -14,7 +15,19 @@ const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  // Served at the site root by default; the hosted demo sets VITE_BASE=/demo/
+  // so it can live under graphwrite.app/demo as a sub-path.
+  base: process.env.VITE_BASE ?? '/',
+  plugins: [
+    react(),
+    // Give the hosted demo a distinct <title> (e.g. for a Google sitelink)
+    // without touching the shared index.html the desktop/mobile apps use.
+    {
+      name: 'demo-title',
+      transformIndexHtml: (html: string) =>
+        isDemo ? html.replace('<title>GraphWrite</title>', '<title>GraphWrite — Demo</title>') : html,
+    },
+  ],
   // Don't clear the screen so Tauri's CLI output stays visible during dev.
   clearScreen: false,
   resolve: {
