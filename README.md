@@ -38,6 +38,7 @@
   - [Install latest (git)](#install-latest-git)
   - [Update to latest (git)](#update-to-latest-git)
   - [Desktop and mobile apps](#desktop-and-mobile-apps-1)
+- [Contributing](#contributing)
 - [AI Disclosure](#ai-disclosure)
 
 
@@ -256,6 +257,42 @@ The desktop and mobile apps live in the `frontend/` directory and are built with
 
 > [!NOTE]
 > This is a very early version of GraphWrite (currently v0.1.0). Authentication, native UI(instead of using WebKit with Tauri), a custom graph library instead of react flow and much MUCH more are on the way. Stay tuned!
+
+## Contributing
+
+Contributions are absolutely welcome. Bug reports, feature ideas, and pull requests all help — open an [issue](https://github.com/seojoonlee-dev/graphwrite/issues) to discuss anything substantial before you start so we do not both build the same thing.
+
+The repo is a few separate pieces:
+
+| Directory | What it is |
+| --- | --- |
+| `frontend/` | The client (browser, desktop, mobile). React + [Vite](https://vite.dev), packaged for desktop/mobile with [Tauri](https://tauri.app). |
+| `backend/` | The self-hosted note store. A small [Express](https://expressjs.com) server that reads and writes plain `.md` files. |
+| `website/` | The marketing site at [graphwrite.app](https://graphwrite.app) (and the hosted demo under `/demo`). |
+
+### Local development
+
+Run the backend and the frontend dev server side by side:
+
+```
+# Terminal 1 — backend (serves on port 3001)
+cd backend
+npm install
+node server.js
+
+# Terminal 2 — frontend (dev server on port 5173)
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend talks to `http://localhost:3001` by default; you can point it at another backend in Settings. To work on the browser-only demo (IndexedDB storage, no backend), run `npm run build:demo` or set `VITE_STORAGE=indexeddb`.
+
+### Guidelines
+
+- **Keep it lightweight.** GraphWrite is deliberately small — no telemetry, no AI, no heavy dependencies. New dependencies should earn their place.
+- **Match the surrounding code.** Follow the existing style and naming; run `npm run lint` in `frontend/` before opening a PR.
+- **Keep PRs focused.** One change per pull request makes review easier.
 
 ## AI Disclosure
 
