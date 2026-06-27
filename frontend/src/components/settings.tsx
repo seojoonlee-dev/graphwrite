@@ -45,7 +45,13 @@ import '../style/settings.css';
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 
 // Vibration only applies to touch devices, so the setting is hidden elsewhere.
-const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+// The Vibration setting drives the native haptics plugin, which only exists in
+// mobile Tauri builds and only does anything on devices with a vibration motor:
+// Android (phones/tablets) and iPhone — not iPad, not desktop Tauri, and never
+// the web build. iPad's WebView reports "iPad" (or masquerades as desktop), so
+// the iPhone-only check leaves it out either way.
+const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const supportsVibration = isTauri() && (/android/i.test(ua) || /iphone/i.test(ua));
 
 // Phones are too narrow for the fixed-width centered column to make sense, so the
 // "Align editor to the center" toggle is hidden there (matches the app's phone
@@ -80,7 +86,7 @@ const SECTIONS: SectionMeta[] = [
   { id: 'center-editor', group: 'Appearance', title: 'Align editor to the center', keywords: 'center column width layout', show: !isPhone },
   { id: 'table-corners', group: 'Appearance', title: 'Rounded table corners', keywords: 'table round corners border radius', show: true },
   { id: 'auto-hide-title', group: 'Appearance', title: 'Auto-hide title', keywords: 'title bar hide scroll header auto sticky', show: true },
-  { id: 'vibration', group: 'Misc', title: 'Vibration', keywords: 'haptic feedback touch buzz', show: isTouch },
+  { id: 'vibration', group: 'Misc', title: 'Vibration', keywords: 'haptic feedback touch buzz', show: supportsVibration },
   { id: 'reset-demo', group: 'Demo', title: 'Reset demo', keywords: 'reset delete clear notes demo restore', show: isDemo },
 ];
 const SECTION_BY_ID = new Map(SECTIONS.map((s) => [s.id, s]));
