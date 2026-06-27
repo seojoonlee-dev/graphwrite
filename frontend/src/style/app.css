@@ -292,6 +292,14 @@ hr {
     margin-left: calc(var(--app-gutter) + 8px) !important;
     margin-right: calc(var(--app-gutter) + 8px) !important;
   }
+  /* The mobile gutter above pins fixed side margins with !important, which would
+     clobber the centered layout's `margin: 0 auto` on touch devices — leaving the
+     editor stuck to the left on tablets. Restore auto margins when centered (the
+     28px padding from .center-editor keeps content off the edge on narrow ones). */
+  .center-editor .editor {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
   .not-found {
     margin-left: var(--app-gutter) !important;
     margin-right: var(--app-gutter) !important;
