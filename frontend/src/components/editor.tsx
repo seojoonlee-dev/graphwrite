@@ -139,9 +139,13 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   // Keep the latest callbacks without recreating the editor, and suppress the
   // change event we fire ourselves when syncing external content in.
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
   const createFileRef = useRef(createFile);
-  createFileRef.current = createFile;
+  // Refresh the callback refs after each render rather than during it, so render
+  // stays pure (writing refs mid-render is unsafe under concurrent rendering).
+  useEffect(() => {
+    onChangeRef.current = onChange;
+    createFileRef.current = createFile;
+  });
   const settingExternal = useRef(false);
   const awaitingLoad = useRef(false);
   // Holds the code-syntax highlight style so it can be swapped on theme change.

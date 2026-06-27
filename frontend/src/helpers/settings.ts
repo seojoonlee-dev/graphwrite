@@ -176,7 +176,7 @@ const DEFAULTS: Settings = {
 };
 
 export const loadSettings = (): Settings => {
-  let stored: Partial<Settings> = {};
+  let stored: Partial<Settings>;
   try {
     stored = JSON.parse(localStorage.getItem(KEY) || '{}');
   } catch {

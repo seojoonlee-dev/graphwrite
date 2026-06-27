@@ -86,7 +86,7 @@ export function useNotes() {
         flushPendingSave().catch(err => console.error('Autosave failed:', err));
       }
     } catch {
-
+      // Corrupt or unavailable sessionStorage — nothing to restore.
     }
   }, [flushPendingSave]);
 
@@ -323,7 +323,7 @@ export function useNotes() {
       try {
         sessionStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pending));
       } catch {
-
+        // sessionStorage unavailable (e.g. private mode) — best-effort only.
       }
       saveFileOnUnload(pending.filePath, pending.content);
     };
