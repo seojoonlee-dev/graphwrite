@@ -3,6 +3,27 @@
 All notable changes to GraphWrite are documented here.
 
 
+## v0.1.1 - 2026-06-28
+
+A small bug-fix release.
+
+### Fixed
+
+- The Vibration setting no longer appears where it does nothing. It now shows
+  only on app builds with a vibration motor (Android and iPhone) and is hidden in
+  the browser, on desktop, and on iPad.
+- **Align editor to the center**: the option is no longer broken. The note title
+  and its divider now line up with the body text, the centered column is properly
+  centered on tablets (it could previously stick to the left), and the editor
+  keeps its full width so the scrollbar stays at the edge of the screen instead of
+  in the middle of the page.
+
+### Improved
+
+- The graph view's **reset** button now animates smoothly back to the default
+  view instead of snapping to it.
+
+
 ## v0.1.0 - 2026-06-25
 
 Initial public release.
