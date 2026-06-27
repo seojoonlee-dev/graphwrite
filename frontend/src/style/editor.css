@@ -98,11 +98,15 @@ a:hover {
 .title-autohide .editor-title {
   position: absolute;
   top: 0;
-  left: 0;
+  /* Honor the editor's horizontal padding so the title lines up with the body
+     text in both layouts: 0 in the default layout, 28px when centered (without
+     this the absolute title hangs out into the centered column's left gutter,
+     ending up wider than and offset from the text). */
+  left: var(--editor-pad, 0px);
   /* Stop short of the right edge so the opaque overlay doesn't sit on top of
-     the editor's scrollbar. 10px matches the editor content's own right padding,
-     so no scrolling text is exposed in the gap. */
-  right: 10px;
+     the editor's scrollbar. The +10px matches the editor content's own right
+     padding, so no scrolling text is exposed in the gap. */
+  right: calc(var(--editor-pad, 0px) + 10px);
   z-index: 2;
   flex: none;
   margin-bottom: 0;
@@ -133,6 +137,10 @@ a:hover {
 }
 
 .editor {
+  /* Horizontal padding of the editor's content box. 0 in the default layout
+     (insets come from the margin below); the centered layout sets it so the
+     auto-hiding title can line up with the body text (see .title-autohide). */
+  --editor-pad: 0px;
   display: flex;
   flex-direction: column;
   margin: 0px 16px 0px 28px;
@@ -144,10 +152,11 @@ a:hover {
 /* Optional centered layout (Settings → "Align editor to the center"), matching
    the Start screen's column. Toggled by the .center-editor class on <html>. */
 .center-editor .editor {
+  --editor-pad: 28px;
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
-  padding: 0 28px;
+  padding: 0 var(--editor-pad);
 }
 
 .editor > div:not(.editor-title) {
