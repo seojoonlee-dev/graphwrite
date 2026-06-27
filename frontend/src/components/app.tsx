@@ -22,6 +22,12 @@ import { GraphView } from './graphView';
 import { getStartupNote, getAutoHideTitle, subscribe } from '../helpers/settings';
 
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
+// The hosted web demo lives at a sub-path (graphwrite.app/demo) on Cloudflare
+// Pages, where SPA deep-link fallback for /demo/* is unreliable (it shadows the
+// demo's own assets). A hash router keeps reloads/deep links working with no
+// server config — the server only ever sees /demo/. The desktop/mobile/self-
+// hosted builds keep clean BrowserRouter URLs.
+const Router = isDemo ? HashRouter : BrowserRouter;
 // True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -477,13 +483,13 @@ export default function App() {
   }, []);
 
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+    <Router basename={isDemo ? undefined : import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Suspense fallback={null}>
         <Routes>
           <Route path="/settings/*" element={<Settings to={'/'} />} />
           <Route path="/*" element={<MainWorkspace />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </Router>
   );
 }
