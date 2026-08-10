@@ -41,9 +41,11 @@ a:hover {
   align-items: baseline;
   /* The divider lives on the title's last row (path/save), so it sits snug under
      the title text on both desktop and the mobile overlay — replacing the old
-     in-flow <hr>. Tight above the line. */
-  padding-bottom: 5px;
+     in-flow <hr>. Breathing room above (padding) and below (margin) the line;
+     the auto-hide overlay resets both to keep its 80px height budget. */
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
 }
 
 .editor-path {
@@ -93,6 +95,14 @@ a:hover {
    rides on inline --title-* vars, which survive re-renders. */
 .title-autohide .editor {
   position: relative;
+}
+
+/* The overlay title is sized to exactly match the 80px reserved content padding
+   (see min-height below) — keep the divider spacing at its old compact values so
+   the wider desktop spacing above doesn't push the overlay past that budget. */
+.title-autohide .editor-meta {
+  padding-bottom: 5px;
+  margin-bottom: 0;
 }
 
 .title-autohide .editor-title {

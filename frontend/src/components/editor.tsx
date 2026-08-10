@@ -111,6 +111,11 @@ const editorTheme = EditorView.theme({
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', overscrollBehavior: 'none', paddingBottom: '50vh' },
   '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px' },
+  // Drop CodeMirror's default 6px left line padding so the body text (and the
+  // placeholder) lines up with the title/path column above. Code-block and
+  // quote lines keep their own deliberate left insets (editor.css) — this rule
+  // is injected after those and would win the cascade, so exclude them here.
+  '.cm-line:not(.cm-code-block):not(.cm-quote)': { paddingLeft: '0' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: 'var(--bg-tertiary)',
