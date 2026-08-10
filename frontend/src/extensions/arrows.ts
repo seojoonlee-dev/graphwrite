@@ -4,8 +4,8 @@ import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/s
 import type { SyntaxNode } from '@lezer/common';
 
 // Live Preview arrows: `->`, `<-` and `<->` render as →, ← and ↔. Display-only —
-// the plain ASCII stays in the markdown file — and, like the rest of Live
-// Preview, the raw characters come back on the line(s) the cursor touches.
+// the plain ASCII stays in the markdown file — and the raw characters come back
+// while the selection touches the arrow itself (not the whole line).
 
 // `<->` is listed first so it wins over its own `<-` prefix, which would
 // otherwise render as a stray "←>".
@@ -45,27 +45,23 @@ function inCode(state: EditorState, pos: number): boolean {
 
 function buildDecorations(view: EditorView): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
-  const { doc } = view.state;
+  const { doc, selection } = view.state;
 
-  // Lines the selection touches keep their raw arrows (same reveal rule as the
-  // live-preview plugin); when blurred everything renders as preview.
-  const active = new Set<number>();
-  if (view.hasFocus) {
-    for (const range of view.state.selection.ranges) {
-      const first = doc.lineAt(range.from).number;
-      const last = doc.lineAt(range.to).number;
-      for (let n = first; n <= last; n++) active.add(n);
-    }
-  }
+  // Unlike the line-level reveal the live-preview plugin uses, an arrow only
+  // shows its raw characters while the selection actually touches it (cursor
+  // inside or at either edge) — elsewhere on the line it stays an arrow. When
+  // blurred there is no reveal at all.
+  const focused = view.hasFocus;
 
   for (const { from, to } of view.visibleRanges) {
     const text = doc.sliceString(from, to);
     ARROW_RE.lastIndex = 0;
     for (let m = ARROW_RE.exec(text); m; m = ARROW_RE.exec(text)) {
       const start = from + m.index;
-      if (active.has(doc.lineAt(start).number)) continue;
+      const end = start + m[0].length;
+      if (focused && selection.ranges.some((r) => r.to >= start && r.from <= end)) continue;
       if (inCode(view.state, start)) continue;
-      builder.add(start, start + m[0].length, arrowDecos[m[0]]);
+      builder.add(start, end, arrowDecos[m[0]]);
     }
   }
   return builder.finish();
