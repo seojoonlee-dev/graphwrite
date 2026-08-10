@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useParams } from 'react-router-dom';
 import { Compartment, EditorState } from '@codemirror/state';
-import { EditorView, keymap, placeholder as cmPlaceholder } from '@codemirror/view';
+import { EditorView, keymap, drawSelection, placeholder as cmPlaceholder } from '@codemirror/view';
 import { history, historyKeymap, defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage, markdownKeymap } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -111,11 +111,18 @@ const editorTheme = EditorView.theme({
   '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', overscrollBehavior: 'none', paddingBottom: '50vh' },
   '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px' },
-  // Drop CodeMirror's default 6px left line padding so the body text (and the
-  // placeholder) lines up with the title/path column above. Code-block and
-  // quote lines keep their own deliberate left insets (editor.css) — this rule
-  // is injected after those and would win the cascade, so exclude them here.
-  '.cm-line:not(.cm-code-block):not(.cm-quote)': { paddingLeft: '0' },
+  // Shrink CodeMirror's default 6px left line padding so the body text (and the
+  // placeholder) lines up with the title/path column above. Keep 2px so the
+  // drawn cursor (drawSelection) isn't clipped at the content edge on the first
+  // column. Code-block and quote lines keep their own deliberate left insets
+  // (editor.css) — this rule is injected after those and would win the cascade,
+  // so exclude them here.
+  '.cm-line:not(.cm-code-block):not(.cm-quote)': { paddingLeft: '3px' },
+  // CodeMirror's base theme makes the placeholder an inline-block pinned to the
+  // top of the line box (vertical-align: top); the caret is drawn from the
+  // text baseline instead, so the two overlap. Plain inline text sits exactly
+  // where typed text would, and the caret lines up with it.
+  '.cm-placeholder': { display: 'inline' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: 'var(--bg-tertiary)',
@@ -205,6 +212,12 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
           codeHlRef.current.of(codeHighlight()),
           livePreview,
           arrows,
+          // Draw the cursor/selection ourselves instead of relying on the native
+          // caret, which Firefox misplaces in an empty doc (it ends up above the
+          // first line, clipped by the scroller). The drawn cursor is positioned
+          // from CodeMirror's own coordinates, which the placeholder widget
+          // supplies correctly.
+          drawSelection(),
           EditorView.lineWrapping,
           cmPlaceholder(placeholder),
           editorTheme,
