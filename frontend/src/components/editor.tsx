@@ -8,6 +8,7 @@ import { languages } from '@codemirror/language-data';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { livePreview } from '../extensions/livePreview';
+import { arrows } from '../extensions/arrows';
 import { WikiLink } from '../extensions/wikiLink';
 import { effectiveColors, subscribe } from '../helpers/settings';
 import { openExternal } from '../helpers/openExternal';
@@ -198,6 +199,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
           syntaxHighlighting(markdownHighlight),
           codeHlRef.current.of(codeHighlight()),
           livePreview,
+          arrows,
           EditorView.lineWrapping,
           cmPlaceholder(placeholder),
           editorTheme,

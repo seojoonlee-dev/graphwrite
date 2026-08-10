@@ -2,6 +2,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
+import { ARROWS, ARROW_RE } from './arrows';
 
 // Live Preview: hide the markdown syntax markers and let syntaxHighlighting
 // render the formatting inline. Markers on the line(s) the cursor/selection
@@ -143,6 +144,13 @@ const inlineRules: { re: RegExp; build: (m: RegExpExecArray) => Node }[] = [
       e.textContent = m[1];
       return e;
     },
+  },
+  // Arrows render in table cells too, matching the arrows extension. Inline code
+  // still wins: a code span starts before any arrow inside it, and the earliest
+  // match is picked.
+  {
+    re: new RegExp(ARROW_RE.source),
+    build: (m) => document.createTextNode(ARROWS[m[0]]),
   },
 ];
 
