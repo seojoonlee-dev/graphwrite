@@ -207,7 +207,10 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
         extensions: [
           history(),
           keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
-          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [WikiLink] }),
+          // SetextHeading is removed: it makes a lone `-` under a paragraph turn
+          // that paragraph into a heading (a setext underline) while you're
+          // still about to type the first bullet of a list. `#` headings only.
+          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [WikiLink, { remove: ['SetextHeading'] }] }),
           syntaxHighlighting(markdownHighlight),
           codeHlRef.current.of(codeHighlight()),
           livePreview,
