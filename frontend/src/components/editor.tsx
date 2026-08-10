@@ -122,12 +122,11 @@ const editorTheme = EditorView.theme({
   // top of the line box (vertical-align: top); the caret is drawn from the
   // text baseline instead, so the two overlap. Plain inline text sits exactly
   // where typed text would, and the caret lines up with it.
-  '.cm-placeholder': { display: 'inline' },
+  '.cm-placeholder': { display: 'inline', color: 'var(--text-muted)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
     backgroundColor: 'var(--bg-tertiary)',
   },
-  '.cm-placeholder': { color: 'var(--text-muted)' },
 });
 
 function Editor({ rawContent, onChange, placeholder = 'Start typing your note here...', title, onTitleChange, createFile, saveState, lastSavedAt }: EditorProps) {
