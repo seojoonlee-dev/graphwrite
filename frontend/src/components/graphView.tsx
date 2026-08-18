@@ -287,14 +287,21 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
     return true;
   }, []);
 
-  // Drag-out-to-create (node-editor style): start a connection from a node's
-  // output handle and release on empty canvas to get a "New Note Here" popup
-  // that creates a child of that node at the drop point.
+  // Drag-out-to-create (node-editor style): drag a connection out of a node and
+  // release on empty canvas to get a "New Note Here" popup that creates a child
+  // of that node at the drop point.
   const connectSourceRef = useRef<string | null>(null);
   const [connectMenu, setConnectMenu] = useState<{ x: number; y: number; sourceId: string } | null>(null);
 
   const handleConnectStart = useCallback((_event: unknown, params: OnConnectStartParams) => {
-    connectSourceRef.current = params.handleType === 'source' ? params.nodeId : null;
+    // Record which node the drag came out of. A node is a single visible dot but
+    // carries two stacked handles — a target on its left half, a source on its
+    // right — and React Flow lets a drag start from either. Keying off nodeId
+    // (not handleType) means dragging out of *any* part of the dot arms the
+    // create-flow; gating on handleType==='source' previously dropped every drag
+    // that happened to begin on the left (target) half, so the "Create New Note"
+    // menu appeared only about half the time and felt random.
+    connectSourceRef.current = params.nodeId;
   }, []);
 
   const handleConnectEnd = useCallback((event: MouseEvent | TouchEvent, state: FinalConnectionState) => {
