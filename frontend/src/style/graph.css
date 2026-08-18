@@ -128,8 +128,8 @@
   stop-opacity: 0.35;
 }
 
-/* Handles are invisible (the dot itself is the visual) but keep a tall, narrow
-   grab zone so dragging a connection out of a node stays easy. */
+/* Handles are invisible (the dot itself is the visual) but keep a generous grab
+   zone so dragging a connection out of a node stays easy. */
 .react-flow__handle {
   width: 6px;
   height: 6px;
@@ -138,10 +138,29 @@
   opacity: 0;
 }
 
+/* The dot stacks two 6px handles — target on its left edge, source on its right
+   — which natively leaves a ~5px strip dead-centre that starts no drag. Extend
+   each grab zone vertically (tall target) and INWARD toward the dot's centre so
+   the two together blanket the whole 11px dot: a drag out of any pixel now
+   starts a connection. Extending only inward (per-side, via React Flow's
+   position classes) keeps the zones from bleeding outward toward neighbouring
+   nodes. Both handles arm the create-flow, so the overlap in the middle is
+   harmless. */
 .react-flow__handle::before {
   content: '';
   position: absolute;
-  inset: -8px 0;
+  top: -8px;
+  bottom: -8px;
+}
+
+.react-flow__handle-left::before {
+  left: 0;
+  right: -6px;
+}
+
+.react-flow__handle-right::before {
+  left: -6px;
+  right: 0;
 }
 
 /* Edges keep the (intentional) bezier shape; thin and subtle, accent on hover. */
