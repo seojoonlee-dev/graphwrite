@@ -36,6 +36,25 @@ const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 const MIN_SIDEBAR_WIDTH = 150;
 const MAX_SIDEBAR_WIDTH = 600;
 
+// Cancel any attempt to begin a text selection. Attached to the document (capture
+// phase, so it beats the editor's own handlers) only while the sidebar handle is
+// being dragged. CSS user-select is useless here: WebKitGTK — the desktop build's
+// engine — always allows selection inside CodeMirror's contenteditable and
+// ignores user-select there, so blocking the selectstart event is what actually
+// stops the editor from selecting as its lines re-wrap under the moving cursor.
+const preventSelection = (e: Event) => e.preventDefault();
+
+// Hard fallback for WebKit, where blocking selectstart isn't fully honored inside
+// contenteditable: if a selection still forms mid-drag, drop it the instant it
+// appears (selectionchange fires immediately, unlike waiting for the next pointer
+// move). Only clears real, non-collapsed selections, so the editor's own caret
+// survives the resize; removeAllRanges re-fires selectionchange but then
+// rangeCount is 0, so it doesn't recurse.
+const clearStraySelection = () => {
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0 && !sel.isCollapsed) sel.removeAllRanges();
+};
+
 const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { files: string[], onCreate: (path:string) => void, onDelete: (path:string) => void, onRename: (path:string, newTitle:string) => void, onNavigate?: () => void }) => {
   const { '*': parsedFilePath } = useParams();
 
@@ -391,9 +410,12 @@ function MainWorkspace() {
                 sidebarRef.current.style.transition = 'none';
               }
 
-              // Suppress text selection (incl. inside the contenteditable editor)
-              // and hold the resize cursor for the drag — see .resizing-sidebar.
+              // Hold the resize cursor for the drag (see .resizing-sidebar) and
+              // block text selection at the event level for the editor, which
+              // WebKit won't suppress via CSS.
               document.body.classList.add('resizing-sidebar');
+              document.addEventListener('selectstart', preventSelection, true);
+              document.addEventListener('selectionchange', clearStraySelection);
             }}
             onPointerUp={(e) => {
               isDragging.current = false;
@@ -404,6 +426,8 @@ function MainWorkspace() {
               }
 
               document.body.classList.remove('resizing-sidebar');
+              document.removeEventListener('selectstart', preventSelection, true);
+              document.removeEventListener('selectionchange', clearStraySelection);
 
               localStorage.setItem("sidebarWidth", sidebarWidth.toString());
             }}
@@ -416,6 +440,8 @@ function MainWorkspace() {
               }
 
               document.body.classList.remove('resizing-sidebar');
+              document.removeEventListener('selectstart', preventSelection, true);
+              document.removeEventListener('selectionchange', clearStraySelection);
             }}
             onPointerMove={handlePointerMove}
           />
