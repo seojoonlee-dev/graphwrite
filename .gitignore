@@ -31,3 +31,4 @@ website/
 *.njsproj
 *.sln
 *.sw?
+.claude

@@ -1,7 +1,8 @@
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
+import { type BuildRanges, viewportCachedDecorations } from '../helpers/decorationCache';
 
 // Live Preview arrows: `->`, `<-` and `<->` render as →, ← and ↔. Display-only —
 // the plain ASCII stays in the markdown file — and the raw characters come back
@@ -43,7 +44,7 @@ function inCode(state: EditorState, pos: number): boolean {
   return false;
 }
 
-function buildDecorations(view: EditorView): DecorationSet {
+function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const { doc, selection } = view.state;
 
@@ -53,7 +54,7 @@ function buildDecorations(view: EditorView): DecorationSet {
   // blurred there is no reveal at all.
   const focused = view.hasFocus;
 
-  for (const { from, to } of view.visibleRanges) {
+  for (const { from, to } of ranges) {
     const text = doc.sliceString(from, to);
     ARROW_RE.lastIndex = 0;
     for (let m = ARROW_RE.exec(text); m; m = ARROW_RE.exec(text)) {
@@ -67,19 +68,9 @@ function buildDecorations(view: EditorView): DecorationSet {
   return builder.finish();
 }
 
-const arrowPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = buildDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
-        this.decorations = buildDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (plugin) => plugin.decorations },
-);
+// Cached (see decorationCache): rebuilt on doc/parse/selection/focus changes or
+// when the viewport leaves the padded build range, but not on the geometry-only
+// viewport updates that fire every frame of a sidebar resize.
+const arrowPlugin = viewportCachedDecorations(buildDecorations, { selection: true, focus: true });
 
 export const arrows: Extension = [arrowPlugin];

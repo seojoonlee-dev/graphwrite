@@ -1,8 +1,9 @@
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
 import { ARROWS, ARROW_RE } from './arrows';
+import { type BuildRanges, viewportCachedDecorations } from '../helpers/decorationCache';
 
 // Live Preview: hide the markdown syntax markers and let syntaxHighlighting
 // render the formatting inline. Markers on the line(s) the cursor/selection
@@ -377,12 +378,12 @@ function childrenByName(node: SyntaxNode) {
   return out;
 }
 
-function buildDecorations(view: EditorView): DecorationSet {
+function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const active = activeLines(view);
   const { doc } = view.state;
 
-  for (const { from, to } of view.visibleRanges) {
+  for (const { from, to } of ranges) {
     syntaxTree(view.state).iterate({
       from,
       to,
@@ -547,28 +548,18 @@ function buildDecorations(view: EditorView): DecorationSet {
   return builder.finish();
 }
 
-const livePreviewPlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = buildDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged || update.selectionSet || update.focusChanged) {
-        this.decorations = buildDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (plugin) => plugin.decorations },
-);
+// Cached (see decorationCache): rebuilt when the doc/parse/selection/focus
+// changes or the viewport escapes the padded build range — NOT on the
+// geometry-only viewport updates that fire every frame of a sidebar resize.
+const livePreviewPlugin = viewportCachedDecorations(buildDecorations, { selection: true, focus: true });
 
 // Blockquote lines get an accent bar down the side (styled by .cm-quote). It's a
 // line decoration that shows whether or not the cursor is on the line, so it
 // lives in its own plugin to keep clear of the inline builder's ordering.
-function buildQuoteDecorations(view: EditorView): DecorationSet {
+function buildQuoteDecorations(view: EditorView, ranges: BuildRanges): DecorationSet {
   const { doc } = view.state;
   const quoteLines = new Set<number>();
-  for (const { from, to } of view.visibleRanges) {
+  for (const { from, to } of ranges) {
     syntaxTree(view.state).iterate({
       from,
       to,
@@ -588,20 +579,9 @@ function buildQuoteDecorations(view: EditorView): DecorationSet {
   return builder.finish();
 }
 
-const quoteLinePlugin = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet;
-    constructor(view: EditorView) {
-      this.decorations = buildQuoteDecorations(view);
-    }
-    update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = buildQuoteDecorations(update.view);
-      }
-    }
-  },
-  { decorations: (plugin) => plugin.decorations },
-);
+// Cached like the live-preview plugin above; quote bars don't depend on the
+// selection or focus, so only doc/parse/viewport changes rebuild them.
+const quoteLinePlugin = viewportCachedDecorations(buildQuoteDecorations);
 
 // `focusedField` is listed before `tableField` so that, within a transaction,
 // `tableField.update` reads the already-updated focus value.
