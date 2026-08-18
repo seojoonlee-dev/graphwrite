@@ -391,8 +391,9 @@ function MainWorkspace() {
                 sidebarRef.current.style.transition = 'none';
               }
 
-              document.body.style.userSelect = "none";
-              document.body.style.setProperty('-webkit-user-select', 'none');
+              // Suppress text selection (incl. inside the contenteditable editor)
+              // and hold the resize cursor for the drag — see .resizing-sidebar.
+              document.body.classList.add('resizing-sidebar');
             }}
             onPointerUp={(e) => {
               isDragging.current = false;
@@ -402,8 +403,7 @@ function MainWorkspace() {
                 sidebarRef.current.style.transition = '';
               }
 
-              document.body.style.userSelect = "";
-              document.body.style.removeProperty('-webkit-user-select');
+              document.body.classList.remove('resizing-sidebar');
 
               localStorage.setItem("sidebarWidth", sidebarWidth.toString());
             }}
@@ -415,8 +415,7 @@ function MainWorkspace() {
                 sidebarRef.current.style.transition = '';
               }
 
-              document.body.style.userSelect = "";
-              document.body.style.removeProperty('-webkit-user-select');
+              document.body.classList.remove('resizing-sidebar');
             }}
             onPointerMove={handlePointerMove}
           />

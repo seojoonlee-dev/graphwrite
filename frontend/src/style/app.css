@@ -193,6 +193,22 @@ hr {
   touch-action: none;
 }
 
+/* While the sidebar is being resized the drag handle captures the pointer, but a
+   native text selection can still start inside the editor as lines re-wrap under
+   the cursor: CodeMirror's content is contenteditable, which establishes its own
+   selectable region and resets the user-select inherited from an ancestor, so
+   setting it on <body> alone never reaches the text. Kill selection app-wide for
+   the duration (the class is toggled on <body> by the drag handlers) and hold
+   the resize cursor so it doesn't flip to the I-beam when the pointer strays over
+   the text. The universal selector + !important is what's needed to beat the
+   editable region's own user-select. */
+body.resizing-sidebar,
+body.resizing-sidebar * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  cursor: col-resize !important;
+}
+
 /* For touchscreen users */
 @media (pointer: coarse) {
   .drag-handle::after {
