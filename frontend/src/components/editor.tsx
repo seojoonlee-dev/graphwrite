@@ -20,8 +20,8 @@ interface EditorProps {
   placeholder?: string;
   title: string;
   onTitleChange: (value: string) => Promise<boolean>;
-  // Invoked when a [[wikilink]] is clicked: creates the note (or navigates to it
-  // if it already exists), matching the previous behavior.
+  // Invoked when a [[wikilink]] is clicked: creates the note, or navigates to it
+  // if it already exists.
   createFile: (value?: string) => void;
   saveState: 'idle' | 'saving' | 'saved' | 'error';
   lastSavedAt: number | null;
@@ -38,7 +38,7 @@ function savedLabel(ts: number): string {
   return `saved ${hrs}h ago`;
 }
 
-// Markdown chrome styling — theme-independent. The CodeMirror document IS the
+// Markdown chrome styling, theme-independent. The CodeMirror document IS the
 // markdown, so there is no lossy round-trip; what you type is what gets saved.
 const markdownHighlight = HighlightStyle.define([
   { tag: t.heading1, fontSize: '1.5em', fontWeight: 'bold' },
@@ -104,7 +104,7 @@ const isLightHex = (hex: string): boolean => {
 const codeHighlight = () =>
   syntaxHighlighting(isLightHex(effectiveColors().codeBg) ? codeHighlightLight : codeHighlightDark);
 
-// Editor chrome only — references the same semantic tokens so it follows the
+// Editor chrome only. References the same semantic tokens so it follows the
 // theme. Syntax-highlight colors above are deliberately left untouched.
 const editorTheme = EditorView.theme({
   '&': { color: 'var(--text)', backgroundColor: 'transparent', height: '100%' },
@@ -115,7 +115,7 @@ const editorTheme = EditorView.theme({
   // placeholder) lines up with the title/path column above. Keep 2px so the
   // drawn cursor (drawSelection) isn't clipped at the content edge on the first
   // column. Code-block and quote lines keep their own deliberate left insets
-  // (editor.css) — this rule is injected after those and would win the cascade,
+  // (editor.css). This rule is injected after those and would win the cascade,
   // so exclude them here.
   '.cm-line:not(.cm-code-block):not(.cm-quote)': { paddingLeft: '3px' },
   // CodeMirror's base theme makes the placeholder an inline-block pinned to the
@@ -195,7 +195,6 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
     setTitle(title);
   }, [title]);
 
-  // Create the editor once.
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -286,7 +285,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   // we latch `awaitingLoad` on the change and keep applying until the content
   // actually differs from the editor. This matters when the navigation came
   // from inside the editor (e.g. clicking a wikilink to create a note), where it
-  // stays focused — the focus guard below would otherwise skip the load.
+  // stays focused and the focus guard below would otherwise skip the load.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;

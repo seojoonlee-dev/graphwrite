@@ -11,7 +11,7 @@ export async function vibrate(ms: number): Promise<void> {
       const haptics = await import('@tauri-apps/plugin-haptics');
       await haptics.vibrate(ms);
     } catch (e) {
-      // Plugin not registered (e.g. desktop) — log for diagnosis on mobile.
+      // Plugin not registered (e.g. desktop). Log for diagnosis on mobile.
       console.warn('haptics vibrate failed:', e);
     }
   } else if (typeof navigator !== 'undefined' && navigator.vibrate) {

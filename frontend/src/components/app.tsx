@@ -25,7 +25,7 @@ const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 // The hosted web demo lives at a sub-path (graphwrite.app/demo) on Cloudflare
 // Pages, where SPA deep-link fallback for /demo/* is unreliable (it shadows the
 // demo's own assets). A hash router keeps reloads/deep links working with no
-// server config — the server only ever sees /demo/. The desktop/mobile/self-
+// server config: the server only ever sees /demo/. The desktop/mobile/self-
 // hosted builds keep clean BrowserRouter URLs.
 const Router = isDemo ? HashRouter : BrowserRouter;
 // True when running inside the Tauri desktop shell (currently Linux/WebKitGTK only).
@@ -38,8 +38,8 @@ const MAX_SIDEBAR_WIDTH = 600;
 
 // Cancel any attempt to begin a text selection. Attached to the document (capture
 // phase, so it beats the editor's own handlers) only while the sidebar handle is
-// being dragged. CSS user-select is useless here: WebKitGTK — the desktop build's
-// engine — always allows selection inside CodeMirror's contenteditable and
+// being dragged. CSS user-select is useless here: WebKitGTK (the desktop build's
+// engine) always allows selection inside CodeMirror's contenteditable and
 // ignores user-select there, so blocking the selectstart event is what actually
 // stops the editor from selecting as its lines re-wrap under the moving cursor.
 const preventSelection = (e: Event) => e.preventDefault();
@@ -114,11 +114,11 @@ const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { fi
 
     return parsed.sort((a, b) => {
       const minLen = Math.min(a.segments.length, b.segments.length);
-      
+
       for (let i = 0; i < minLen; i++) {
         const segA = a.segments[i];
         const segB = b.segments[i];
-        
+
         if (segA.toLowerCase() !== segB.toLowerCase()) {
           return segA.localeCompare(segB);
         }
@@ -130,15 +130,15 @@ const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { fi
     }));
   }, [files]);
 
-  const visibleList = parsedList.filter(item => 
+  const visibleList = parsedList.filter(item =>
     !Object.keys(collapsed).some(p => collapsed[p] && item.dirPath.startsWith(p + '/'))
   );
 
   return (
     <div className="file-tree">
       {visibleList.map(({ dirPath, name, depth, hasChildren }) => (
-        <div 
-          key={dirPath} 
+        <div
+          key={dirPath}
           style={{ paddingLeft: depth * 10 }}
           onContextMenu={(e) => {
             e.preventDefault();
@@ -175,7 +175,7 @@ const FileList = memo(({ files, onCreate, onDelete, onRename, onNavigate }: { fi
                 <button className="btn-link">{name}</button>
               </Link>
             )}
-            <button onClick={() => onCreate(dirPath)} className="btn-add">+</button> 
+            <button onClick={() => onCreate(dirPath)} className="btn-add">+</button>
           </div>
         </div>
       ))}
@@ -268,11 +268,10 @@ function MainWorkspace() {
     if (vk) vk.overlaysContent = true;
   }, []);
 
-  // sidebar
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem('sidebarWidth');
     if (!saved) return MIN_SIDEBAR_WIDTH;
-    // Clamp legacy values saved before the 200px floor existed.
+    // Clamp values saved under older bounds.
     return Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, parseInt(saved, 10)));
   });
 
@@ -325,7 +324,6 @@ function MainWorkspace() {
     if (parsedFilePath && !notFound) pushRecent(parsedFilePath);
   }, [parsedFilePath, notFound]);
 
-  // save shortcut
   const handleSave = useCallback(async () => {
     await saveCurrentFile();
   }, [saveCurrentFile]);
@@ -375,10 +373,10 @@ function MainWorkspace() {
             }
           </button>
         </div>
-        <div 
+        <div
           className={`l-sidebar ${sideBarOpen ? 'is-open' : ''}`}
-          ref={sidebarRef} 
-          style={{ 
+          ref={sidebarRef}
+          style={{
             width: sideBarOpen ? `${sidebarWidth}px` : '0px',
             opacity: sideBarOpen ? 1 : 0
           }}
@@ -391,7 +389,7 @@ function MainWorkspace() {
                 <span className="sidebar-notice-text">{error}</span>
               </div>
             )}
-            
+
             {!loading && !error && files.length === 0 && (
                 <p>No notes found. Create a new note!</p>
             )}
@@ -460,7 +458,7 @@ function MainWorkspace() {
             }}
             onNodeRename={renameFile}
             onNodeMove={moveFile}
-            onNodeCreate={(path, position) => createFile(path, undefined, { keepView: true, position })}
+            onNodeCreate={(path) => createFile(path, undefined, { keepView: true })}
             onNodeDelete={(path) => deleteFile(path, { keepView: true })}
           />
         ) : notFound ? (

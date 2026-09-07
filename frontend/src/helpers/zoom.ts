@@ -1,6 +1,6 @@
 // Shared screen-zoom state for the desktop/mobile (Tauri) app. The webview's
 // native zoom is driven by us (instead of Tauri's zoomHotkeysEnabled polyfill)
-// so the level can be saved/restored — the polyfill resets to 100% on launch.
+// so the level can be saved/restored (the polyfill resets to 100% on launch).
 // Both the keyboard shortcut hook and the settings dropdown go through here so
 // they stay in sync. No-op in browsers, which already zoom natively.
 import type { Webview } from '@tauri-apps/api/webview';
@@ -16,7 +16,7 @@ export const isTauri = () => '__TAURI_INTERNALS__' in window;
 // property gets cancelled out by the webview's font auto-sizing (text rescales
 // to compensate, so nothing visibly changes). Instead we expose the level as a
 // `--zoom` CSS variable and let the phone stylesheet apply a transform: scale()
-// on the app root — a transform scales the rendered output wholesale, so
+// on the app root. A transform scales the rendered output wholesale, so
 // auto-sizing can't fight it. Desktop (WebKitGTK) keeps native setZoom.
 const isAndroid = () => isTauri() && /android/i.test(navigator.userAgent);
 
@@ -24,12 +24,6 @@ export const clampZoom = (z: number) =>
   Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
 
 export const getZoom = () => clampZoom(parseFloat(localStorage.getItem(KEY) || '1') || 1);
-
-// The scale currently applied to the app via CSS transform (Android phones +
-// tablets). 1 everywhere the transform isn't active — desktop drives the
-// webview's own zoom, and the browser zooms natively, so neither needs this.
-// Used to convert viewport coordinates into the transformed coordinate space.
-export const getCssZoomScale = () => (isAndroid() ? getZoom() : 1);
 
 let webviewPromise: Promise<Webview> | undefined;
 const getWebview = () => {

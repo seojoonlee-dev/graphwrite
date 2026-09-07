@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: '*', 
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -23,19 +23,18 @@ function getSafePath(userInputPath) {
   if (resolvedPath !== safeBaseDir && !resolvedPath.startsWith(safeBaseDir + path.sep)) {
     throw new Error("Invalid path");
   }
-  
+
   return resolvedPath;
 }
 
-// get all files
 async function getAllFiles(dir, baseDir = dir) {
   let results = [];
   try {
     const list = await fs.readdir(dir, { withFileTypes: true });
-    
+
     for (let file of list) {
       const fullPath = path.join(dir, file.name);
-      
+
       if (file.isDirectory()) {
         const subFiles = await getAllFiles(fullPath, baseDir);
         results = results.concat(subFiles);
@@ -99,8 +98,8 @@ app.post('/api/save', async (req, res) => {
 });
 
 app.post('/api/create', async (req, res) => {
-  const { currentPath, fileName } = req.body; 
-  
+  const { currentPath, fileName } = req.body;
+
   try {
     let baseDir = NOTES_DIR;
 
@@ -108,14 +107,14 @@ app.post('/api/create', async (req, res) => {
       const safePath = getSafePath(currentPath);
       baseDir = safePath;
     }
-    
+
     let candidateName = fileName ? fileName.trim() : "NewFile";
     if (fileName && (!candidateName || INVALID_NAME_CHARS.test(candidateName))) {
       return res.status(400).json({ success: false, message: 'File names can\'t contain \\, /, :, *, ?, ", <, >, and |.' });
     }
     let finalDir = path.join(baseDir, candidateName);
     let finalFile = path.join(finalDir, `${candidateName}.md`);
-    
+
     if (fileName) {
       try {
         await fs.access(finalFile);
@@ -144,10 +143,10 @@ app.post('/api/create', async (req, res) => {
 
     await fs.mkdir(finalDir, { recursive: true });
     await fs.writeFile(finalFile, '', 'utf8');
-    
+
     const relativePath = path.relative(NOTES_DIR, finalDir).split(path.sep).join('/');
     res.json({ success: true, filePath: relativePath });
-    
+
   } catch (error) {
     console.error("Error creating file:", error);
     res.status(500).json({ success: false, message: 'Failed to create file' });
@@ -190,7 +189,7 @@ app.post('/api/rename', async (req, res) => {
     await fs.rename(oldDir, newDir);
     const oldFileInNewDir = path.join(newDir, path.basename(oldFullPath));
     await fs.rename(oldFileInNewDir, newFullPath);
-    
+
     const newRelativePath = path.relative(NOTES_DIR, newDir).split(path.sep).join('/');
     res.json({ success: true, filePath: newRelativePath });
   } catch (error) {
@@ -208,7 +207,7 @@ app.delete('/api/delete', async (req, res) => {
   try {
     const fullPath = getSafePath(filePath);
     const targetFolder = path.dirname(fullPath);
-    
+
     await fs.rm(targetFolder, { recursive: true, force: true });
     res.json({ success: true, message: 'File deleted successfully!' });
   } catch (error) {
@@ -238,7 +237,7 @@ app.post('/api/move', async (req, res) => {
       throw new Error('Invalid path');
     }
 
-    // Already in this parent — nothing to do.
+    // Already in this parent, nothing to do.
     if (newDir === oldDir) {
       const rel = path.relative(NOTES_DIR, oldDir).split(path.sep).join('/');
       return res.json({ success: true, filePath: rel });

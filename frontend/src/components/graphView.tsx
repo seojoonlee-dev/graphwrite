@@ -15,14 +15,13 @@ interface GraphViewProps {
   onNodeClick: (path: string) => void;
   onNodeRename: (path: string, newTitle: string) => void;
   onNodeMove: (dirPath: string, newParentPath: string) => void;
-  onNodeCreate: (path: string, position?: { x: number; y: number }) => void;
+  onNodeCreate: (path: string) => void;
   onNodeDelete: (path: string) => void;
 }
 
 interface FileNodeData {
   label: string;
   filePath?: string;
-  isRoot?: boolean;
   isSynthetic?: boolean;
   hasChildren?: boolean;
   renaming?: boolean;
@@ -45,7 +44,7 @@ const FileNode = ({ id, data }: NodeProps) => {
   const openMenu = useContext(NodeContextMenuContext);
   const longPress = useLongPress();
 
-  // The node itself is just a dot; the label sits outside it — to the left for
+  // The node itself is just a dot; the label sits outside it: to the left for
   // branch nodes (so it tucks toward the parent) and to the right for leaves.
   const side = hasChildren ? 'label-left' : 'label-right';
 
@@ -82,7 +81,7 @@ const FileNode = ({ id, data }: NodeProps) => {
 const nodeTypes = { fileNode: FileNode };
 
 // A search hit lights its whole path to the accent; the edges hanging off that
-// path get a minimal bloom — this edge strokes a gradient that fades from the
+// path get a minimal bloom. This edge strokes a gradient that fades from the
 // accent (at the end touching the lit path) to the normal edge colour, so the
 // glow bleeds outward by one hop and falls off.
 const GlowEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data }: EdgeProps) => {
@@ -112,11 +111,10 @@ const GlowEdge = ({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targ
 const edgeTypes = { glow: GlowEdge };
 
 export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNodeRename, onNodeMove, onNodeCreate, onNodeDelete }) => {
-  // Nodes are locked (not draggable), so the layout is always the fresh tidy
-  // tree — no saved per-node positions to merge.
+  // Nodes are locked (not draggable), so the layout is always the fresh tidy tree.
   const { nodes: layoutedNodes, edges } = useMemo(() => getLayoutedElements(files), [files]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);  
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
 
   useEffect(() => {
     setNodes(layoutedNodes);
@@ -295,12 +293,10 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
 
   const handleConnectStart = useCallback((_event: unknown, params: OnConnectStartParams) => {
     // Record which node the drag came out of. A node is a single visible dot but
-    // carries two stacked handles — a target on its left half, a source on its
-    // right — and React Flow lets a drag start from either. Keying off nodeId
-    // (not handleType) means dragging out of *any* part of the dot arms the
-    // create-flow; gating on handleType==='source' previously dropped every drag
-    // that happened to begin on the left (target) half, so the "Create New Note"
-    // menu appeared only about half the time and felt random.
+    // carries two stacked handles (a target on its left half, a source on its
+    // right) and React Flow lets a drag start from either. Keying off nodeId
+    // (not handleType) means dragging out of any part of the dot arms the
+    // create-flow.
     connectSourceRef.current = params.nodeId;
   }, []);
 
@@ -317,7 +313,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
   const handleCreateFromConnect = useCallback(() => {
     if (!connectMenu) return;
     // Dragging from the Notes root creates a top-level note; the tree
-    // auto-lays-out, so the new child just slots in (no drop position).
+    // auto-lays-out, so the new child just slots in.
     onNodeCreate(connectMenu.sourceId === GRAPH_ROOT_ID ? '' : connectMenu.sourceId);
     setConnectMenu(null);
   }, [connectMenu, onNodeCreate]);

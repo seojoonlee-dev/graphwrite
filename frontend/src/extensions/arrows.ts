@@ -4,8 +4,8 @@ import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/s
 import type { SyntaxNode } from '@lezer/common';
 import { type BuildRanges, viewportCachedDecorations } from '../helpers/decorationCache';
 
-// Live Preview arrows: `->`, `<-` and `<->` render as →, ← and ↔. Display-only —
-// the plain ASCII stays in the markdown file — and the raw characters come back
+// Live Preview arrows: `->`, `<-` and `<->` render as →, ← and ↔. Display-only:
+// the plain ASCII stays in the markdown file, and the raw characters come back
 // while the selection touches the arrow itself (not the whole line).
 
 // `<->` is listed first so it wins over its own `<-` prefix, which would
@@ -50,7 +50,7 @@ function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet 
 
   // Unlike the line-level reveal the live-preview plugin uses, an arrow only
   // shows its raw characters while the selection actually touches it (cursor
-  // inside or at either edge) — elsewhere on the line it stays an arrow. When
+  // inside or at either edge). Elsewhere on the line it stays an arrow. When
   // blurred there is no reveal at all.
   const focused = view.hasFocus;
 

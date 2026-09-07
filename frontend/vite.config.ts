@@ -13,7 +13,6 @@ const isDemo = storage === 'indexeddb'
 // physical phone. Unset for desktop/web dev, where the defaults are fine.
 const host = process.env.TAURI_DEV_HOST
 
-// https://vite.dev/config/
 export default defineConfig({
   // Served at the site root by default; the hosted demo sets VITE_BASE=/demo/
   // so it can live under graphwrite.app/demo as a sub-path.
@@ -25,7 +24,7 @@ export default defineConfig({
     {
       name: 'demo-title',
       transformIndexHtml: (html: string) =>
-        isDemo ? html.replace('<title>GraphWrite</title>', '<title>GraphWrite — Demo</title>') : html,
+        isDemo ? html.replace('<title>GraphWrite</title>', '<title>GraphWrite Demo</title>') : html,
     },
   ],
   // Don't clear the screen so Tauri's CLI output stays visible during dev.

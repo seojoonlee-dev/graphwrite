@@ -24,10 +24,8 @@ export function TintedImage({
     backgroundColor: tintColor,
     WebkitMaskImage: `url(${resolved})`,
     maskImage: `url(${resolved})`,
-    
     WebkitMaskSize: 'contain',
     maskSize: 'contain',
-    
     WebkitMaskPosition: 'center',
     maskPosition: 'center',
     WebkitMaskRepeat: 'no-repeat',

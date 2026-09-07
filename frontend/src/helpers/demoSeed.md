@@ -1,5 +1,5 @@
 # Welcome to GraphWrite
-This is a demo note. Everything you write here is saved locally in your browser, so feel free to edit, delete, and create notes — your changes stay on this device.
+This is a demo note. Everything you write here is saved locally in your browser, so feel free to edit, delete, and create notes. Your changes stay on this device.
 This note shows off every feature GraphWrite currently supports (version 0.1.0).
 
 ## Architecture
@@ -57,24 +57,24 @@ console.log(greet("mom"));
 Visit the [GraphWrite website](https://graphwrite.app) to learn more.
 
 ## Connected notes
-GraphWrite links notes together with wikilinks. Type two square brackets around a name to link to another note — for example [[Ideas]] or [[Tasks]]. Click a wikilink to jump to that note, or to create it if it doesn't exist yet. The graph view shows how all your notes connect.
+GraphWrite links notes together with wikilinks. Type two square brackets around a name to link to another note, for example [[Ideas]] or [[Tasks]]. Click a wikilink to jump to that note, or to create it if it doesn't exist yet. The graph view shows how all your notes connect.
 
 ## Dividers
-Break up a long note with a horizontal rule — three dashes on their own line:
+Break up a long note with a horizontal rule: three dashes on their own line:
 
 ---
 
 ## Make it yours
 Open **Settings** (the gear icon, top left) to tweak things:
 
-- **Appearance** — switch between Dark, AMOLED Black, Light, or a fully custom color palette; pick a font; scale the whole interface with Screen zoom (desktop & mobile apps); and toggle *Align editor to the center* for a focused, column layout.
-- **General** — set a startup note that opens automatically, and clear your recent-notes history.
-- **Misc** — choose the vibration strength for haptic feedback (touch devices).
+- **Appearance**: switch between Dark, AMOLED Black, Light, or a fully custom color palette; pick a font; scale the whole interface with Screen zoom (desktop & mobile apps); and toggle *Align editor to the center* for a focused, column layout.
+- **General**: set a startup note that opens automatically, and clear your recent-notes history.
+- **Misc**: choose the vibration strength for haptic feedback (touch devices).
 
 When no note is open you land on the **Start screen**, with quick actions and your recently opened notes.
 
 ## Everywhere
-GraphWrite runs in the browser, as a desktop app, and on Android — with mobile touches like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
+GraphWrite runs in the browser, as a desktop app, and on Android, with mobile touches like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
 
 ---
 That's everything currently supported. Happy (graph) writing!

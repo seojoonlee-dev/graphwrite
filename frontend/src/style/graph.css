@@ -5,7 +5,7 @@
 }
 
 /* Nodes are small hollow dots; the label lives outside the dot (see below).
-   No shadows/transitions — flat and responsive on WebKitGTK. */
+   No shadows/transitions, so it stays flat and responsive on WebKitGTK. */
 .react-flow__node.graph-node {
   width: 11px;
   height: 11px;
@@ -138,8 +138,8 @@
   opacity: 0;
 }
 
-/* The dot stacks two 6px handles — target on its left edge, source on its right
-   — which natively leaves a ~5px strip dead-centre that starts no drag. Extend
+/* The dot stacks two 6px handles (target on its left edge, source on its right),
+   which natively leaves a ~5px strip dead-centre that starts no drag. Extend
    each grab zone vertically (tall target) and INWARD toward the dot's centre so
    the two together blanket the whole 11px dot: a drag out of any pixel now
    starts a connection. Extending only inward (per-side, via React Flow's

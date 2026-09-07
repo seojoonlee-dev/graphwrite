@@ -1,6 +1,6 @@
 // Android's webview inflates rendered text (font auto-sizing / system font
 // scale) without resizing em/rem-based elements, so the header icon buttons end
-// up tiny next to the note text — and no static CSS unit can match, because text
+// up tiny next to the note text, and no static CSS unit can match, because text
 // and layout are on different scaling tracks. We can't disable the inflation
 // from CSS (text-size-adjust doesn't reach it here), so instead we *measure* how
 // much text is actually inflated and expose it as the --text-scale variable; the

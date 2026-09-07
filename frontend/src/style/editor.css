@@ -40,8 +40,7 @@ a:hover {
   display: flex;
   align-items: baseline;
   /* The divider lives on the title's last row (path/save), so it sits snug under
-     the title text on both desktop and the mobile overlay — replacing the old
-     in-flow <hr>. Breathing room above (padding) and below (margin) the line;
+     the title text on both desktop and the mobile overlay. Breathing room above (padding) and below (margin) the line;
      the auto-hide overlay resets both to keep its 80px height budget. */
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
@@ -88,9 +87,8 @@ a:hover {
    inline --title-transition var) so it tracks the scroll 1:1.
 
    Gated by the .title-autohide class (rendered onto .l-app from React state while
-   the feature is enabled), NOT a media query — so a future setting can switch it
-   on for desktop/web without touching this CSS. Today it's enabled on phones only,
-   so the effective scope is unchanged. The class is React-owned (not toggled
+   the feature is enabled), NOT a media query, so the user setting controls it on
+   every platform. The class is React-owned (not toggled
    imperatively) so a re-render of .l-app can't strip it; the per-scroll position
    rides on inline --title-* vars, which survive re-renders. */
 .title-autohide .editor {
@@ -98,7 +96,7 @@ a:hover {
 }
 
 /* The overlay title is sized to exactly match the 80px reserved content padding
-   (see min-height below) — keep the divider spacing at its old compact values so
+   (see min-height below). Keep the divider spacing at its old compact values so
    the wider desktop spacing above doesn't push the overlay past that budget. */
 .title-autohide .editor-meta {
   padding-bottom: 5px;
@@ -219,7 +217,7 @@ a:hover {
 
 /* NOTE: no vertical margins here. CodeMirror's height map measures each line's
    border box (margins excluded), so margins on .cm-line desync the cursor/click
-   coordinate mapping — the error accumulates with every code block above, making
+   coordinate mapping. The error accumulates with every code block above, making
    clicks and arrow up/down land off-target. The former 12px margins are folded
    into padding (24px), which CM does measure, keeping the same visual footprint. */
 .cm-line.cm-code-block-first {
@@ -284,8 +282,8 @@ a:hover {
   cursor: text;
 }
 
-/* Separate (not collapsed) borders so the table can take a border-radius — a
-   collapsed border model ignores it. To avoid the doubled lines that separate
+/* Separate (not collapsed) borders so the table can take a border-radius (a
+   collapsed border model ignores it). To avoid the doubled lines that separate
    borders normally produce, each cell draws only its right + bottom edge and
    the first column / header row supply the missing outer left / top edges. */
 .cm-md-table {
@@ -377,8 +375,7 @@ a:hover {
 }
 
 /* Invalid-filename hint. Sits in the metadata row in place of the save
-   indicator, matching its type and dot separator — just tinted clay so it
-   reads as a gentle warning rather than the prototype's bare red text. */
+   indicator, matching its type and dot separator. */
 .editor-error {
   flex-shrink: 0;
   color: var(--warning);

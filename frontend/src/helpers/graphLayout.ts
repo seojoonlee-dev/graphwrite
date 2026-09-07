@@ -1,7 +1,7 @@
 import { type Node, type Edge, Position } from '@xyflow/react';
 
 // Synthetic root every top-level note hangs off, so the graph is one tree.
-// Not a real path — handlers treat it as the top level ('').
+// Not a real path. Handlers treat it as the top level ('').
 export const GRAPH_ROOT_ID = '__notes_root__';
 
 // Nodes render as small dots with their labels outside, so layout only needs the
@@ -24,7 +24,7 @@ export function getLayoutedElements(files: string[]) {
     const parts = noExtPath.split('/');
 
     if (parts.length > 1 && parts[parts.length - 1] === parts[parts.length - 2]) {
-      parts.pop(); 
+      parts.pop();
     }
 
     let currentPath = '';
@@ -41,7 +41,6 @@ export function getLayoutedElements(files: string[]) {
           data: {
             label: `${part}`,
             filePath: isFinalNode ? fullPath : undefined,
-            isRoot: index === 0,
           },
           position: { x: 0, y: 0 },
           type: 'fileNode',
@@ -114,7 +113,7 @@ export function getLayoutedElements(files: string[]) {
   childrenOf.forEach((kids) => kids.sort((a, b) => labelOf(a).localeCompare(labelOf(b))));
 
   // Layered tidy-tree layout (Reingold–Tilford style). The data is a strict tree
-  // — every node reaches the synthetic root through exactly one parent — so we
+  // (every node reaches the synthetic root through exactly one parent), so we
   // place it directly: x by depth, and y by packing leaves top-to-bottom while
   // centring each branch on its outermost children. Unlike a force-directed layout
   // this can't open gaps between siblings: every leaf takes the next row, and a

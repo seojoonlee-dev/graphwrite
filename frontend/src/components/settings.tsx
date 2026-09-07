@@ -44,10 +44,9 @@ import '../style/settings.css';
 // server address setting is irrelevant there.
 const isDemo = import.meta.env.VITE_STORAGE === 'indexeddb';
 
-// Vibration only applies to touch devices, so the setting is hidden elsewhere.
 // The Vibration setting drives the native haptics plugin, which only exists in
 // mobile Tauri builds and only does anything on devices with a vibration motor:
-// Android (phones/tablets) and iPhone — not iPad, not desktop Tauri, and never
+// Android (phones/tablets) and iPhone. Not iPad, not desktop Tauri, and never
 // the web build. iPad's WebView reports "iPad" (or masquerades as desktop), so
 // the iPhone-only check leaves it out either way.
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
@@ -60,8 +59,7 @@ const isPhone = window.matchMedia('(max-width: 600px) and (pointer: coarse)').ma
 
 const isTauriEnv = isTauri();
 
-// --- Section registry -----------------------------------------------------
-// Single source of truth for both the sidebar nav and the global search. Each
+// Section registry: the single source of truth for both the sidebar nav and the global search. Each
 // settings block is a `<Section id>`; the matching entry here supplies its
 // title (rendered as the heading + the sidebar label), the keywords search
 // looks through, and whether it's available on this device/build at all.
@@ -401,7 +399,7 @@ export function Settings({ to }: SettingsProps) {
   const searching = q.length > 0;
 
   // A section renders when it's available AND either matches the search (search
-  // is global, across every category) or — with no search — belongs to the
+  // is global, across every category) or, with no search, belongs to the
   // category currently selected in the sidebar.
   const matches = useCallback(
     (id: string) => {

@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchFilesList, loadFile, saveFile, saveFileOnUnload, renameFile, moveFile, createFile, deleteFile } from '@notesApi';
 import { toFilePath, nameOf } from '../helpers/paths';
-import { migrateSavedPositions, setSavedPosition } from '../helpers/graphStorage';
 
 const PENDING_SAVE_KEY = 'pendingSave';
 
@@ -27,7 +26,6 @@ export function useNotes() {
   const pendingSaveRef = useRef<{ filePath: string; content: string } | null>(null);
   const inFlightSaveRef = useRef<Promise<void> | null>(null);
 
-  // fetch
   const fetchFiles = useCallback(async () => {
     try {
       const data = await fetchFilesList();
@@ -48,7 +46,6 @@ export function useNotes() {
     fetchFiles();
   }, [fetchFiles]);
 
-  // autosave
   const flushPendingSave = useCallback(async () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = null;
@@ -73,7 +70,7 @@ export function useNotes() {
     if (inFlightSaveRef.current) await inFlightSaveRef.current;
   }, []);
 
-  // load
+  // Restore a save that a reload interrupted (stashed by the beforeunload handler below).
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(PENDING_SAVE_KEY);
@@ -86,11 +83,10 @@ export function useNotes() {
         flushPendingSave().catch(err => console.error('Autosave failed:', err));
       }
     } catch {
-      // Corrupt or unavailable sessionStorage — nothing to restore.
+      // Corrupt or unavailable sessionStorage, nothing to restore.
     }
   }, [flushPendingSave]);
 
-  // load
   useEffect(() => {
     let cancelled = false;
 
@@ -150,7 +146,7 @@ export function useNotes() {
     if (!filePath) return;
     pendingSaveRef.current = { filePath, content: newContent };
     cacheRef.current[filePath] = newContent;
-    // Don't flip to 'saving' on every keystroke — flushPendingSave sets it once
+    // Don't flip to 'saving' on every keystroke. flushPendingSave sets it once
     // the debounce timer fires and the write actually starts.
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -163,7 +159,6 @@ export function useNotes() {
     debouncedSave(newContent);
   }, [debouncedSave]);
 
-  // save
   const saveCurrentFile = useCallback(async (): Promise<boolean> => {
     if (!filePath) return false;
 
@@ -183,7 +178,6 @@ export function useNotes() {
     }
   }, [filePath, content]);
 
-  // rename
   const handleRenameFile = useCallback(async (dirPath: string | undefined, newTitle: string): Promise<boolean> => {
     if (!dirPath || !newTitle.trim()) return false;
     const targetFilePath = toFilePath(dirPath);
@@ -201,7 +195,6 @@ export function useNotes() {
         if (targetFilePath === filePath) {
           cacheRef.current[toFilePath(data.filePath)] = content;
         }
-        migrateSavedPositions(dirPath, data.filePath);
         await fetchFiles();
         if (parsedFilePath === dirPath) {
           navigate(`/${data.filePath}`);
@@ -240,7 +233,6 @@ export function useNotes() {
         if (targetFilePath === filePath) {
           cacheRef.current[toFilePath(data.filePath)] = content;
         }
-        migrateSavedPositions(dirPath, data.filePath);
         await fetchFiles();
         if (parsedFilePath === dirPath) {
           navigate(`/${data.filePath}`);
@@ -256,21 +248,18 @@ export function useNotes() {
     }
   }, [filePath, content, parsedFilePath, navigate, fetchFiles, flushPendingSave]);
 
-  // create
   // opts.keepView leaves the current view in place (the graph creates notes
-  // without jumping to the editor); opts.position pins the new node where it was
-  // dropped, set before the refresh so the graph lays it out there.
+  // without jumping to the editor).
   const handleCreateFile = useCallback(async (
     path: string,
     filename?: string,
-    opts?: { keepView?: boolean; position?: { x: number; y: number } },
+    opts?: { keepView?: boolean },
   ): Promise<string | null> => {
     try {
       const data = await createFile(path, filename);
 
       if (data.success) {
         cacheRef.current[data.filePath] = '';
-        if (opts?.position) setSavedPosition(data.filePath, opts.position);
         await fetchFiles();
         if (!opts?.keepView) navigate(`/${data.filePath}`);
         return data.filePath;
@@ -284,7 +273,6 @@ export function useNotes() {
     return null;
   }, [navigate, fetchFiles]);
 
-  // delete
   // opts.keepView: when the deleted note is the active one we navigate home, but
   // pass a router flag so the caller's view (e.g. the graph) can stay put instead
   // of being kicked back to the editor/start screen.
@@ -313,7 +301,7 @@ export function useNotes() {
     }
   }, [filePath, navigate, fetchFiles, discardPendingSave]);
 
-  // flush unsaved changes when the tab closes
+  // Flush unsaved changes when the tab closes.
   useEffect(() => {
     const handleBeforeUnload = () => {
       const pending = pendingSaveRef.current;
@@ -323,7 +311,7 @@ export function useNotes() {
       try {
         sessionStorage.setItem(PENDING_SAVE_KEY, JSON.stringify(pending));
       } catch {
-        // sessionStorage unavailable (e.g. private mode) — best-effort only.
+        // sessionStorage unavailable (e.g. private mode), best-effort only.
       }
       saveFileOnUnload(pending.filePath, pending.content);
     };

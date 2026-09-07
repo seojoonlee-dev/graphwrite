@@ -9,7 +9,7 @@ type LongPressHandlers = Record<string, TouchHandler>;
 //
 // Pass `capture: true` when an ancestor swallows touch events during the
 // bubble phase (e.g. ReactFlow/d3-drag calls stopImmediatePropagation on
-// node touchstart) — capture-phase handlers run before that happens.
+// node touchstart). Capture-phase handlers run before that happens.
 export function useLongPress(ms = 500) {
   const timer = useRef<number | null>(null);
   const start = useRef<{ x: number, y: number } | null>(null);

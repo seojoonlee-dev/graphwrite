@@ -60,9 +60,9 @@ export const createFile = async (currentPath: string, fileName?: string) => {
   const response = await fetch(`${getServerIp()}/api/create`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ currentPath: currentPath || '', fileName }), 
+    body: JSON.stringify({ currentPath: currentPath || '', fileName }),
   });
-  
+
   const data = await response.json();
 
   if (!response.ok && response.status !== 409) {

@@ -5,7 +5,7 @@
 // Theming works through CSS custom properties (see :root in app.css). A theme is
 // a preset (dark/light) plus optional per-token overrides; applySettings() pushes
 // the effective values onto :root. Syntax-highlight colors and code-block
-// surfaces are intentionally NOT themed here — they stay dark in every theme.
+// surfaces are intentionally NOT themed here. They stay dark in every theme.
 import '@fontsource/domine/latin-400.css';
 import '@fontsource/domine/latin-700.css';
 
@@ -154,7 +154,7 @@ export interface Settings {
 const KEY = 'graphwrite-settings';
 
 // Phones default to the auto-hiding title (screen height is scarce); desktop/web
-// default it off. Only the default differs by device — once the user toggles it,
+// default it off. Only the default differs by device. Once the user toggles it,
 // the stored value wins everywhere.
 const isPhone =
   typeof window !== 'undefined' &&
@@ -162,11 +162,10 @@ const isPhone =
 
 const DEFAULTS: Settings = {
   font: 'Domine',
-  // Empty = land on the Start screen (the demo used to auto-open the sample note).
+  // Empty = land on the Start screen.
   startupNote: '',
   theme: 'dark',
   colors: {},
-  // Default to the original full-width editor layout.
   centerEditor: false,
   tableRounded: true,
   // Title bar slides away on scroll-down, peeks back on scroll-up. On by default
@@ -188,7 +187,7 @@ export const loadSettings = (): Settings => {
 type Listener = () => void;
 const listeners = new Set<Listener>();
 // Notified after any settings change so non-React consumers (the CodeMirror
-// editor) can react — e.g. re-pick code highlighting when the theme changes.
+// editor) can react, e.g. re-pick code highlighting when the theme changes.
 export const subscribe = (listener: Listener): (() => void) => {
   listeners.add(listener);
   return () => {

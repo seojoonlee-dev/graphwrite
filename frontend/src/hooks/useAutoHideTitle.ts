@@ -7,15 +7,15 @@ const TITLE_ZONE_PX = 80;
 
 // Net scroll distance (px) in one direction before the title toggles. Deltas are
 // accumulated, so a smooth scroll built from many tiny sub-threshold events still
-// trips it — that fragmentation (browsers emit far more, far smaller scroll events
-// than Android's WebView) was why the old fixed per-event comparison missed.
+// trips it (browsers emit far more, far smaller scroll events than Android's
+// WebView).
 const HIDE_AFTER = 12;
 const SHOW_AFTER = 12;
 
 // A scroll counts as user-driven if a real input device (wheel / touch) acted
 // within this window OR the scroll is part of a continuous stream (see below).
-// Programmatic one-offs — the cursor scrolled into view while typing, a
-// scroll-into-view on navigation — get neither, so they never flip the title.
+// Programmatic one-offs (the cursor scrolled into view while typing, a
+// scroll-into-view on navigation) get neither, so they never flip the title.
 const INPUT_WINDOW_MS = 700;
 
 // Touch inertia fires NO touch events, so the input window above can't be relied
@@ -26,7 +26,7 @@ const INPUT_WINDOW_MS = 700;
 const SCROLL_GAP_MS = 200;
 
 interface Options {
-  /** Master switch — when false the controller detaches and the title is pinned. */
+  /** Master switch: when false the controller detaches and the title is pinned. */
   enabled: boolean;
   /** Changes on view/route change; resets the controller and re-pins the title. */
   resetKey: string;
@@ -44,7 +44,7 @@ interface Options {
  *
  * Input-agnostic by design: direction is read from scroll deltas and gated by a
  * recent-input timestamp, so it works identically for touch, mouse wheel and
- * trackpad — and is ready to be switched on for desktop/web behind a setting.
+ * trackpad.
  */
 export function useAutoHideTitle(
   scrollRef: RefObject<HTMLElement | null>,
@@ -54,7 +54,7 @@ export function useAutoHideTitle(
   const shownRef = useRef(true); // is the title currently revealed?
   // Scroll extremes since the last toggle: the highest point reached (lowest
   // scrollTop) and the deepest (highest scrollTop). The title toggles on travel
-  // measured from these, not from the previous event — see onScroll.
+  // measured from these, not from the previous event (see onScroll).
   const highRef = useRef(0);
   const lowRef = useRef(0);
   const lastInputAt = useRef(0); // timestamp (perf clock) of the last real input
@@ -115,7 +115,7 @@ export function useAutoHideTitle(
       const now = performance.now();
       // User-driven if a real input fired recently OR this scroll continues an
       // unbroken stream (an active drag or its inertia). The stream test is what
-      // covers momentum once the input window lapses — without it, the tail of a
+      // covers momentum once the input window lapses. Without it, the tail of a
       // long flick was misread as programmatic, collapsing the anchors every frame
       // so the title could never reach its hide threshold mid-scroll.
       const userDriven =
@@ -126,7 +126,7 @@ export function useAutoHideTitle(
         // not from the previous event. An extreme only moves when the scroll
         // genuinely pushes past it, so the small opposite-direction jitter that
         // accompanies a rapid reversal (and momentum being cancelled) can't reset
-        // the progress — it just fails to beat the extreme and is ignored. Deltas
+        // the progress. It just fails to beat the extreme and is ignored. Deltas
         // still accumulate naturally because the extreme stays put across a stream
         // of tiny same-direction events.
         if (top < highRef.current) highRef.current = top; // pushed higher (scroll up)
@@ -160,7 +160,7 @@ export function useAutoHideTitle(
         // Top zone, revealed / at rest: pin the title at the very top.
         render(0, false);
       } else {
-        // Past the zone: pure overlay — peek in on scroll-up, hide on scroll-down.
+        // Past the zone: pure overlay. Peek in on scroll-up, hide on scroll-down.
         render(shownRef.current ? 0 : -zone, false);
       }
     };

@@ -7,7 +7,7 @@ import { type BuildRanges, viewportCachedDecorations } from '../helpers/decorati
 
 // Live Preview: hide the markdown syntax markers and let syntaxHighlighting
 // render the formatting inline. Markers on the line(s) the cursor/selection
-// touches are revealed so they stay editable — the core Obsidian behavior.
+// touches are revealed so they stay editable, the core Obsidian behavior.
 // Links and wikilinks additionally get a clickable mark carrying their target;
 // the click handler lives in the editor (see editor.tsx).
 
@@ -81,7 +81,7 @@ class CodeHeaderWidget extends WidgetType {
   }
 }
 
-// --- GFM table rendering -------------------------------------------------
+// GFM table rendering.
 // A markdown table (parsed by the GFM extension as a `Table` node) is replaced
 // by a real, GitHub-style <table> when the cursor isn't inside it. Put the
 // cursor on any of its lines and the raw pipe source comes back for editing.
@@ -275,7 +275,7 @@ class TableWidget extends WidgetType {
 }
 
 // Block decorations (the rendered table replaces a run of lines, changing the
-// document's vertical layout) may not come from a view plugin — CodeMirror only
+// document's vertical layout) may not come from a view plugin: CodeMirror only
 // accepts them from a state field that feeds the decorations facet directly. So
 // tables live in their own field, separate from the inline live-preview plugin.
 //
@@ -308,7 +308,7 @@ function buildTableDecorations(state: EditorState, focused: boolean): Decoration
   const builder = new RangeSetBuilder<Decoration>();
   const { doc } = state;
 
-  // Lines (1-based) the selection touches — a table covering any of them shows
+  // Lines (1-based) the selection touches. A table covering any of them shows
   // its raw source for editing. Empty when blurred, so nothing stays open.
   const active = new Set<number>();
   if (focused) {
@@ -355,7 +355,7 @@ const tableField = StateField.define<DecorationSet>({
   provide: (f) => EditorView.decorations.from(f),
 });
 
-// Lines (1-based) touched by any selection range — markers here stay visible.
+// Lines (1-based) touched by any selection range, where markers stay visible.
 // When the editor isn't focused there is no active line, so everything renders
 // as preview (no stray markers on reload or after clicking away).
 function activeLines(view: EditorView): Set<number> {
@@ -549,7 +549,7 @@ function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet 
 }
 
 // Cached (see decorationCache): rebuilt when the doc/parse/selection/focus
-// changes or the viewport escapes the padded build range — NOT on the
+// changes or the viewport escapes the padded build range, NOT on the
 // geometry-only viewport updates that fire every frame of a sidebar resize.
 const livePreviewPlugin = viewportCachedDecorations(buildDecorations, { selection: true, focus: true });
 

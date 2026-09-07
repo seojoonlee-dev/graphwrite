@@ -46,13 +46,13 @@
 GraphWrite is a self-hosted, no-bs, customizable, lightweight note taking app with live-preview markdown editing. No AI, no encryption, no grammar checking, no telemetry, no bloat. Just good old note taking.
 
 > [!TIP]
-> Try GraphWrite right now in your browser — no account, nothing to install: **[graphwrite.app/demo](https://graphwrite.app/demo)**
+> Try GraphWrite right now in your browser. No account, nothing to install: **[graphwrite.app/demo](https://graphwrite.app/demo)**
 
 Notes in GraphWrite branch into child notes, so your whole collection forms a tree, and the graph view shows you that tree so you can see how everything connects rather than scrolling a flat list. Your notes are stored as plain markdown files on disk, so they are yours to grep, back up, or take elsewhere at any time.
 
 ## Why GraphWrite
 
-GraphWrite is built around one idea: your notes are connected, so you should be able to see how. Any note can branch into child notes, so a collection grows into a tree instead of a flat, scrolling list — and the graph view draws that tree so you can navigate it visually instead of hunting through folders.
+GraphWrite is built around one idea: your notes are connected, so you should be able to see how. Any note can branch into child notes, so a collection grows into a tree instead of a flat, scrolling list, and the graph view draws that tree so you can navigate it visually instead of hunting through folders.
 
 Everything else stays out of the way. Your notes are plain markdown files you own, there is no account and nothing leaves your machine, and the app is small by design: it reuses the webview already on your system instead of bundling a browser engine, ships a tiny native binary, and keeps the backend down to Express plus a couple hundred lines of code.
 
@@ -71,14 +71,14 @@ The layout is generated automatically as a tidy left-to-right tree (each note ce
 - Right click a node for file actions.
 - Drag a branch (edge) onto another note to re-parent it, or right-click an edge to detach a note back to the top level.
 - Drag outward from a node onto empty canvas to create a child note there.
-- Search to highlight the path to any note — matches light up in the accent color, with a soft glow bleeding onto the neighboring branches.
+- Search to highlight the path to any note. Matches light up in the accent color, with a soft glow bleeding onto the neighboring branches.
 
 The graph is rendered with React Flow.
 
 ## Features
 
 - **Branching notes.** Inspired by a literal tree, any note can contain child notes, so your notes form a tree instead of a flat list. The sidebar shows the full hierarchy with inline renaming, collapsing, and a context menu (right-click on desktop, long-press on mobile).
-- **Live-preview markdown editing.** Markdown renders inline as you type, and the syntax markers hide until you need them — no formatting toolbar, just plain markdown. Headings, bold/italic/strikethrough, inline and fenced code (syntax-highlighted, with a copy button), lists, blockquotes, links, and horizontal rules are all supported. Built on CodeMirror.
+- **Live-preview markdown editing.** Markdown renders inline as you type, and the syntax markers hide until you need them. No formatting toolbar, just plain markdown. Headings, bold/italic/strikethrough, inline and fenced code (syntax-highlighted, with a copy button), lists, blockquotes, links, and horizontal rules are all supported. Built on CodeMirror.
 - **Wiki links.** Type `[[name]]` to create a link inside your note. Clicking it opens the child note with that name, creating it first if it does not exist yet. This makes branching a new note off the one you are writing as simple as naming it. Links are stored as plain `[[name]]` text in the markdown file.
 - **Themes and appearance.** Built-in Dark, AMOLED Black and Light themes, a fully custom color palette, several fonts, and interface zoom, all in Settings. Optionally center the editor in a column for a more focused layout.
 - **Cross-platform.** Use GraphWrite in the browser, on the desktop, or on mobile. The mobile apps add niceties like an auto-hiding title bar, a bottom-sheet menu, and haptic feedback.
@@ -101,7 +101,7 @@ The graph is rendered with React Flow.
 > [!NOTE]
 > I am planning on releasing it on the AUR and even Flatpak for linux.
 
-All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also run more than one backend and switch between them — changing the server address takes a moment in Settings.
+All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also run more than one backend and switch between them. Changing the server address takes a moment in Settings.
 
 ## Quick Start
 
@@ -260,7 +260,7 @@ The desktop and mobile apps live in the `frontend/` directory and are built with
 
 ## Contributing
 
-Contributions are absolutely welcome. Bug reports, feature ideas, and pull requests all help — open an [issue](https://github.com/seojoonlee-dev/graphwrite/issues) to discuss anything substantial before you start so we do not both build the same thing.
+Contributions are absolutely welcome. Bug reports, feature ideas, and pull requests all help. Open an [issue](https://github.com/seojoonlee-dev/graphwrite/issues) to discuss anything substantial before you start so we do not both build the same thing.
 
 The repo is a few separate pieces:
 
@@ -274,12 +274,12 @@ The repo is a few separate pieces:
 Run the backend and the frontend dev server side by side:
 
 ```
-# Terminal 1 — backend (serves on port 3001)
+# Terminal 1: backend (serves on port 3001)
 cd backend
 npm install
 node server.js
 
-# Terminal 2 — frontend (dev server on port 5173)
+# Terminal 2: frontend (dev server on port 5173)
 cd frontend
 npm install
 npm run dev
@@ -289,7 +289,7 @@ The frontend talks to `http://localhost:3001` by default; you can point it at an
 
 ### Guidelines
 
-- **Keep it lightweight.** GraphWrite is deliberately small — no telemetry, no AI, no heavy dependencies. New dependencies should earn their place.
+- **Keep it lightweight.** GraphWrite is deliberately small: no telemetry, no AI, no heavy dependencies. New dependencies should earn their place.
 - **Match the surrounding code.** Follow the existing style and naming; run `npm run lint` in `frontend/` before opening a PR.
 - **Keep PRs focused.** One change per pull request makes review easier.
 

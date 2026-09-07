@@ -1,9 +1,9 @@
 import { type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
 
-// The decoration plugins used to rebuild on every viewportChanged update. That
-// is correct but wasteful: CodeMirror reports a viewport change for pure
-// geometry shifts too — most notably every frame of the sidebar's width
+// Rebuilding decorations on every viewportChanged update is correct but
+// wasteful: CodeMirror reports a viewport change for pure
+// geometry shifts too, most notably every frame of the sidebar's width
 // transition, where line wrapping changes line heights and therefore the
 // viewport's document range. Each of those frames re-iterated the syntax tree
 // in three plugins, on top of the unavoidable native re-layout, which the
@@ -11,7 +11,7 @@ import { syntaxTree } from '@codemirror/language';
 //
 // Instead, decorations are built over the viewport plus PAD characters of
 // slack on each side and kept until the viewport actually escapes the covered
-// range — or the doc, parse, selection or focus genuinely invalidates them.
+// range, or the doc, parse, selection or focus genuinely invalidates them.
 // Keeping them across geometry-only updates is safe because decoration
 // positions only depend on the document, which hasn't changed.
 

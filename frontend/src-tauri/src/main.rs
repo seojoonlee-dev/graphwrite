@@ -9,7 +9,7 @@ fn main() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
 
     // Native <select> popups are drawn by GTK using the system theme, not page
-    // CSS — force a dark theme so the dropdown isn't white-on-white in our dark
+    // CSS. Force a dark theme so the dropdown isn't white-on-white in our dark
     // UI. Respect an explicit user override if one is already set.
     if std::env::var_os("GTK_THEME").is_none() {
       std::env::set_var("GTK_THEME", "Adwaita:dark");

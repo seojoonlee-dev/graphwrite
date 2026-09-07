@@ -38,8 +38,8 @@
 
 /* Semantic color tokens (dark preset defaults). Overridden at runtime by
    applySettings() in settings.ts based on the chosen theme / custom colors.
-   Code-block surfaces and syntax-highlight colors are intentionally not tokens —
-   they stay dark in every theme. */
+   Code-block surfaces and syntax-highlight colors are intentionally not tokens.
+   They stay dark in every theme. */
 :root {
   --bg: #282828;
   --bg-secondary: #1e1e1e;
@@ -78,7 +78,7 @@ body {
   font-family: var(--app-font, 'Times New Roman', Times, serif);
   /* Kill the Android webview's tap/long-press highlight box on UI elements
      (e.g. long-pressing a file row for its context menu). Doesn't affect real
-     text selection — the editor's CodeMirror text stays selectable. */
+     text selection. The editor's CodeMirror text stays selectable. */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -90,7 +90,7 @@ button {
   cursor: pointer;
 }
 
-/* Base link color lives here (eager) rather than only in editor.css — otherwise
+/* Base link color lives here (eager) rather than only in editor.css. Otherwise
    sidebar links render in the browser's default purple/blue until the lazy
    editor chunk loads and applies its own `a` rule. */
 a {
@@ -200,7 +200,7 @@ hr {
    The real fix is `pointer-events: none` on the main content below: WebKitGTK
    (the desktop build) deliberately IGNORES user-select:none inside a
    contenteditable, so no amount of user-select stops the CodeMirror editor from
-   selecting — but with the content inert to hit-testing there's simply no target
+   selecting, but with the content inert to hit-testing there's simply no target
    for a selection to form in as it re-wraps. The drag handle lives in .l-sidebar
    (not .l-main), so it stays interactive, and the move handler reads the captured
    pointer's clientX, so the drag is unaffected.
@@ -254,7 +254,7 @@ body.resizing-sidebar .l-main {
     width: calc(100dvw / var(--zoom, 1));
     /* Base on the large-viewport height (lvh), which ignores the on-screen
        keyboard, then subtract the keyboard's height so views shrink to sit above
-       it. The VirtualKeyboard API (app.tsx) keeps the keyboard overlaying — that's
+       it. The VirtualKeyboard API (app.tsx) keeps the keyboard overlaying, which is
        what exposes env(keyboard-inset-height); it's 0 when the keyboard is closed.
        dvh stays as a fallback for webviews without lvh support. */
     height: calc((100dvh - env(keyboard-inset-height, 0px)) / var(--zoom, 1));
@@ -262,8 +262,8 @@ body.resizing-sidebar .l-main {
   }
 
   /* The editor alone ignores the keyboard (it overlays the text instead of
-     reflowing the layout while typing); every other view — graph, settings,
-     start — keeps the inset subtraction above so the keyboard pushes content up. */
+     reflowing the layout while typing); every other view (graph, settings,
+     start) keeps the inset subtraction above so the keyboard pushes content up. */
   .l-app.editor-active {
     height: calc(100dvh / var(--zoom, 1));
     height: calc(100lvh / var(--zoom, 1));
@@ -274,12 +274,12 @@ body.resizing-sidebar .l-main {
     height: 100%;
   }
 
-  /* Header buttons on touch devices. The real bug: the header is a flex row with
-     the default align-items:stretch + flex-shrink:1, so the buttons were
-     stretched tall and crushed narrow — sizing the icon did nothing. Fix: don't
-     shrink (flex:none) and give an explicit square size (explicit height beats
-     stretch). --btn-size scales with the measured text inflation so the buttons
-     keep pace with the text; box-sizing keeps the square true with padding. */
+  /* Header buttons on touch devices. The header is a flex row, so the default
+     align-items:stretch + flex-shrink:1 would stretch the buttons tall and crush
+     them narrow (sizing the icon alone does nothing). Don't shrink (flex:none)
+     and give an explicit square size (explicit height beats stretch). --btn-size
+     scales with the measured text inflation so the buttons keep pace with the
+     text; box-sizing keeps the square true with padding. */
   :root {
     /* Square button, scaled by the measured text inflation. Sized so the icon
        (~1.5em after the padding below) stays the same while the surrounding tap
@@ -293,7 +293,7 @@ body.resizing-sidebar .l-main {
        transform; applied as padding on content so the app background still fills
        the screen behind the nav bar. */
     --safe-bottom: calc(env(safe-area-inset-bottom, 0px) / var(--zoom, 1) + 12px);
-    /* App-wide left/right gutter on phones — tighter than desktop to reclaim
+    /* App-wide left/right gutter on phones, tighter than desktop to reclaim
        horizontal space. Drives every top-level screen's side inset below. */
     --app-gutter: 12px;
   }
@@ -302,7 +302,7 @@ body.resizing-sidebar .l-main {
     align-items: center;
   }
 
-  /* Pull the major screens in to the shared gutter (was 20–28px each).
+  /* Pull the major screens in to the shared gutter.
      !important because the editor / settings / start-screen styles ship in
      lazy-loaded chunks that inject AFTER app.css, so their own margin/padding
      shorthands would otherwise win the cascade at equal specificity. */
@@ -321,7 +321,7 @@ body.resizing-sidebar .l-main {
     margin-left: var(--app-gutter) !important;
     margin-right: var(--app-gutter) !important;
   }
-  /* Sidebar links are plain text too — give them the wider gutter so they don't
+  /* Sidebar links are plain text too, so give them the wider gutter so they don't
      hug the edge. */
   .sidebar-content {
     padding-left: calc(var(--app-gutter) + 8px) !important;
@@ -334,10 +334,8 @@ body.resizing-sidebar .l-main {
     padding-right: calc(var(--app-gutter) + 8px) !important;
   }
 
-  /* Scoped under .l-header to outrank the base `.btn-header { width: 1.75em }`
-     rule, which is later in the file and was overriding the mobile width (that's
-     why the buttons went tall but never wide). width == height == one value, so
-     they're a guaranteed square. */
+  /* Scoped under .l-header to outrank the base .btn-header width rule later in
+     the file. width == height == one value, so they're a guaranteed square. */
   .l-header .btn-header {
     box-sizing: border-box;
     flex: none;
@@ -370,7 +368,7 @@ body.resizing-sidebar .l-main {
 /* Phones only: the sidebar becomes a full-screen overlay rather than a resizable
    panel (tablets are wider, desktops aren't coarse). The inline width is
    overridden with !important; the drag handle is removed so the sidebar can't be
-   resized — it's either full width or hidden. */
+   resized: it's either full width or hidden. */
 @media (max-width: 600px) and (pointer: coarse) {
   .l-sidebar {
     /* Overlay on top of the main view instead of pushing it aside. */
@@ -385,7 +383,7 @@ body.resizing-sidebar .l-main {
     width: 100% !important;
   }
 
-  /* Full-screen overlay sidebar sits at the screen edge — drop its right border. */
+  /* Full-screen overlay sidebar sits at the screen edge, so drop its right border. */
   .sidebar-content,
   .l-sidebar::before {
     border-right: none;
@@ -408,8 +406,8 @@ body.resizing-sidebar .l-main {
 
 .btn-header {
   /* Explicit square (em-based, so it scales with text/zoom). An explicit height
-     beats the flex row's default stretch, and flex:none stops it being squeezed
-     — the icon then fills it via the .tinted-image rule below. Mobile overrides
+     beats the flex row's default stretch, and flex:none stops it being squeezed.
+     The icon then fills it via the .tinted-image rule below. Mobile overrides
      these with the measured --btn-size via the higher-specificity
      `.l-header .btn-header` rules. */
   display: flex;
@@ -463,7 +461,7 @@ body.resizing-sidebar .l-main {
   background-color: var(--bg);
 }
 
-/* Hover only on real pointing devices — on iOS, :hover styles cause the
+/* Hover only on real pointing devices. On iOS, :hover styles cause the
    first tap to just reveal hover instead of activating the link. */
 @media (hover: hover) {
   .file-tree-node:hover {
@@ -542,7 +540,7 @@ body.resizing-sidebar .l-main {
 
 /* Out of flow (absolute) so it doesn't reserve width and shrink the name's room
    while invisible. It's only revealed on hover/active rows, whose background is
-   var(--bg) — the chip matches it, so it cleanly caps a long (ellipsed) name. */
+   var(--bg). The chip matches it, so it cleanly caps a long (ellipsed) name. */
 .btn-add {
   position: absolute;
   right: 2px;
@@ -692,7 +690,7 @@ body.resizing-sidebar .l-main {
     background-color: var(--bg-secondary);
   }
 
-  /* Exit animations (mobile only — desktop closes instantly). */
+  /* Exit animations (mobile only, desktop closes instantly). */
   .context-menu-backdrop.is-closing {
     animation: context-fade-out 0.19s ease forwards;
   }
@@ -721,7 +719,7 @@ body.resizing-sidebar .l-main {
 }
 
 /* Connection/load failure notice. Plain wrapping text to match the sidebar's
-   minimal file list — a clay heading signals the problem, muted detail below.
+   minimal file list: a clay heading signals the problem, muted detail below.
    white-space:normal is required because .l-sidebar forces nowrap. */
 .sidebar-notice {
   margin: 0 4px 8px 0;
