@@ -1,6 +1,6 @@
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { type EditorState, type Extension, RangeSet, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
 import { ARROWS, ARROW_RE } from './arrows';
 import { type BuildRanges, viewportCachedDecorations } from '../helpers/decorationCache';
@@ -378,10 +378,53 @@ function childrenByName(node: SyntaxNode) {
   return out;
 }
 
+const rawLinkMark = Decoration.mark({ class: 'cm-link-raw' });
+
+// Strip the optional <angle brackets> around a link destination.
+const linkHref = (s: string): string => (s.startsWith('<') && s.endsWith('>') ? s.slice(1, -1) : s);
+
+// CommonMark label matching: case-insensitive, with runs of whitespace collapsed.
+const normalizeLabel = (s: string): string => s.trim().replace(/\s+/g, ' ').toLowerCase();
+
+// Block containers a [label]: url definition can sit inside. Anything else is
+// skipped without descending, so this walk stays cheap on a long document.
+const DEFINITION_CONTAINERS = new Set(['Document', 'Blockquote', 'BulletList', 'OrderedList', 'ListItem']);
+
+// Every [label]: url definition in the document, keyed by normalized label. The
+// first definition of a label wins, as in CommonMark. Collected from the whole
+// tree (not just the build range) so a link resolves against a definition
+// anywhere in the note, and rebuilt with the decorations, which already refresh
+// as the incremental parse advances.
+function collectLinkDefinitions(state: EditorState): Map<string, string> {
+  const defs = new Map<string, string>();
+  const { doc } = state;
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name === 'LinkReference') {
+        const kids = childrenByName(node.node);
+        const label = kids.LinkLabel?.[0];
+        const url = kids.URL?.[0];
+        if (label && url) {
+          const key = normalizeLabel(doc.sliceString(label.from + 1, label.to - 1));
+          if (!defs.has(key)) defs.set(key, linkHref(doc.sliceString(url.from, url.to)));
+        }
+        return false;
+      }
+      return DEFINITION_CONTAINERS.has(node.name);
+    },
+  });
+  return defs;
+}
+
 function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet {
   const builder = new RangeSetBuilder<Decoration>();
   const active = activeLines(view);
   const { doc } = view.state;
+  const defs = collectLinkDefinitions(view.state);
+  // Line decorations for [label]: url definitions. Kept in their own builder
+  // because a definition inside a list item or blockquote starts after that
+  // line's marker decoration, so adding at line start would be out of order.
+  const refLines = new RangeSetBuilder<Decoration>();
 
   for (const { from, to } of ranges) {
     syntaxTree(view.state).iterate({
@@ -390,25 +433,46 @@ function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet 
       enter: (node) => {
         const onActiveLine = active.has(doc.lineAt(node.from).number);
 
-        // Standard link: [text](url) -> show "text" only, clickable.
+        // Link: inline [text](url), or a reference form ([text], [text][] and
+        // [text][label]) that resolves through a [label]: url definition. Shows
+        // "text" only, clickable. A reference that doesn't resolve is plain text,
+        // exactly as CommonMark renders it, so a bare [text] or a half-typed
+        // [[wikilink] never looks like a link.
         if (node.name === 'Link') {
-          if (!onActiveLine) {
-            const kids = childrenByName(node.node);
-            const marks = kids.LinkMark ?? [];
-            const url = kids.URL?.[0];
-            const open = marks[0];
-            const close = marks[1];
-            if (open && close && url && open.to < close.from) {
-              const href = doc.sliceString(url.from, url.to);
-              builder.add(open.from, open.to, hidden);
-              builder.add(
-                open.to,
-                close.from,
-                Decoration.mark({ class: 'cm-link', attributes: { 'data-href': href } }),
-              );
-              builder.add(close.from, node.to, hidden);
-            }
+          const kids = childrenByName(node.node);
+          const marks = kids.LinkMark ?? [];
+          const open = marks[0];
+          const close = marks[1];
+          if (!open || !close || open.to >= close.from) return false;
+
+          let href: string | undefined;
+          const url = kids.URL?.[0];
+          if (url) {
+            href = linkHref(doc.sliceString(url.from, url.to));
+          } else {
+            // Full form carries its label in [label]; collapsed ([]) and shortcut
+            // forms use the link text itself.
+            const label = kids.LinkLabel?.[0];
+            const key = label && label.to - label.from > 2
+              ? doc.sliceString(label.from + 1, label.to - 1)
+              : doc.sliceString(open.to, close.from);
+            href = defs.get(normalizeLabel(key));
           }
+          if (href === undefined) return false;
+
+          if (onActiveLine) {
+            // Raw source stays visible; style it as a link but don't make the
+            // whole span clickable, or editing it would open the URL.
+            builder.add(node.from, node.to, rawLinkMark);
+            return false;
+          }
+          builder.add(open.from, open.to, hidden);
+          builder.add(
+            open.to,
+            close.from,
+            Decoration.mark({ class: 'cm-link', attributes: { 'data-href': href } }),
+          );
+          builder.add(close.from, node.to, hidden);
           return false;
         }
 
@@ -437,6 +501,18 @@ function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet 
         // layout). It's produced by `tableField` instead; here we only skip the
         // node so its cells don't get inline markers applied underneath.
         if (node.name === 'Table') {
+          return false;
+        }
+
+        // [label]: url definition. Rendered markdown never shows these, so the
+        // line is dimmed (see .cm-link-ref) but left editable in place.
+        if (node.name === 'LinkReference') {
+          const startLine = doc.lineAt(node.from).number;
+          const endLine = doc.lineAt(Math.max(node.from, node.to - 1)).number;
+          for (let ln = startLine; ln <= endLine; ln++) {
+            const line = doc.line(ln);
+            refLines.add(line.from, line.from, Decoration.line({ class: 'cm-link-ref' }));
+          }
           return false;
         }
 
@@ -545,7 +621,7 @@ function buildDecorations(view: EditorView, ranges: BuildRanges): DecorationSet 
       },
     });
   }
-  return builder.finish();
+  return RangeSet.join([builder.finish(), refLines.finish()]);
 }
 
 // Cached (see decorationCache): rebuilt when the doc/parse/selection/focus

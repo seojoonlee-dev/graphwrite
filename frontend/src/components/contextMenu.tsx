@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { nameOf } from '../helpers/paths';
 import { getVibrationMs } from '../helpers/settings';
 import { vibrate } from '../helpers/haptics';
+import { useClampToViewport } from '../hooks/useClampToViewport';
 
 interface ContextMenuProps {
   x: number;
@@ -56,12 +57,18 @@ export function ContextMenu({ x, y, path, onClose, onRename, onDelete, onCreate 
 
   const cls = (base: string) => `${base}${closing ? ' is-closing' : ''}`;
 
+  // Desktop popup: keep it inside the window when opened near an edge. The
+  // mobile sheet is positioned by CSS and needs no correction.
+  const menuRef = useRef<HTMLDivElement>(null);
+  useClampToViewport(menuRef, x, y, !isMobile);
+
   // Portaled to <body> so the scrim/sheet sit above everything (the sidebar's
   // stacking context would otherwise trap them below the header on mobile).
   return createPortal(
     <>
       <div className={cls('context-menu-backdrop')} onClick={close} />
       <div
+        ref={menuRef}
         className={cls('context-menu')}
         style={isMobile ? undefined : { top: y, left: x }}
         onClick={(e) => e.stopPropagation()}

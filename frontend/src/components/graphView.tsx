@@ -7,6 +7,7 @@ import { ContextMenu } from './contextMenu';
 import { loadSavedViewport, saveViewport, loadSavedSearch, saveSearch } from '../helpers/graphStorage';
 import { validateRename } from '../helpers/paths';
 import { useLongPress } from '../hooks/useLongPress';
+import { useClampToViewport } from '../hooks/useClampToViewport';
 import '@xyflow/react/dist/style.css';
 import '../style/graph.css';
 
@@ -290,6 +291,9 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
   // of that node at the drop point.
   const connectSourceRef = useRef<string | null>(null);
   const [connectMenu, setConnectMenu] = useState<{ x: number; y: number; sourceId: string } | null>(null);
+  // Keep the desktop popup on screen when the drop lands near a window edge.
+  const connectMenuRef = useRef<HTMLDivElement>(null);
+  useClampToViewport(connectMenuRef, connectMenu?.x ?? 0, connectMenu?.y ?? 0, !!connectMenu && !isMobile);
 
   const handleConnectStart = useCallback((_event: unknown, params: OnConnectStartParams) => {
     // Record which node the drag came out of. A node is a single visible dot but
@@ -389,6 +393,7 @@ export const GraphView: React.FC<GraphViewProps> = ({ files, onNodeClick, onNode
             onClick={() => setConnectMenu(null)}
           />
           <div
+            ref={connectMenuRef}
             className="context-menu"
             style={isMobile ? undefined : { top: connectMenu.y, left: connectMenu.x }}
           >

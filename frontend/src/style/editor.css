@@ -358,9 +358,23 @@ a:hover {
   color: var(--text-muted);
 }
 
-/* Clickable rendered links and wikilinks */
+/* Rendered links. Color lives here rather than on the parser's Link node so only
+   links that resolve to a URL are styled; .cm-link-raw is the same look for the
+   still-editable source on the active line, minus the click. */
+.cm-link,
+.cm-link-raw {
+  color: #7aa2f7;
+  text-decoration: underline;
+}
+
 .cm-link {
   cursor: pointer;
+}
+
+/* [label]: url definition lines: dimmed, since rendered markdown never shows
+   them, but left in place so the URL stays editable. */
+.cm-link-ref {
+  opacity: 0.65;
 }
 
 .cm-wikilink {

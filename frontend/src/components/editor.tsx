@@ -9,6 +9,7 @@ import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { livePreview } from '../extensions/livePreview';
 import { arrows } from '../extensions/arrows';
+import { wrapSelection } from '../extensions/wrapSelection';
 import { WikiLink } from '../extensions/wikiLink';
 import { effectiveColors, subscribe } from '../helpers/settings';
 import { openExternal } from '../helpers/openExternal';
@@ -51,7 +52,10 @@ const markdownHighlight = HighlightStyle.define([
   { tag: t.emphasis, fontStyle: 'italic' },
   { tag: t.strikethrough, textDecoration: 'line-through' },
   { tag: t.monospace, fontFamily: "'Fira Code', 'Courier New', monospace" },
-  { tag: [t.link, t.url], color: '#7aa2f7', textDecoration: 'underline' },
+  // No t.link rule: the parser tags a bare [text] as a (reference) Link whether
+  // or not a definition exists, so link styling comes from the live preview's
+  // cm-link marks, which only land on links that resolve to a URL.
+  { tag: t.url, color: '#7aa2f7', textDecoration: 'underline' },
   { tag: t.quote, color: '#9aaab0', fontStyle: 'italic' },
   { tag: [t.processingInstruction, t.meta], color: '#6f6f6f' },
 ]);
@@ -213,6 +217,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
           codeHlRef.current.of(codeHighlight()),
           livePreview,
           arrows,
+          wrapSelection,
           // Draw the cursor/selection ourselves instead of relying on the native
           // caret, which Firefox misplaces in an empty doc (it ends up above the
           // first line, clipped by the scroller). The drawn cursor is positioned
