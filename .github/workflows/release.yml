@@ -4,9 +4,11 @@
 #   1. A draft GitHub Release whose notes are the tag's section of CHANGELOG.md.
 #   2. Desktop installers: Linux (deb, rpm, AppImage), Windows (msi, nsis exe),
 #      macOS (dmg for Apple Silicon and Intel).
-#   3. The Android APK, if the signing secrets are configured.
-#   4. Docker images for the backend and frontend, if the Docker Hub secrets
+#   3. Docker images for the backend and frontend, if the Docker Hub secrets
 #      are configured.
+#
+# The Android APK is not built here: scripts/release.sh builds it locally with
+# the signing key on this machine and uploads it to the same draft release.
 #
 # The release stays a draft so the notes and assets can be checked before it
 # goes public. scripts/release.sh drives the whole thing from a terminal.
@@ -18,9 +20,7 @@
 # as environment secrets (on that page), not repository secrets, so they only
 # exist inside approved runs.
 #
-# Secrets (all optional):
-#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
-#   ANDROID_KEY_PASSWORD               sign the APK (job is skipped without them)
+# Secrets (optional):
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN push the images (job is skipped without them)
 #
 # The macOS dmg is unsigned (see RELEASING.md).
@@ -164,102 +164,6 @@ jobs:
           tauriScript: npm run tauri
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
-
-  android:
-    name: Android
-    needs: create-release
-    environment: release
-    runs-on: ubuntu-latest
-    env:
-      NDK_VERSION: 27.2.12479018
-    steps:
-      - name: Check for signing secrets
-        id: signing
-        env:
-          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$KEYSTORE" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set; skipping the Android build."
-          fi
-
-      - uses: actions/checkout@v4
-        if: steps.signing.outputs.present == 'true'
-        with:
-          ref: ${{ env.TAG }}
-
-      - uses: actions/setup-node@v4
-        if: steps.signing.outputs.present == 'true'
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - uses: actions/setup-java@v4
-        if: steps.signing.outputs.present == 'true'
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - uses: android-actions/setup-android@v3
-        if: steps.signing.outputs.present == 'true'
-
-      - name: Install NDK
-        if: steps.signing.outputs.present == 'true'
-        run: sdkmanager --install "ndk;${NDK_VERSION}" "platforms;android-36" "build-tools;36.0.0"
-
-      - uses: dtolnay/rust-toolchain@stable
-        if: steps.signing.outputs.present == 'true'
-        with:
-          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
-
-      - uses: swatinem/rust-cache@v2
-        if: steps.signing.outputs.present == 'true'
-        with:
-          workspaces: frontend/src-tauri
-
-      - name: Install frontend dependencies
-        if: steps.signing.outputs.present == 'true'
-        working-directory: frontend
-        run: npm ci
-
-      - name: Write the signing keystore
-        if: steps.signing.outputs.present == 'true'
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          KEYSTORE="$RUNNER_TEMP/release.jks"
-          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
-          cat > frontend/src-tauri/gen/android/keystore.properties <<PROPS
-          storeFile=$KEYSTORE
-          storePassword=$KEYSTORE_PASSWORD
-          keyAlias=$KEY_ALIAS
-          keyPassword=$KEY_PASSWORD
-          PROPS
-
-      - name: Build the APK
-        if: steps.signing.outputs.present == 'true'
-        working-directory: frontend
-        run: NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION" npm run tauri android build -- --apk
-
-      - name: Upload the APK to the release
-        if: steps.signing.outputs.present == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.create-release.outputs.version }}
-        run: |
-          APK=$(find frontend/src-tauri/gen/android/app/build/outputs/apk -name '*-release.apk' | head -n1)
-          if [ -z "$APK" ]; then
-            echo "::error::No signed release APK was produced (found: $(find frontend/src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | tr '\n' ' '))"
-            exit 1
-          fi
-          cp "$APK" "GraphWrite_${VERSION}_android.apk"
-          gh release upload "$TAG" "GraphWrite_${VERSION}_android.apk" --clobber
 
   docker:
     name: Docker images
