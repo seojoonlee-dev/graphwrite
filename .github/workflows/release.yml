@@ -22,10 +22,8 @@
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
 #   ANDROID_KEY_PASSWORD               sign the APK (job is skipped without them)
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN push the images (job is skipped without them)
-#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
-#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
-#                                      sign + notarize the macOS build; without
-#                                      them the dmg is unsigned (see RELEASING.md)
+#
+# The macOS dmg is unsigned (see RELEASING.md).
 
 name: Release
 
@@ -155,13 +153,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS signing + notarization; ignored (unsigned build) when unset.
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # No APPLE_* variables here: the macOS build is unsigned. Passing an
+          # unset secret sets the variable to "", and Tauri then tries to import
+          # an empty certificate and fails the bundle step.
         with:
           projectPath: frontend
           tauriScript: npm run tauri
