@@ -113,8 +113,13 @@ const codeHighlight = () =>
 const editorTheme = EditorView.theme({
   '&': { color: 'var(--text)', backgroundColor: 'transparent', height: '100%' },
   '&.cm-focused': { outline: 'none' },
-  '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', overscrollBehavior: 'none', paddingBottom: '50vh' },
-  '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px' },
+  '.cm-scroller': { fontFamily: 'inherit', lineHeight: '1.5', overflow: 'auto', overscrollBehavior: 'none' },
+  // The half-screen of room below the last line is padding on the content
+  // element, not the scroller, so it is part of the editable surface: a click
+  // there lands in CodeMirror's own mouse handling and puts the cursor on the
+  // last line, the same as clicking past the end of any line. Padding on the
+  // scroller would be dead space that swallows the click.
+  '.cm-content': { caretColor: 'var(--text)', paddingRight: '10px', paddingBottom: '50vh' },
   // Shrink CodeMirror's default 6px left line padding so the body text (and the
   // placeholder) lines up with the title/path column above. Keep 2px so the
   // drawn cursor (drawSelection) isn't clipped at the content edge on the first
