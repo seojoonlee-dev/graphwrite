@@ -1,11 +1,14 @@
-FROM node:22-alpine AS build
+# The build stage only produces static files, so it runs on the build
+# machine's own architecture; only the nginx stage below is per-platform.
+# Without this, a multi-arch build compiles the frontend under arm64
+# emulation, which takes half an hour or more.
+FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 
-RUN npm run build 
-
+RUN npm run build
 
 FROM nginx:alpine
 
