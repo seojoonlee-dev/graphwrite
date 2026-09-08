@@ -92,8 +92,8 @@ The graph is rendered with React Flow.
 | Linux | ✅ Supported |
 | Windows | ✅ Supported |
 | Android | ✅ Supported |
-| macOS | 🚧 In progress |
-| iOS | 🚧 In progress |
+| macOS | 🚧 Un tested |
+| iOS | 🛠️ In progress |
 
 > [!NOTE]
 > Android app is not on Google Play Store just yet. You can download and install the apk in the Release tab.
