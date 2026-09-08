@@ -36,6 +36,11 @@ on:
         description: 'Existing tag to build (e.g. v0.1.2)'
         required: true
         type: string
+      platforms:
+        description: 'Comma-separated subset of linux,windows,macos,docker to build'
+        required: false
+        default: 'linux,windows,macos,docker'
+        type: string
 
 permissions:
   contents: write
@@ -51,7 +56,32 @@ jobs:
     outputs:
       release_id: ${{ steps.release.outputs.id }}
       version: ${{ steps.version.outputs.version }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      desktop: ${{ steps.plan.outputs.desktop }}
+      docker: ${{ steps.plan.outputs.docker }}
     steps:
+      # Which platforms to build. A tag push builds everything; a manual run can
+      # name a subset, which scripts/release.sh uses to fill in only what a
+      # draft release is missing.
+      - name: Plan the builds
+        id: plan
+        env:
+          PLATFORMS: ${{ inputs.platforms || 'linux,windows,macos,docker' }}
+        run: |
+          MATRIX=$(jq -c --arg p ",$PLATFORMS," '{include: [.[] | select(.key as $k | $p | contains("," + $k + ","))]}' <<'JSON'
+          [
+            {"key": "linux",   "name": "Linux x64",           "os": "ubuntu-22.04",   "args": "--bundles deb rpm appimage"},
+            {"key": "windows", "name": "Windows x64",         "os": "windows-latest", "args": "--bundles msi nsis"},
+            {"key": "macos",   "name": "macOS Apple Silicon", "os": "macos-latest",   "args": "--target aarch64-apple-darwin --bundles dmg", "rust_target": "aarch64-apple-darwin"},
+            {"key": "macos",   "name": "macOS Intel",         "os": "macos-latest",   "args": "--target x86_64-apple-darwin --bundles dmg",  "rust_target": "x86_64-apple-darwin"}
+          ]
+          JSON
+          )
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "desktop=$([ "$(jq '.include | length' <<< "$MATRIX")" -gt 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "docker=$([[ ",$PLATFORMS," == *,docker,* ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "building: $PLATFORMS"
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.TAG }}
@@ -102,25 +132,10 @@ jobs:
   desktop:
     name: Desktop (${{ matrix.name }})
     needs: create-release
-    environment: release
+    if: needs.create-release.outputs.desktop == 'true'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Linux x64
-            os: ubuntu-22.04
-            args: --bundles deb rpm appimage
-          - name: Windows x64
-            os: windows-latest
-            args: --bundles msi nsis
-          - name: macOS Apple Silicon
-            os: macos-latest
-            args: --target aarch64-apple-darwin --bundles dmg
-            rust_target: aarch64-apple-darwin
-          - name: macOS Intel
-            os: macos-latest
-            args: --target x86_64-apple-darwin --bundles dmg
-            rust_target: x86_64-apple-darwin
+      matrix: ${{ fromJSON(needs.create-release.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -168,7 +183,7 @@ jobs:
   docker:
     name: Docker images
     needs: create-release
-    environment: release
+    if: needs.create-release.outputs.docker == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check for Docker Hub secrets
