@@ -11,7 +11,14 @@
 # The release stays a draft so the notes and assets can be checked before it
 # goes public. scripts/release.sh drives the whole thing from a terminal.
 #
-# Secrets (Settings > Secrets and variables > Actions), all optional:
+# Every build job runs in the "release" environment. Configure that environment
+# (Settings > Environments) with yourself as a required reviewer: the jobs then
+# wait for your approval in the Actions UI, so nobody else can produce release
+# assets or reach the secrets, even with write access. Keep the secrets below
+# as environment secrets (on that page), not repository secrets, so they only
+# exist inside approved runs.
+#
+# Secrets (all optional):
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
 #   ANDROID_KEY_PASSWORD               sign the APK (job is skipped without them)
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN push the images (job is skipped without them)
@@ -94,6 +101,7 @@ jobs:
   desktop:
     name: Desktop (${{ matrix.name }})
     needs: create-release
+    environment: release
     strategy:
       fail-fast: false
       matrix:
@@ -163,6 +171,7 @@ jobs:
   android:
     name: Android
     needs: create-release
+    environment: release
     runs-on: ubuntu-latest
     env:
       NDK_VERSION: 27.2.12479018
@@ -258,6 +267,7 @@ jobs:
   docker:
     name: Docker images
     needs: create-release
+    environment: release
     runs-on: ubuntu-latest
     steps:
       - name: Check for Docker Hub secrets
