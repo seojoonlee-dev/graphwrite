@@ -32,3 +32,6 @@ website/
 *.sln
 *.sw?
 .claude
+# Local release tooling (not published)
+scripts/release.sh
+RELEASING.md

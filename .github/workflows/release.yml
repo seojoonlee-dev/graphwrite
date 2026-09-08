@@ -1,0 +1,313 @@
+# Release pipeline. Runs when a v* tag is pushed (or by hand from the Actions
+# tab for an existing tag) and produces everything a release needs:
+#
+#   1. A draft GitHub Release whose notes are the tag's section of CHANGELOG.md.
+#   2. Desktop installers: Linux (deb, rpm, AppImage), Windows (msi, nsis exe),
+#      macOS (dmg for Apple Silicon and Intel).
+#   3. The Android APK, if the signing secrets are configured.
+#   4. Docker images for the backend and frontend, if the Docker Hub secrets
+#      are configured.
+#
+# The release stays a draft so the notes and assets can be checked before it
+# goes public. scripts/release.sh drives the whole thing from a terminal.
+#
+# Secrets (Settings > Secrets and variables > Actions), all optional:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
+#   ANDROID_KEY_PASSWORD               sign the APK (job is skipped without them)
+#   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN push the images (job is skipped without them)
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+#   APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID
+#                                      sign + notarize the macOS build; without
+#                                      them the dmg is unsigned (see RELEASING.md)
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build (e.g. v0.1.2)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
+  DOCKER_NAMESPACE: seojoonleedev
+
+jobs:
+  create-release:
+    name: Create draft release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Check the tag matches the app version
+        id: version
+        run: |
+          VERSION="${TAG#v}"
+          CONF=$(node -p "require('./frontend/src-tauri/tauri.conf.json').version")
+          if [ "$CONF" != "$VERSION" ]; then
+            echo "::error::tag is $TAG but tauri.conf.json says $CONF. Bump the version first."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v v="v$VERSION" '/^## /{p = ($2 == v)} p' CHANGELOG.md | tail -n +2 > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::error::CHANGELOG.md has no '## v$VERSION' section."
+            exit 1
+          fi
+          cat notes.md
+
+      - name: Create (or reuse) the draft release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+                 -q ".[] | select(.tag_name == \"$TAG\") | .id" | head -n1)
+          if [ -z "$ID" ]; then
+            ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" \
+                   -f tag_name="$TAG" -f name="GraphWrite $VERSION" \
+                   -F draft=true -F body=@notes.md -q .id)
+            echo "Created draft release $ID"
+          else
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F body=@notes.md > /dev/null
+            echo "Reusing release $ID (notes refreshed)"
+          fi
+          echo "id=$ID" >> "$GITHUB_OUTPUT"
+
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-22.04
+            args: --bundles deb rpm appimage
+          - name: Windows x64
+            os: windows-latest
+            args: --bundles msi nsis
+          - name: macOS Apple Silicon
+            os: macos-latest
+            args: --target aarch64-apple-darwin --bundles dmg
+            rust_target: aarch64-apple-darwin
+          - name: macOS Intel
+            os: macos-latest
+            args: --target x86_64-apple-darwin --bundles dmg
+            rust_target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: frontend/src-tauri
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build and upload installers
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS signing + notarization; ignored (unsigned build) when unset.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: frontend
+          tauriScript: npm run tauri
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: ${{ matrix.args }}
+
+  android:
+    name: Android
+    needs: create-release
+    runs-on: ubuntu-latest
+    env:
+      NDK_VERSION: 27.2.12479018
+    steps:
+      - name: Check for signing secrets
+        id: signing
+        env:
+          KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::ANDROID_KEYSTORE_BASE64 is not set; skipping the Android build."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.signing.outputs.present == 'true'
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-node@v4
+        if: steps.signing.outputs.present == 'true'
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - uses: actions/setup-java@v4
+        if: steps.signing.outputs.present == 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+        if: steps.signing.outputs.present == 'true'
+
+      - name: Install NDK
+        if: steps.signing.outputs.present == 'true'
+        run: sdkmanager --install "ndk;${NDK_VERSION}" "platforms;android-36" "build-tools;36.0.0"
+
+      - uses: dtolnay/rust-toolchain@stable
+        if: steps.signing.outputs.present == 'true'
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - uses: swatinem/rust-cache@v2
+        if: steps.signing.outputs.present == 'true'
+        with:
+          workspaces: frontend/src-tauri
+
+      - name: Install frontend dependencies
+        if: steps.signing.outputs.present == 'true'
+        working-directory: frontend
+        run: npm ci
+
+      - name: Write the signing keystore
+        if: steps.signing.outputs.present == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          KEYSTORE="$RUNNER_TEMP/release.jks"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE"
+          cat > frontend/src-tauri/gen/android/keystore.properties <<PROPS
+          storeFile=$KEYSTORE
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          PROPS
+
+      - name: Build the APK
+        if: steps.signing.outputs.present == 'true'
+        working-directory: frontend
+        run: NDK_HOME="$ANDROID_HOME/ndk/$NDK_VERSION" npm run tauri android build -- --apk
+
+      - name: Upload the APK to the release
+        if: steps.signing.outputs.present == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.create-release.outputs.version }}
+        run: |
+          APK=$(find frontend/src-tauri/gen/android/app/build/outputs/apk -name '*-release.apk' | head -n1)
+          if [ -z "$APK" ]; then
+            echo "::error::No signed release APK was produced (found: $(find frontend/src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | tr '\n' ' '))"
+            exit 1
+          fi
+          cp "$APK" "GraphWrite_${VERSION}_android.apk"
+          gh release upload "$TAG" "GraphWrite_${VERSION}_android.apk" --clobber
+
+  docker:
+    name: Docker images
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for Docker Hub secrets
+        id: creds
+        env:
+          USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -n "$USERNAME" ] && [ -n "$TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::DOCKERHUB_USERNAME / DOCKERHUB_TOKEN are not set; skipping the Docker images."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.present == 'true'
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: docker/setup-qemu-action@v3
+        if: steps.creds.outputs.present == 'true'
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.creds.outputs.present == 'true'
+
+      - uses: docker/login-action@v3
+        if: steps.creds.outputs.present == 'true'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push the backend image
+        if: steps.creds.outputs.present == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_NAMESPACE }}/graphwrite-backend:latest
+            ${{ env.DOCKER_NAMESPACE }}/graphwrite-backend:${{ needs.create-release.outputs.version }}
+
+      - name: Build and push the frontend image
+        if: steps.creds.outputs.present == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_NAMESPACE }}/graphwrite-frontend:latest
+            ${{ env.DOCKER_NAMESPACE }}/graphwrite-frontend:${{ needs.create-release.outputs.version }}
