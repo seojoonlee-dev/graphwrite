@@ -3,6 +3,51 @@
 All notable changes to GraphWrite are documented here.
 
 
+## v0.1.2 - 2026-09-07
+
+A bug-fix release with a few editor niceties.
+
+### Added
+
+- Arrows: `->`, `<-`, and `<->` render as →, ←, and ↔ in the editor and in
+  table cells. The file keeps the plain characters, and they reappear while
+  the cursor touches the arrow. Arrows inside code are left alone.
+- Reference-style links, as in CommonMark: `[text]`, `[text][]`, and
+  `[text][label]` resolve through a `[label]: url` definition anywhere in the
+  note and behave exactly like inline links. Definition lines are dimmed but
+  stay editable. A `[text]` with no definition is now plain text instead of
+  looking like a link.
+- Select text and press `[` to wrap it in brackets instead of replacing it.
+  The text stays selected, so pressing `[` again turns it into a `[[wikilink]]`.
+
+### Fixed
+
+- Typing a lone `-` under a paragraph no longer turns that paragraph into a
+  heading. Only `#` headings are recognised.
+- The cursor is no longer misplaced in an empty note on Firefox.
+- A half-typed `[[wikilink]` no longer flashes as a link before the closing
+  brackets are typed.
+- Context menus opened near the edge of the window (sidebar notes, graph
+  nodes, and the graph's drag-to-create popup) now stay fully on screen.
+- Dragging a connection out of a graph node now always offers "Create New
+  Note", regardless of which side of the node the drag started on.
+- Text can no longer get selected in the editor while resizing the sidebar,
+  including on the Linux desktop app, where the webview ignores the usual CSS
+  fix.
+- Clicking the empty space below the last line of a note now places the
+  cursor there, instead of doing nothing.
+- The editor's placeholder text is muted again.
+
+### Improved
+
+- Resizing the sidebar is much smoother: the editor no longer re-renders its
+  markdown decorations on every frame of the animation.
+- Graph nodes are easier to grab: a drag from any part of the dot starts a
+  connection.
+- Body text and the placeholder now line up with the note title.
+- More breathing room around the title divider on desktop.
+
+
 ## v0.1.1 - 2026-06-28
 
 A small bug-fix release.

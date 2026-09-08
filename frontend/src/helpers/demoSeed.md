@@ -1,6 +1,6 @@
 # Welcome to GraphWrite
 This is a demo note. Everything you write here is saved locally in your browser, so feel free to edit, delete, and create notes. Your changes stay on this device.
-This note shows off every feature GraphWrite currently supports (version 0.1.0).
+This note shows off every feature GraphWrite currently supports.
 
 ## Architecture
 Inspired by folder structures, GraphWrite saves files in a branching format. Each file can have a child file. Infinitely. You can add links to the child files like this [[child]].

@@ -1,6 +1,6 @@
 [package]
 name = "graphwrite"
-version = "0.1.1"
+version = "0.1.2"
 description = "GraphWrite desktop app"
 authors = ["you"]
 license = ""
