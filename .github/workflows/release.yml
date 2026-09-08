@@ -86,10 +86,10 @@ jobs:
           # Match by tag or by name: a draft can lose its tag between runs, in
           # which case the API reports it as "untagged-...".
           ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
-                 -q ".[] | select(.tag_name == \"$TAG\" or (.draft and .name == \"GraphWrite $VERSION\")) | .id" | head -n1)
+                 -q ".[] | select(.tag_name == \"$TAG\" or (.draft and .name == \"$TAG\")) | .id" | head -n1)
           if [ -z "$ID" ]; then
             ID=$(gh api "repos/$GITHUB_REPOSITORY/releases" \
-                   -f tag_name="$TAG" -f name="GraphWrite $VERSION" \
+                   -f tag_name="$TAG" -f name="$TAG" \
                    -F draft=true -F body=@notes.md -q .id)
             echo "Created draft release $ID"
           else
