@@ -19,12 +19,30 @@ export default defineConfig({
   base: process.env.VITE_BASE ?? '/',
   plugins: [
     react(),
-    // Give the hosted demo a distinct <title> (e.g. for a Google sitelink)
-    // without touching the shared index.html the desktop/mobile apps use.
+    // Give the hosted demo its own <title>, description and canonical URL
+    // (so Google indexes graphwrite.app/demo/ as a distinct page and can show
+    // it as a sitelink) without touching the shared index.html the
+    // desktop/mobile apps use.
     {
-      name: 'demo-title',
+      name: 'demo-head',
       transformIndexHtml: (html: string) =>
-        isDemo ? html.replace('<title>GraphWrite</title>', '<title>GraphWrite Demo</title>') : html,
+        isDemo
+          ? {
+              html: html.replace('<title>GraphWrite</title>', '<title>GraphWrite Demo</title>'),
+              tags: [
+                {
+                  tag: 'meta',
+                  attrs: {
+                    name: 'description',
+                    content:
+                      'Try GraphWrite in your browser: branching markdown notes with an interactive graph view. Runs entirely in your browser, nothing is uploaded.',
+                  },
+                  injectTo: 'head',
+                },
+                { tag: 'link', attrs: { rel: 'canonical', href: 'https://graphwrite.app/demo/' }, injectTo: 'head' },
+              ],
+            }
+          : html,
     },
   ],
   // Don't clear the screen so Tauri's CLI output stays visible during dev.
