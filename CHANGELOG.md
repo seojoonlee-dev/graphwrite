@@ -7,6 +7,9 @@ All notable changes to GraphWrite are documented here.
 
 A bug-fix release with a few editor niceties.
 
+> [!WARNING]
+> The macOS dmg is not signed or notarized with Apple. macOS refuses to open it with a "could not verify" dialog, and on macOS 15 Sequoia right-click > Open does not bypass it. Click Done, then open System Settings > Privacy & Security and click "Open Anyway" in the Security section, or run `xattr -dr com.apple.quarantine /Applications/GraphWrite.app`. See the README for details.
+
 ### Added
 
 - Arrows: `->`, `<-`, and `<->` render as →, ←, and ↔ in the editor and in

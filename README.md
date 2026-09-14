@@ -92,7 +92,7 @@ The graph is rendered with React Flow.
 | Linux | ✅ Supported |
 | Windows | ✅ Supported |
 | Android | ✅ Supported |
-| macOS | 🚧 Un tested |
+| macOS | ✅ Supported (unsigned. see below.) |
 | iOS | 🛠️ In progress |
 
 > [!NOTE]
@@ -100,6 +100,10 @@ The graph is rendered with React Flow.
 
 > [!NOTE]
 > I am planning on releasing it on the AUR and even Flatpak for linux.
+
+> [!NOTE]
+> The macOS app is not signed or notarized with Apple, so macOS shows a "could not verify" dialog and refuses to open it. To fix this, open System Settings > Privacy & Security, scroll down to the Security section, and click "Open Anyway" next to GraphWrite. Alternatively, clear the quarantine flag from a terminal:
+> Signing the build requires a paid Apple Developer account, which the project does not have yet.
 
 All clients talk to the same self-hosted backend, so your notes are the same everywhere. You can also run more than one backend and switch between them. Changing the server address takes a moment in Settings.
 
