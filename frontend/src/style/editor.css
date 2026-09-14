@@ -207,12 +207,30 @@ a:hover {
 
 /* Fenced code block: background box behind the lines.
    Selectors are .cm-line.cm-code-block so they outrank CodeMirror's own
-   .cm-line padding (same class count would otherwise let CM win). */
+   .cm-line padding (same class count would otherwise let CM win).
+
+   The box is painted by a ::before pseudo-element with a negative z-index, not a
+   background on the line itself. drawSelection() draws the selection in a layer
+   that sits BELOW .cm-content, so an opaque line background would cover it and
+   selected text inside a code block showed no highlight at all. A negative
+   z-index drops the pseudo-element to the bottom of the scroller's stacking
+   context, under the selection layer, while the text stays on top of both.
+   (drawSelection gives its layers small negative z-indexes, -2 for the
+   selection at the time of writing, so this goes comfortably below that.) */
 .cm-line.cm-code-block {
-  background-color: var(--code-bg);
+  position: relative;
   font-family: 'Fira Code', 'Courier New', Courier, monospace;
   padding-left: 16px;
   padding-right: 16px;
+}
+
+.cm-line.cm-code-block::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  background-color: var(--code-bg);
+  border-radius: inherit;
 }
 
 /* NOTE: no vertical margins here. CodeMirror's height map measures each line's
@@ -267,11 +285,21 @@ a:hover {
   filter: brightness(1.2);
 }
 
-/* Inline code chip */
+/* Inline code chip. Same ::before trick as the code block above so the
+   selection highlight shows through the chip. */
 .cm-inline-code {
-  background-color: var(--code-bg);
+  position: relative;
   border-radius: 4px;
   padding: 0.1em 0.35em;
+}
+
+.cm-inline-code::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -10;
+  background-color: var(--code-bg);
+  border-radius: inherit;
 }
 
 /* Rendered GFM table (live preview). Horizontal scroll keeps wide tables from

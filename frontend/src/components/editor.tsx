@@ -7,7 +7,7 @@ import { markdown, markdownLanguage, markdownKeymap } from '@codemirror/lang-mar
 import { languages } from '@codemirror/language-data';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
-import { livePreview } from '../extensions/livePreview';
+import { livePreview, syncFocus } from '../extensions/livePreview';
 import { arrows } from '../extensions/arrows';
 import { wrapSelection } from '../extensions/wrapSelection';
 import { WikiLink } from '../extensions/wikiLink';
@@ -138,6 +138,82 @@ const editorTheme = EditorView.theme({
   },
 });
 
+// Everything the editor state needs from the component. The callbacks are
+// read through refs so a state built once keeps seeing the latest props.
+interface StateDeps {
+  placeholder: string;
+  codeHl: Compartment;
+  onChange: () => (value: string) => void;
+  createFile: () => (value?: string) => void;
+}
+
+// One EditorState per note. Opening a note builds a fresh state rather than
+// swapping the text into the existing one, so the undo history (which lives in
+// the state) starts empty: with a shared state, Ctrl+Z right after opening a
+// note undid the "load" itself, bringing back the previous note's text, and
+// the update listener then autosaved that text into the current note.
+function createEditorState(doc: string, deps: StateDeps): EditorState {
+  return EditorState.create({
+    doc,
+    extensions: [
+      history(),
+      keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
+      // SetextHeading is removed: it makes a lone `-` under a paragraph turn
+      // that paragraph into a heading (a setext underline) while you're
+      // still about to type the first bullet of a list. `#` headings only.
+      markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [WikiLink, { remove: ['SetextHeading'] }] }),
+      syntaxHighlighting(markdownHighlight),
+      deps.codeHl.of(codeHighlight()),
+      livePreview,
+      arrows,
+      wrapSelection,
+      // Draw the cursor/selection ourselves instead of relying on the native
+      // caret, which Firefox misplaces in an empty doc (it ends up above the
+      // first line, clipped by the scroller). The drawn cursor is positioned
+      // from CodeMirror's own coordinates, which the placeholder widget
+      // supplies correctly.
+      drawSelection(),
+      EditorView.lineWrapping,
+      cmPlaceholder(deps.placeholder),
+      editorTheme,
+      // Click a rendered link to open it / a wikilink to create-or-open the note.
+      EditorView.domEventHandlers({
+        mousedown: (event) => {
+          const target = event.target as HTMLElement | null;
+          if (!target) return false;
+
+          const linkEl = target.closest('.cm-link');
+          if (linkEl) {
+            const href = linkEl.getAttribute('data-href') || '';
+            if (/^(https?:|mailto:)/i.test(href)) {
+              event.preventDefault();
+              openExternal(href);
+              return true;
+            }
+            return false;
+          }
+
+          const wikiEl = target.closest('.cm-wikilink');
+          if (wikiEl) {
+            const name = wikiEl.getAttribute('data-wikilink') || '';
+            if (name) {
+              event.preventDefault();
+              deps.createFile()(name);
+              return true;
+            }
+          }
+          return false;
+        },
+      }),
+      EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          deps.onChange()(update.state.doc.toString());
+        }
+      }),
+    ],
+  });
+}
+
 function Editor({ rawContent, onChange, placeholder = 'Start typing your note here...', title, onTitleChange, createFile, saveState, lastSavedAt }: EditorProps) {
   const { '*': parsedFilePath } = useParams();
 
@@ -157,8 +233,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   const prevFilePath = useRef(parsedFilePath);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  // Keep the latest callbacks without recreating the editor, and suppress the
-  // change event we fire ourselves when syncing external content in.
+  // Keep the latest callbacks without recreating the editor.
   const onChangeRef = useRef(onChange);
   const createFileRef = useRef(createFile);
   // Refresh the callback refs after each render rather than during it, so render
@@ -167,10 +242,24 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
     onChangeRef.current = onChange;
     createFileRef.current = createFile;
   });
-  const settingExternal = useRef(false);
   const awaitingLoad = useRef(false);
-  // Holds the code-syntax highlight style so it can be swapped on theme change.
-  const codeHlRef = useRef(new Compartment());
+  const stateDeps = useRef<StateDeps>({
+    placeholder,
+    // Holds the code-syntax highlight style so it can be swapped on theme change.
+    codeHl: new Compartment(),
+    onChange: () => onChangeRef.current,
+    createFile: () => createFileRef.current,
+  });
+
+  // Replace the editor's content with a note's text as a brand-new state (fresh
+  // undo history, see createEditorState). No update listener fires for this, so
+  // it never counts as a user edit. setState keeps DOM focus, but the live
+  // preview's focus mirror starts out false in a new state and no focus event
+  // will fire, so it's re-synced by hand.
+  const loadContent = (view: EditorView, doc: string) => {
+    view.setState(createEditorState(doc, stateDeps.current));
+    syncFocus(view);
+  };
 
   const invalidChars = /[\\/:*?"<>|]/;
 
@@ -209,65 +298,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
 
     const view = new EditorView({
       parent: containerRef.current,
-      state: EditorState.create({
-        doc: rawContent,
-        extensions: [
-          history(),
-          keymap.of([...markdownKeymap, ...defaultKeymap, ...historyKeymap, indentWithTab]),
-          // SetextHeading is removed: it makes a lone `-` under a paragraph turn
-          // that paragraph into a heading (a setext underline) while you're
-          // still about to type the first bullet of a list. `#` headings only.
-          markdown({ base: markdownLanguage, codeLanguages: languages, extensions: [WikiLink, { remove: ['SetextHeading'] }] }),
-          syntaxHighlighting(markdownHighlight),
-          codeHlRef.current.of(codeHighlight()),
-          livePreview,
-          arrows,
-          wrapSelection,
-          // Draw the cursor/selection ourselves instead of relying on the native
-          // caret, which Firefox misplaces in an empty doc (it ends up above the
-          // first line, clipped by the scroller). The drawn cursor is positioned
-          // from CodeMirror's own coordinates, which the placeholder widget
-          // supplies correctly.
-          drawSelection(),
-          EditorView.lineWrapping,
-          cmPlaceholder(placeholder),
-          editorTheme,
-          // Click a rendered link to open it / a wikilink to create-or-open the note.
-          EditorView.domEventHandlers({
-            mousedown: (event) => {
-              const target = event.target as HTMLElement | null;
-              if (!target) return false;
-
-              const linkEl = target.closest('.cm-link');
-              if (linkEl) {
-                const href = linkEl.getAttribute('data-href') || '';
-                if (/^(https?:|mailto:)/i.test(href)) {
-                  event.preventDefault();
-                  openExternal(href);
-                  return true;
-                }
-                return false;
-              }
-
-              const wikiEl = target.closest('.cm-wikilink');
-              if (wikiEl) {
-                const name = wikiEl.getAttribute('data-wikilink') || '';
-                if (name) {
-                  event.preventDefault();
-                  createFileRef.current(name);
-                  return true;
-                }
-              }
-              return false;
-            },
-          }),
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged && !settingExternal.current) {
-              onChangeRef.current(update.state.doc.toString());
-            }
-          }),
-        ],
-      }),
+      state: createEditorState(rawContent, stateDeps.current),
     });
     viewRef.current = view;
 
@@ -283,7 +314,7 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   useEffect(
     () =>
       subscribe(() => {
-        viewRef.current?.dispatch({ effects: codeHlRef.current.reconfigure(codeHighlight()) });
+        viewRef.current?.dispatch({ effects: stateDeps.current.codeHl.reconfigure(codeHighlight()) });
       }),
     [],
   );
@@ -296,22 +327,28 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
   // actually differs from the editor. This matters when the navigation came
   // from inside the editor (e.g. clicking a wikilink to create a note), where it
   // stays focused and the focus guard below would otherwise skip the load.
+  //
+  // The switch itself always rebuilds the state, even when the text happens to
+  // match (two empty notes, say): the point is a clean undo history per note,
+  // and equal text says nothing about the history behind it.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
 
+    const current = view.state.doc.toString();
+
     if (prevFilePath.current !== parsedFilePath) {
       prevFilePath.current = parsedFilePath;
       awaitingLoad.current = true;
+      loadContent(view, rawContent);
+      if (rawContent !== current) awaitingLoad.current = false;
+      return;
     }
 
-    const current = view.state.doc.toString();
     if (!awaitingLoad.current && (view.hasFocus || rawContent === current)) return;
 
     if (rawContent !== current) {
-      settingExternal.current = true;
-      view.dispatch({ changes: { from: 0, to: current.length, insert: rawContent } });
-      settingExternal.current = false;
+      loadContent(view, rawContent);
       awaitingLoad.current = false;
     }
   }, [rawContent, parsedFilePath]);

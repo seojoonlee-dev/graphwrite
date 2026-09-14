@@ -659,6 +659,15 @@ function buildQuoteDecorations(view: EditorView, ranges: BuildRanges): Decoratio
 // selection or focus, so only doc/parse/viewport changes rebuild them.
 const quoteLinePlugin = viewportCachedDecorations(buildQuoteDecorations);
 
+// Re-mirror the DOM focus into `focusedField`. Needed after the editor swaps in
+// a fresh EditorState (opening another note): the field starts out false and no
+// focus event fires, since the content element was focused all along.
+export function syncFocus(view: EditorView): void {
+  if (view.hasFocus !== view.state.field(focusedField)) {
+    view.dispatch({ effects: setFocused.of(view.hasFocus) });
+  }
+}
+
 // `focusedField` is listed before `tableField` so that, within a transaction,
 // `tableField.update` reads the already-updated focus value.
 export const livePreview: Extension = [focusedField, tableField, focusWatcher, livePreviewPlugin, quoteLinePlugin];
