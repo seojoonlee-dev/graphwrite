@@ -50,7 +50,7 @@ export interface ThemeTokens {
 export const TOKEN_LABELS: Record<keyof ThemeTokens, string> = {
   bg: 'Editor background',
   bgSecondary: 'Secondary background',
-  bgTertiary: 'Text slection highlight color',
+  bgTertiary: 'Text selection highlight',
   text: 'Text',
   textMuted: 'Muted text',
   border: 'Border',
@@ -78,11 +78,18 @@ export const TABLE_TOKEN_KEYS: (keyof ThemeTokens)[] = [
   'tableAltText',
 ];
 
+// Selection highlight shared by the presets: the accent (#e0a96d) with its
+// saturation roughly halved and at 40% opacity, so it reads as a soft tint of
+// the accent over any of the preset backgrounds instead of a solid block
+// competing with the text. 8-digit hex; the custom-color picker shows only the
+// opaque part and replaces it with an opaque color if changed.
+const SELECTION = '#c6a88766';
+
 export const PRESETS: Record<PresetName, ThemeTokens> = {
   dark: {
     bg: '#282828',
     bgSecondary: '#1e1e1e',
-    bgTertiary: '#5E5C64',
+    bgTertiary: SELECTION,
     text: '#FFF0E3',
     textMuted: '#9a928c',
     border: '#3a3a3a',
@@ -101,7 +108,7 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
   light: {
     bg: '#ffffff',
     bgSecondary: '#F7F6F3',
-    bgTertiary: '#e9e4dc',
+    bgTertiary: SELECTION,
     text: '#2b2824',
     textMuted: '#6e675f',
     border: '#ddd6cc',
@@ -120,7 +127,7 @@ export const PRESETS: Record<PresetName, ThemeTokens> = {
   black: {
     bg: '#000000',
     bgSecondary: '#000000',
-    bgTertiary: '#313133',
+    bgTertiary: SELECTION,
     text: '#FFFFFF',
     textMuted: '#9a928c',
     border: '#3a3a3a',

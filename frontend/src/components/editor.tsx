@@ -133,7 +133,11 @@ const editorTheme = EditorView.theme({
   // where typed text would, and the caret lines up with it.
   '.cm-placeholder': { display: 'inline', color: 'var(--text-muted)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+  // The selection color is the "Text selection highlight" theme token. The
+  // focused selector mirrors the base theme's own (five classes deep); a shorter
+  // one loses the cascade to CodeMirror's default lavender (#d7d4f0) whenever
+  // the editor has focus, which is exactly when a selection is being made.
+  '.cm-selectionBackground, &.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground': {
     backgroundColor: 'var(--bg-tertiary)',
   },
 });

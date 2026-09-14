@@ -263,7 +263,7 @@ function Appearance() {
             <div className='color-list'>
               {GENERAL_TOKEN_KEYS.map((key) => (
                 <label key={key} className='color-row'>
-                  <input type='color' value={colors[key]} onChange={changeColor(key)} />
+                  <input type='color' value={colors[key].slice(0, 7)} onChange={changeColor(key)} />
                   <span>{TOKEN_LABELS[key]}</span>
                 </label>
               ))}
@@ -274,7 +274,7 @@ function Appearance() {
             <div className='color-list'>
               {TABLE_TOKEN_KEYS.map((key) => (
                 <label key={key} className='color-row'>
-                  <input type='color' value={colors[key]} onChange={changeColor(key)} />
+                  <input type='color' value={colors[key].slice(0, 7)} onChange={changeColor(key)} />
                   <span>{TOKEN_LABELS[key]}</span>
                 </label>
               ))}
