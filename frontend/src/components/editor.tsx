@@ -8,6 +8,7 @@ import { languages } from '@codemirror/language-data';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { tags as t } from '@lezer/highlight';
 import { livePreview, syncFocus } from '../extensions/livePreview';
+import { findInNote, isFindShortcut, openFindPanel } from '../extensions/findPanel';
 import { arrows } from '../extensions/arrows';
 import { wrapSelection } from '../extensions/wrapSelection';
 import { WikiLink } from '../extensions/wikiLink';
@@ -171,6 +172,7 @@ function createEditorState(doc: string, deps: StateDeps): EditorState {
       livePreview,
       arrows,
       wrapSelection,
+      findInNote,
       // Draw the cursor/selection ourselves instead of relying on the native
       // caret, which Firefox misplaces in an empty doc (it ends up above the
       // first line, clipped by the scroller). The drawn cursor is positioned
@@ -306,7 +308,19 @@ function Editor({ rawContent, onChange, placeholder = 'Start typing your note he
     });
     viewRef.current = view;
 
+    // Ctrl/Cmd+F opens find-in-note from anywhere while a note is open (the
+    // editor's own keymap only sees it when the editor has focus), in place of
+    // the browser's page search. The editor keymap handles it first when it
+    // can; defaultPrevented skips the second run.
+    const onFindKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || !isFindShortcut(e)) return;
+      e.preventDefault();
+      openFindPanel(view);
+    };
+    document.addEventListener('keydown', onFindKey);
+
     return () => {
+      document.removeEventListener('keydown', onFindKey);
       view.destroy();
       viewRef.current = null;
     };

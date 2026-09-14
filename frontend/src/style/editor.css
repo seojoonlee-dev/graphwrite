@@ -431,3 +431,87 @@ a:hover {
   margin: 0 7px;
   color: var(--text-muted);
 }
+
+/* Find-in-note panel (Ctrl/Cmd+F). CodeMirror mounts panels in-flow above or
+   below the scroller; this floats it in the editor's bottom-right corner
+   instead so the text doesn't jump when it opens. Three-class selectors outrank
+   CodeMirror's own injected panel styles (two classes). */
+.editor .cm-editor .cm-panels {
+  position: absolute;
+  top: auto;
+  bottom: 16px;
+  right: 16px;
+  left: auto;
+  width: auto;
+  z-index: 3;
+  background: none;
+  border: none;
+  color: inherit;
+}
+
+.cm-find {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  font-family: var(--app-font, 'Times New Roman', Times, serif);
+  font-size: 0.9rem;
+}
+
+.cm-find-input {
+  width: 180px;
+  padding: 4px 8px;
+  background-color: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font: inherit;
+  outline: none;
+}
+
+.cm-find-input:focus {
+  border-color: var(--accent);
+}
+
+.cm-find-count {
+  min-width: 64px;
+  margin: 0 4px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cm-find-none .cm-find-count {
+  color: var(--accent);
+}
+
+.cm-find-btn {
+  padding: 2px 7px;
+  color: var(--text);
+  border-radius: 4px;
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.cm-find-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Search matches: accent tint, the current one stronger. The rgba lines are a
+   fallback for webviews without color-mix. */
+.editor .cm-editor .cm-searchMatch {
+  background-color: rgba(224, 169, 109, 0.3);
+  background-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 2px;
+}
+
+.editor .cm-editor .cm-searchMatch-selected {
+  background-color: rgba(224, 169, 109, 0.55);
+  background-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
