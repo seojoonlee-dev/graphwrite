@@ -57,7 +57,7 @@ export const TOKEN_LABELS: Record<keyof ThemeTokens, string> = {
   scrollbar: 'Scrollbar',
   accent: 'Accent',
   danger: 'Danger',
-  icon: 'Icons',
+  icon: 'Buttons',
   codeBg: 'Code block',
   tableHeaderBg: 'Header background',
   tableHeaderText: 'Header text',
