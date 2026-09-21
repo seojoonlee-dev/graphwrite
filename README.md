@@ -260,7 +260,7 @@ The desktop and mobile apps live in the `frontend/` directory and are built with
 - Android: `npm run tauri android build` (requires the Android SDK and NDK)
 
 > [!NOTE]
-> This is a very early version of GraphWrite (currently v0.1.2). Authentication, native UI(instead of using WebKit with Tauri), a custom graph library instead of react flow and much MUCH more are on the way. Stay tuned!
+> This is a very early version of GraphWrite (currently v0.1.3). Authentication, native UI(instead of using WebKit with Tauri), a custom graph library instead of react flow and much MUCH more are on the way. Stay tuned!
 
 ## Contributing
 

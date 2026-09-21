@@ -3,6 +3,37 @@
 All notable changes to GraphWrite are documented here.
 
 
+## v0.1.3 - 2026-09-21
+
+Find in note, plus a fix for undo reaching back into the previous note.
+
+> [!WARNING]
+> The macOS dmg is not signed or notarized with Apple. macOS refuses to open it with a "could not verify" dialog, and on macOS 15 Sequoia right-click > Open does not bypass it. Click Done, then open System Settings > Privacy & Security and click "Open Anyway" in the Security section, or run `xattr -dr com.apple.quarantine /Applications/GraphWrite.app`. See the README for details.
+
+### Added
+
+- Find in note: Ctrl/Cmd+F searches the text of the note you have open (the
+  graph search finds notes; this one looks inside one). A bar over the editor
+  gives a match counter and previous/next, on Enter and Shift+Enter, F3, or
+  Ctrl/Cmd+G; Esc closes it. Matches are literal and case-insensitive, text
+  selected before opening becomes the search term, and the shortcut works from
+  the sidebar and the title as well.
+
+### Fixed
+
+- Undo no longer reaches back into the note you had open before. Each note now
+  gets its own history; previously Ctrl+Z right after opening a note undid the
+  load itself, put the previous note's text on screen, and autosaved it over
+  the note you were in.
+- Selected text inside code blocks and inline code is highlighted again,
+  instead of the code background hiding the selection.
+- The "Text selection highlight" setting now applies while the editor has
+  focus, where the built-in lavender used to win. The preset themes share one
+  selection color tinted from the accent instead of a flat gray, and the
+  custom color pickers no longer show the opacity digits.
+- Corrected the setting's label, which read "slection".
+
+
 ## v0.1.2 - 2026-09-07
 
 A bug-fix release with a few editor niceties.
