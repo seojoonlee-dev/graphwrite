@@ -7,9 +7,6 @@ All notable changes to GraphWrite are documented here.
 
 Find in note, plus a fix for undo reaching back into the previous note.
 
-> [!WARNING]
-> The macOS dmg is not signed or notarized with Apple. macOS refuses to open it with a "could not verify" dialog, and on macOS 15 Sequoia right-click > Open does not bypass it. Click Done, then open System Settings > Privacy & Security and click "Open Anyway" in the Security section, or run `xattr -dr com.apple.quarantine /Applications/GraphWrite.app`. See the README for details.
-
 ### Added
 
 - Find in note: Ctrl/Cmd+F searches the text of the note you have open (the
@@ -37,9 +34,6 @@ Find in note, plus a fix for undo reaching back into the previous note.
 ## v0.1.2 - 2026-09-07
 
 A bug-fix release with a few editor niceties.
-
-> [!WARNING]
-> The macOS dmg is not signed or notarized with Apple. macOS refuses to open it with a "could not verify" dialog, and on macOS 15 Sequoia right-click > Open does not bypass it. Click Done, then open System Settings > Privacy & Security and click "Open Anyway" in the Security section, or run `xattr -dr com.apple.quarantine /Applications/GraphWrite.app`. See the README for details.
 
 ### Added
 
