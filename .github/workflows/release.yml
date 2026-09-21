@@ -13,13 +13,6 @@
 # The release stays a draft so the notes and assets can be checked before it
 # goes public. scripts/release.sh drives the whole thing from a terminal.
 #
-# Every build job runs in the "release" environment. Configure that environment
-# (Settings > Environments) with yourself as a required reviewer: the jobs then
-# wait for your approval in the Actions UI, so nobody else can produce release
-# assets or reach the secrets, even with write access. Keep the secrets below
-# as environment secrets (on that page), not repository secrets, so they only
-# exist inside approved runs.
-#
 # Secrets (optional):
 #   DOCKERHUB_USERNAME, DOCKERHUB_TOKEN push the images (job is skipped without them)
 #
